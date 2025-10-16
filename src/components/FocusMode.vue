@@ -288,18 +288,20 @@ onUnmounted(() => {
 
 .settings-btn,
 .exit-btn {
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
+  background: #374151;
+  color: white;
+  border: none;
   padding: 0.5rem 1rem;
   border-radius: 8px;
   cursor: pointer;
   font-size: 1.25rem;
   transition: all 0.2s ease;
+  font-weight: bold;
 }
 
 .settings-btn:hover,
 .exit-btn:hover {
-  background: #e5e7eb;
+  background: #1f2937;
 }
 
 .settings-overlay {
