@@ -10,7 +10,47 @@
           <span class="pasuk">פסוק {{ currentVerse.pasuk }}</span>
         </span>
       </div>
-      <button @click="$emit('exit')" class="exit-btn" title="חזרה לרשימה (Esc)">✕</button>
+      <div class="header-controls">
+        <button @click="showSettings = !showSettings" class="settings-btn" title="הגדרות">⚙️</button>
+        <button @click="$emit('exit')" class="exit-btn" title="חזרה לרשימה (Esc)">✕</button>
+      </div>
+    </div>
+
+    <!-- Settings Panel -->
+    <div v-if="showSettings" class="settings-overlay" @click.self="showSettings = false">
+      <div class="settings-panel">
+        <div class="settings-content">
+          <h3>הגדרות</h3>
+          <label>
+            סוג תרגום למעקב:
+            <select v-model="settings.targumType">
+              <option value="onkelos">תרגום אונקלוס</option>
+              <option value="rashi">רש"י</option>
+              <option value="english">English</option>
+            </select>
+          </label>
+          <label>
+            <input type="checkbox" v-model="settings.showTrop" />
+            הצג טעמים
+          </label>
+          <label>
+            <input type="checkbox" v-model="settings.showRashi" />
+            הצג רש"י
+          </label>
+          <label>
+            <input type="checkbox" v-model="settings.showEnglish" />
+            הצג תרגום אנגלי
+          </label>
+          <label>
+            גודל גופן: {{ settings.fontSize }}
+            <input type="range" v-model.number="settings.fontSize" min="14" max="32" />
+          </label>
+          <label>
+            <input type="checkbox" v-model="settings.fontRashi" />
+            כתב רש"י
+          </label>
+        </div>
+      </div>
     </div>
 
     <!-- Main Content -->
@@ -129,6 +169,7 @@ const emit = defineEmits(['exit'])
 
 const { getVerseProgress, setVerseProgress } = useProgress()
 
+const showSettings = ref(false)
 const currentIndex = ref(props.startIndex)
 const currentVerse = computed(() => props.verses[currentIndex.value] || {})
 const totalVerses = computed(() => props.verses.length)
@@ -239,6 +280,13 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
+.header-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.settings-btn,
 .exit-btn {
   background: #f3f4f6;
   border: 1px solid #d1d5db;
@@ -249,8 +297,64 @@ onUnmounted(() => {
   transition: all 0.2s ease;
 }
 
+.settings-btn:hover,
 .exit-btn:hover {
   background: #e5e7eb;
+}
+
+.settings-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-overlay .settings-panel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  max-width: 400px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+.settings-content h3 {
+  margin-bottom: 1rem;
+  color: #1f2937;
+  font-size: 1.2rem;
+}
+
+.settings-content label {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.settings-content input[type="checkbox"] {
+  margin-left: 0.5rem;
+}
+
+.settings-content select,
+.settings-content input[type="range"] {
+  margin-right: 0.5rem;
+}
+
+.settings-content select {
+  padding: 0.4rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  color: #374151;
+  font-size: 0.95rem;
 }
 
 .focus-content {
