@@ -101,15 +101,15 @@
 
     <!-- Content -->
     <div v-if="!loading && !error && !showFocusMode" class="content">
-      <!-- New Reading List View (for pasuk or aliyah reading approaches) -->
-      <ReadingListView
-        v-if="readingItems.length > 0"
-        :reading-items="readingItems"
+      <!-- Aliyah Reading List (new system with useAliyahNavigation) -->
+      <AliyahReadingList
+        v-if="settings.readingApproach === 'aliyah'"
         :parasha="parasha"
+        :verses="data"
       />
 
-      <!-- Legacy Verse View (for parasha-grouped display) -->
-      <div v-else-if="settings.order === 'pasuk'">
+      <!-- Legacy Verse View (for verse-by-verse or parasha-grouped display) -->
+      <div v-else>
         <VerseView
           v-for="(verse, i) in data"
           :key="i"
@@ -130,11 +130,9 @@ import { useData } from '../composables/useData'
 import { useSettings } from '../composables/useSettings'
 import { useParsha } from '../composables/useParsha'
 import { useProgress } from '../composables/useProgress'
-import { useReadingItems } from '../composables/useReadingItems'
-import { useReadingProgress } from '../composables/useReadingProgress'
 import VerseView from './VerseView.vue'
 import FocusMode from './FocusMode.vue'
-import ReadingListView from './ReadingListView.vue'
+import AliyahReadingList from './AliyahReadingList.vue'
 
 const props = defineProps({
   parasha: {
@@ -147,31 +145,11 @@ const { loadParsha, loading, error, data } = useData()
 const { settings } = useSettings()
 const { parshiyotList } = useParsha()
 const { getParshaStats } = useProgress()
-const { generateItems } = useReadingItems()
-const { handleSpacebarPress: handleReadingSpacebarPress, initializeParsha: initializeReadingProgress } = useReadingProgress()
 
 const showSettings = ref(false)
 const selectedParsha = ref(props.parasha)
 const showFocusMode = ref(false)
 const focusIndex = ref(0)
-const readingItems = ref([])
-
-// Keyboard handler for spacebar navigation
-const handleKeydown = (event) => {
-  if (event.code === 'Space' || event.key === ' ') {
-    handleReadingSpacebarPress(event)
-  }
-}
-
-// Set up keyboard listener
-onMounted(() => {
-  window.addEventListener('keydown', handleKeydown)
-})
-
-// Clean up keyboard listener
-onUnmounted(() => {
-  window.removeEventListener('keydown', handleKeydown)
-})
 
 const enterFocusMode = (index) => {
   focusIndex.value = index
@@ -192,33 +170,15 @@ const stats = computed(() => getParshaStats(props.parasha, totalVerses.value))
 const completedVerses = computed(() => stats.value.completed)
 const progressPercentage = computed(() => stats.value.percentage)
 
-// Generate reading items when data or approach changes
-const generateReadingItems = async () => {
-  if (data.value.length > 0) {
-    const items = await generateItems(props.parasha, data.value, settings.value.readingApproach)
-    readingItems.value = items
-    if (items.length > 0) {
-      initializeReadingProgress(props.parasha, items, settings.value.readingApproach)
-    }
-  }
-}
-
 // Load data when parasha changes
 watch(() => props.parasha, async (newParasha) => {
   selectedParsha.value = newParasha
   await loadParsha(newParasha, settings.value.showRashi)
-  await generateReadingItems()
 }, { immediate: true })
-
-// Regenerate items when reading approach changes
-watch(() => settings.value.readingApproach, async () => {
-  await generateReadingItems()
-})
 
 // Reload when showRashi changes
 watch(() => settings.value.showRashi, async () => {
   await loadParsha(props.parasha, settings.value.showRashi)
-  await generateReadingItems()
 })
 
 const navigateToParsha = () => {
