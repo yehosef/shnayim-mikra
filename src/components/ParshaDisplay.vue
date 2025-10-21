@@ -5,10 +5,6 @@
       <div class="container">
         <div class="title-section">
           <h1>פרשת {{ parashaHe }}</h1>
-          <!-- Aliyah Progress Display -->
-          <div v-if="progressDisplay" class="aliyah-progress">
-            {{ progressDisplay }}
-          </div>
           <!-- Progress Indicator (shown only if progress > 0) -->
           <div v-if="totalVerses > 0 && completedVerses > 0" class="progress-bar">
             <div class="progress-text">התקדמות: {{ completedVerses }}/{{ totalVerses }} ({{ progressPercentage }}%)</div>
@@ -37,6 +33,17 @@
             <option value="rashi">רש"י</option>
             <option value="english">English</option>
           </select>
+        </label>
+        <label>
+          גישת קריאה:
+          <select v-model="settings.readingApproach">
+            <option value="pasuk">פסוק אחרי פסוק</option>
+            <option value="aliyah">עליה אחרי עליה</option>
+          </select>
+        </label>
+        <label>
+          <input type="checkbox" v-model="settings.dailyAliyahGuide" />
+          הצג עליות היום
         </label>
         <label>
           <input type="checkbox" v-model="settings.showTrop" />
@@ -94,7 +101,15 @@
 
     <!-- Content -->
     <div v-if="!loading && !error && !showFocusMode" class="content">
-      <div v-if="settings.order === 'pasuk'">
+      <!-- New Reading List View (for pasuk or aliyah reading approaches) -->
+      <ReadingListView
+        v-if="readingItems.length > 0"
+        :reading-items="readingItems"
+        :parasha="parasha"
+      />
+
+      <!-- Legacy Verse View (for parasha-grouped display) -->
+      <div v-else-if="settings.order === 'pasuk'">
         <VerseView
           v-for="(verse, i) in data"
           :key="i"
@@ -115,9 +130,11 @@ import { useData } from '../composables/useData'
 import { useSettings } from '../composables/useSettings'
 import { useParsha } from '../composables/useParsha'
 import { useProgress } from '../composables/useProgress'
-import { useAliyahNavigation } from '../composables/useAliyahNavigation'
+import { useReadingItems } from '../composables/useReadingItems'
+import { useReadingProgress } from '../composables/useReadingProgress'
 import VerseView from './VerseView.vue'
 import FocusMode from './FocusMode.vue'
+import ReadingListView from './ReadingListView.vue'
 
 const props = defineProps({
   parasha: {
@@ -130,17 +147,19 @@ const { loadParsha, loading, error, data } = useData()
 const { settings } = useSettings()
 const { parshiyotList } = useParsha()
 const { getParshaStats } = useProgress()
-const { handleSpacebarPress, getProgressDisplay } = useAliyahNavigation()
+const { generateItems } = useReadingItems()
+const { handleSpacebarPress: handleReadingSpacebarPress, initializeParsha: initializeReadingProgress } = useReadingProgress()
 
 const showSettings = ref(false)
 const selectedParsha = ref(props.parasha)
 const showFocusMode = ref(false)
 const focusIndex = ref(0)
+const readingItems = ref([])
 
 // Keyboard handler for spacebar navigation
 const handleKeydown = (event) => {
   if (event.code === 'Space' || event.key === ' ') {
-    handleSpacebarPress(event)
+    handleReadingSpacebarPress(event)
   }
 }
 
@@ -167,27 +186,39 @@ const parashaHe = computed(() => {
   return parshiyotList.find(p => p.route === props.parasha)?.he || ''
 })
 
-// Aliyah progress display
-const progressDisplay = computed(() => {
-  return getProgressDisplay()
-})
-
 // Progress calculation
 const totalVerses = computed(() => data.value.length)
 const stats = computed(() => getParshaStats(props.parasha, totalVerses.value))
 const completedVerses = computed(() => stats.value.completed)
 const progressPercentage = computed(() => stats.value.percentage)
 
+// Generate reading items when data or approach changes
+const generateReadingItems = async () => {
+  if (data.value.length > 0) {
+    const items = await generateItems(props.parasha, data.value, settings.value.readingApproach)
+    readingItems.value = items
+    if (items.length > 0) {
+      initializeReadingProgress(props.parasha, items, settings.value.readingApproach)
+    }
+  }
+}
 
 // Load data when parasha changes
 watch(() => props.parasha, async (newParasha) => {
   selectedParsha.value = newParasha
   await loadParsha(newParasha, settings.value.showRashi)
+  await generateReadingItems()
 }, { immediate: true })
+
+// Regenerate items when reading approach changes
+watch(() => settings.value.readingApproach, async () => {
+  await generateReadingItems()
+})
 
 // Reload when showRashi changes
 watch(() => settings.value.showRashi, async () => {
   await loadParsha(props.parasha, settings.value.showRashi)
+  await generateReadingItems()
 })
 
 const navigateToParsha = () => {
