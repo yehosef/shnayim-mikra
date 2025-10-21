@@ -72,6 +72,8 @@ export function useData() {
             targum: targumData.text[perek]?.[pasuk] || '',
             english: englishData.text[perek]?.[pasuk] || '',
             pasuk: toHebrew(pasuk + 1),
+            perekNum: perek,        // Store numeric chapter index for tracking
+            pasukNum: pasuk,        // Store numeric verse index for tracking
             perek: null,
             aliya: null,
             meforshim: meforshimIndexData.text?.[perek]?.[pasuk] || []

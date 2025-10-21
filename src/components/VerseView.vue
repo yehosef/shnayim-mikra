@@ -1,9 +1,29 @@
 <template>
-  <div class="verse" :class="{ 'completed': isCompleted }">
+  <div
+    class="verse"
+    :class="{
+      'completed': isCompleted,
+      'current-verse': isCurrent,
+      'in-current-aliyah': isInCurrentAliyah,
+      'showing-completion': showingCompletion
+    }"
+    :data-perek="verse.perekNum"
+    :data-pasuk="verse.pasukNum"
+  >
+    <!-- Verse Pointer (Current verse indicator) -->
+    <div v-if="isCurrent" class="verse-pointer">
+      <span class="pointer-icon">▶</span>
+    </div>
+
     <!-- Completion Indicator -->
     <div class="completion-indicator" :class="{ 'complete': isCompleted }">
       <span v-if="isCompleted" class="completion-checkmark">✓</span>
       <span v-else class="completion-dot"></span>
+    </div>
+
+    <!-- Completion Feedback (brief visual feedback) -->
+    <div v-if="showingCompletion" class="completion-feedback">
+      <span class="feedback-checkmark">✓</span>
     </div>
 
     <!-- Focus Button -->
@@ -81,8 +101,9 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useProgress } from '../composables/useProgress'
+import { useAliyahNavigation } from '../composables/useAliyahNavigation'
 import { formatHebrewText } from '../utils/hebrewUtils'
 
 const props = defineProps({
@@ -105,10 +126,39 @@ const props = defineProps({
 })
 
 const { getVerseProgress, setVerseProgress } = useProgress()
+const { currentPosition, completionFeedback, initializeParsha: initNavigation, isVerseInCurrentAliyah, isFirstVerseOfCurrentAliyah } = useAliyahNavigation()
 
 const verseKey = computed(() => `${props.verse.perek || ''}:${props.verse.pasuk}`)
 const progress = computed(() => getVerseProgress(props.parasha, verseKey.value))
 const celebrating = ref(false)
+const showingCompletion = ref(false)
+
+// Initialize navigation on mount if parasha changes
+watch(() => props.parasha, async (parasha) => {
+  await initNavigation(parasha)
+}, { immediate: true })
+
+// Check if this verse is in the current aliyah being studied
+const isInCurrentAliyah = computed(() => {
+  if (!currentPosition.value || props.verse.perekNum === undefined) return false
+  return isVerseInCurrentAliyah(props.verse.perekNum, props.verse.pasukNum)
+})
+
+// Check if this verse is the first verse of the current aliyah (for positioning pointer)
+const isCurrent = computed(() => {
+  if (!isInCurrentAliyah.value || props.verse.perekNum === undefined) return false
+  return isFirstVerseOfCurrentAliyah(props.verse.perekNum, props.verse.pasukNum)
+})
+
+// Show completion feedback when this aliyah phase completes
+watch(completionFeedback, (feedback) => {
+  if (feedback.isVisible && feedback.position && isInCurrentAliyah.value) {
+    showingCompletion.value = true
+    setTimeout(() => {
+      showingCompletion.value = false
+    }, 400)
+  }
+})
 
 const isCompleted = computed(() => {
   return progress.value.hebrew1 && progress.value.hebrew2 && progress.value.targum
@@ -316,5 +366,93 @@ const formattedTorahText = computed(() => {
 
 .font-rashi {
   font-family: 'Rashi', serif;
+}
+
+/* Current Verse Indicator */
+.verse-pointer {
+  position: absolute;
+  left: -12px;
+  top: 1.5rem;
+  animation: pointerPulse 1.5s ease-in-out infinite;
+}
+
+.pointer-icon {
+  color: #d4a574;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+@keyframes pointerPulse {
+  0%, 100% { opacity: 1; transform: translateX(0); }
+  50% { opacity: 0.6; transform: translateX(-4px); }
+}
+
+/* Current Verse State */
+.verse.current-verse {
+  border-right-color: #d4a574;
+  background: linear-gradient(to left, rgba(212, 165, 116, 0.05) 0%, #ffffff 100%);
+  box-shadow: 0 2px 8px rgba(212, 165, 116, 0.1);
+}
+
+.verse.current-verse:hover {
+  box-shadow: 0 4px 12px rgba(212, 165, 116, 0.15);
+}
+
+/* Completion Feedback Animation */
+.completion-feedback {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.feedback-checkmark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #10b981;
+  color: white;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  font-weight: bold;
+  animation: completionFadeOut 0.6s ease-out forwards;
+}
+
+@keyframes completionFadeOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    background: #10b981;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+}
+
+/* Verse background when showing completion */
+.verse.showing-completion {
+  background: linear-gradient(to left, rgba(16, 185, 129, 0.1) 0%, #ffffff 100%);
+}
+
+/* Verses in the current aliyah - subtle highlighting */
+.verse.in-current-aliyah {
+  border-right-color: #3b82f6;
+  background: linear-gradient(to left, rgba(59, 130, 246, 0.03) 0%, #ffffff 100%);
+}
+
+.verse.in-current-aliyah:hover {
+  background: linear-gradient(to left, rgba(59, 130, 246, 0.08) 0%, #ffffff 100%);
+}
+
+/* Current verse (first verse of current aliyah) - stronger emphasis */
+.verse.current-verse {
+  border-right-color: #d4a574 !important;
+  background: linear-gradient(to left, rgba(212, 165, 116, 0.1) 0%, #ffffff 100%) !important;
 }
 </style>

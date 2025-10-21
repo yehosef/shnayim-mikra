@@ -5,6 +5,10 @@
       <div class="container">
         <div class="title-section">
           <h1>פרשת {{ parashaHe }}</h1>
+          <!-- Aliyah Progress Display -->
+          <div v-if="progressDisplay" class="aliyah-progress">
+            {{ progressDisplay }}
+          </div>
           <!-- Progress Indicator (shown only if progress > 0) -->
           <div v-if="totalVerses > 0 && completedVerses > 0" class="progress-bar">
             <div class="progress-text">התקדמות: {{ completedVerses }}/{{ totalVerses }} ({{ progressPercentage }}%)</div>
@@ -106,11 +110,12 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, computed } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useData } from '../composables/useData'
 import { useSettings } from '../composables/useSettings'
 import { useParsha } from '../composables/useParsha'
 import { useProgress } from '../composables/useProgress'
+import { useAliyahNavigation } from '../composables/useAliyahNavigation'
 import VerseView from './VerseView.vue'
 import FocusMode from './FocusMode.vue'
 
@@ -125,11 +130,29 @@ const { loadParsha, loading, error, data } = useData()
 const { settings } = useSettings()
 const { parshiyotList } = useParsha()
 const { getParshaStats } = useProgress()
+const { handleSpacebarPress, getProgressDisplay } = useAliyahNavigation()
 
 const showSettings = ref(false)
 const selectedParsha = ref(props.parasha)
 const showFocusMode = ref(false)
 const focusIndex = ref(0)
+
+// Keyboard handler for spacebar navigation
+const handleKeydown = (event) => {
+  if (event.code === 'Space' || event.key === ' ') {
+    handleSpacebarPress(event)
+  }
+}
+
+// Set up keyboard listener
+onMounted(() => {
+  window.addEventListener('keydown', handleKeydown)
+})
+
+// Clean up keyboard listener
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeydown)
+})
 
 const enterFocusMode = (index) => {
   focusIndex.value = index
@@ -142,6 +165,11 @@ const exitFocusMode = () => {
 
 const parashaHe = computed(() => {
   return parshiyotList.find(p => p.route === props.parasha)?.he || ''
+})
+
+// Aliyah progress display
+const progressDisplay = computed(() => {
+  return getProgressDisplay()
 })
 
 // Progress calculation
@@ -195,6 +223,13 @@ h1 {
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
+}
+
+.aliyah-progress {
+  font-size: 0.95rem;
+  color: #3b82f6;
+  font-weight: 500;
+  margin: 0.5rem 0;
 }
 
 .progress-bar {
