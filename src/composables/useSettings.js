@@ -1,16 +1,22 @@
 import { ref, watch } from 'vue'
 
 const defaults = {
+  // Display settings
   order: 'pasuk',
   showRashi: false,
   showTrop: false,
   location: 'israel',
   fontSize: 20,
-  aliyaByDay: false,
   fontRashi: true,
   disableMeforshim: false,
   targumType: 'onkelos', // onkelos | rashi | english
   showEnglish: false,
+  aliyaByDay: false,
+
+  // Reading approach settings (NEW)
+  readingApproach: 'pasuk', // 'pasuk' (verse-by-verse) | 'aliyah' (aliyah-by-aliyah)
+  dailyAliyahGuide: false, // Show "today's aliyah" helper
+  animationSpeed: 'normal', // 'fast' (300ms) | 'normal' (500ms) | 'slow' (800ms)
 }
 
 function loadSettings() {

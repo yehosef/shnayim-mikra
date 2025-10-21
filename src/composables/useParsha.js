@@ -1,4 +1,4 @@
-import { HebrewCalendar, Location } from '@hebcal/core'
+import { HebrewCalendar, Location, HDate } from '@hebcal/core'
 import parshiyot, { parshiyotList } from '../data/parshiyot'
 
 export function useParsha() {
@@ -8,7 +8,7 @@ export function useParsha() {
       // Use current year but clamp to valid range
       const year = Math.min(new Date().getFullYear(), 2024)
       const sedra = HebrewCalendar.getSedra(year, il)
-      const today = new Date(year, new Date().getMonth(), new Date().getDate())
+      const today = new HDate()
       const parsha = sedra.lookup(today)
 
       if (!parsha.parsha || parsha.parsha.length === 0) {
