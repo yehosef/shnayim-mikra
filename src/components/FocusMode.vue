@@ -9,114 +9,117 @@
           <span class="separator">:</span>
           <span class="pasuk">פסוק {{ currentVerse.pasuk }}</span>
         </span>
+        <!-- Step Indicators -->
+        <div class="step-indicator">
+          <span
+            :class="{ active: currentStep >= 1, done: progress.hebrew1 }"
+            @click="jumpToStep(1)"
+            title="קריאה ראשונה (1)"
+          >●</span>
+          <span
+            :class="{ active: currentStep >= 2, done: progress.hebrew2 }"
+            @click="jumpToStep(2)"
+            title="קריאה שנייה (2)"
+          >●</span>
+          <span
+            :class="{ active: currentStep >= 3, done: progress.targum }"
+            @click="jumpToStep(3)"
+            title="תרגום (3)"
+          >●</span>
+        </div>
       </div>
       <div class="header-controls">
+        <button @click="showHelp = !showHelp" class="help-btn" title="קיצורי מקלדת (?)">?</button>
         <button @click="showSettings = !showSettings" class="settings-btn" title="הגדרות">⚙️</button>
         <button @click="$emit('exit')" class="exit-btn" title="חזרה לרשימה (Esc)">✕</button>
       </div>
     </div>
 
-    <!-- Settings Panel -->
-    <div v-if="showSettings" class="settings-overlay" @click.self="showSettings = false">
-      <div class="settings-panel">
-        <div class="settings-content">
-          <h3>הגדרות</h3>
-          <label>
-            סוג תרגום למעקב:
-            <select v-model="settings.targumType">
-              <option value="onkelos">תרגום אונקלוס</option>
-              <option value="rashi">רש"י</option>
-              <option value="english">English</option>
-            </select>
-          </label>
-          <label>
-            <input type="checkbox" v-model="settings.showTrop" />
-            הצג טעמים
-          </label>
-          <label>
-            <input type="checkbox" v-model="settings.showRashi" />
-            הצג רש"י
-          </label>
-          <label>
-            <input type="checkbox" v-model="settings.showEnglish" />
-            הצג תרגום אנגלי
-          </label>
-          <label>
-            גודל גופן: {{ settings.fontSize }}
-            <input type="range" v-model.number="settings.fontSize" min="14" max="32" />
-          </label>
-          <label>
-            <input type="checkbox" v-model="settings.fontRashi" />
-            כתב רש"י
-          </label>
+    <!-- Keyboard Help Overlay -->
+    <div v-if="showHelp" class="help-overlay" @click.self="showHelp = false">
+      <div class="help-panel">
+        <h3>קיצורי מקלדת</h3>
+        <div class="shortcuts-grid">
+          <div class="shortcut"><kbd>Space</kbd> <span>המשך לשלב הבא</span></div>
+          <div class="shortcut"><kbd>Enter</kbd> <span>המשך לשלב הבא</span></div>
+          <div class="shortcut"><kbd>←</kbd> <span>פסוק קודם</span></div>
+          <div class="shortcut"><kbd>→</kbd> <span>פסוק הבא</span></div>
+          <div class="shortcut"><kbd>↑</kbd> <span>שלב קודם</span></div>
+          <div class="shortcut"><kbd>↓</kbd> <span>שלב הבא</span></div>
+          <div class="shortcut"><kbd>1</kbd> <span>קריאה ראשונה</span></div>
+          <div class="shortcut"><kbd>2</kbd> <span>קריאה שנייה</span></div>
+          <div class="shortcut"><kbd>3</kbd> <span>תרגום</span></div>
+          <div class="shortcut"><kbd>M</kbd> <span>סמן כנקרא</span></div>
+          <div class="shortcut"><kbd>U</kbd> <span>בטל סימון</span></div>
+          <div class="shortcut"><kbd>?</kbd> <span>עזרה זו</span></div>
+          <div class="shortcut"><kbd>Esc</kbd> <span>חזרה לרשימה</span></div>
         </div>
+        <button @click="showHelp = false" class="close-help-btn">סגור</button>
       </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="focus-content">
-      <!-- Hebrew Text - First Reading -->
+    <!-- Settings Modal -->
+    <SettingsModal v-if="showSettings" :focusMode="true" @close="showSettings = false" />
+
+    <!-- Main Content - Sequential 3-Step Display -->
+    <div class="focus-content" @click="advanceStep">
+      <!-- Step Label -->
+      <div class="step-label">{{ stepLabel }}</div>
+
+      <!-- Hebrew Text (Steps 1 & 2) -->
       <div
-        class="torah font-sbl clickable-text"
-        :class="{ 'reading-done': progress.hebrew1 }"
-        @click="toggleReading('hebrew1')"
+        v-if="currentStep === 1 || currentStep === 2"
+        class="text-display torah font-sbl"
+        :class="{ 'step-complete': currentStep === 1 ? progress.hebrew1 : progress.hebrew2 }"
       >
         {{ formattedTorahText }}
       </div>
 
-      <!-- Hebrew Text - Second Reading -->
+      <!-- Targum (Step 3) -->
       <div
-        class="torah font-sbl clickable-text"
-        :class="{ 'reading-done': progress.hebrew2 }"
-        @click="toggleReading('hebrew2')"
-      >
-        {{ formattedTorahText }}
-      </div>
-
-      <!-- Targum -->
-      <div
-        v-if="settings.targumType === 'onkelos'"
-        class="targum font-sbl clickable-text"
-        :class="{ 'reading-done': progress.targum }"
-        @click="toggleReading('targum')"
+        v-if="currentStep === 3 && settings.targumType === 'onkelos'"
+        class="text-display targum font-sbl"
+        :class="{ 'step-complete': progress.targum }"
         v-html="currentVerse.targum"
       ></div>
 
       <div
-        v-if="settings.targumType === 'rashi' && currentVerse.rashi"
-        class="targum clickable-text"
-        :class="{ 'reading-done': progress.targum, 'font-rashi': settings.fontRashi }"
-        @click="toggleReading('targum')"
+        v-if="currentStep === 3 && settings.targumType === 'rashi' && currentVerse.rashi"
+        class="text-display targum"
+        :class="{ 'step-complete': progress.targum, 'font-rashi': settings.fontRashi }"
         v-html="currentVerse.rashi.join('  ')"
       ></div>
 
       <div
-        v-if="settings.targumType === 'english' && currentVerse.english"
-        class="targum clickable-text english-targum"
-        :class="{ 'reading-done': progress.targum }"
-        @click="toggleReading('targum')"
-        v-html="currentVerse.english"
-      ></div>
+        v-if="currentStep === 3 && settings.targumType === 'english'"
+        class="text-display targum english-targum"
+        :class="{ 'step-complete': progress.targum }"
+      >
+        {{ currentVerse.english || 'No English translation available' }}
+      </div>
 
-      <!-- English (shown if enabled in settings AND not selected as targum type) -->
-      <div
-        v-if="settings.showEnglish && settings.targumType !== 'english' && currentVerse.english"
-        class="english reference-text"
-        v-html="currentVerse.english"
-      ></div>
+      <!-- Instruction -->
+      <div class="instruction">
+        <span v-if="currentStep < 3">לחץ או [Space] להמשיך</span>
+        <span v-else-if="currentIndex < totalVerses - 1">לחץ או [Space] לפסוק הבא</span>
+        <span v-else>לחץ או [Space] לסיים</span>
+      </div>
 
-      <!-- Rashi (shown if enabled in settings AND not selected as targum type) -->
-      <div
-        v-if="currentVerse.rashi && settings.showRashi && settings.targumType !== 'rashi'"
-        class="rashi reference-text"
-        :class="{ 'font-rashi': settings.fontRashi }"
-        v-html="currentVerse.rashi.join('  ')"
-      ></div>
+      <!-- Additional Reference Texts (always visible if enabled) -->
+      <div v-if="settings.showEnglish && settings.targumType !== 'english' && currentVerse.english" class="reference-section">
+        <div class="reference-label">English</div>
+        <div class="english reference-text" v-html="currentVerse.english"></div>
+      </div>
+
+      <div v-if="currentVerse.rashi && settings.showRashi && settings.targumType !== 'rashi'" class="reference-section">
+        <div class="reference-label">רש"י</div>
+        <div class="rashi reference-text" :class="{ 'font-rashi': settings.fontRashi }" v-html="currentVerse.rashi.join('  ')"></div>
+      </div>
     </div>
 
     <!-- Side Navigation Buttons -->
     <button
-      @click="previousVerse"
+      @click.stop="previousVerse"
       :disabled="currentIndex === 0"
       class="nav-btn nav-btn-left"
       title="פסוק קודם (←)"
@@ -124,7 +127,7 @@
       ←
     </button>
     <button
-      @click="nextVerse"
+      @click.stop="nextVerse"
       :disabled="currentIndex === totalVerses - 1"
       class="nav-btn nav-btn-right"
       title="פסוק הבא (→)"
@@ -135,16 +138,17 @@
     <!-- Progress Footer -->
     <div class="focus-footer">
       <div class="progress-indicator">
-        {{ currentIndex + 1 }} / {{ totalVerses }}
+        פסוק {{ currentIndex + 1 }} / {{ totalVerses }}
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useProgress } from '../composables/useProgress'
 import { formatHebrewText } from '../utils/hebrewUtils'
+import SettingsModal from './SettingsModal.vue'
 
 const props = defineProps({
   verses: {
@@ -170,7 +174,12 @@ const emit = defineEmits(['exit'])
 const { getVerseProgress, setVerseProgress } = useProgress()
 
 const showSettings = ref(false)
+const showHelp = ref(false)
 const currentIndex = ref(props.startIndex)
+const currentStep = ref(1) // 1 = first Hebrew, 2 = second Hebrew, 3 = Targum
+const lastAction = ref(null) // For undo functionality
+const skipStepReset = ref(false) // Flag to skip step reset during arrow navigation
+
 const currentVerse = computed(() => props.verses[currentIndex.value] || {})
 const totalVerses = computed(() => props.verses.length)
 
@@ -185,9 +194,80 @@ const formattedTorahText = computed(() => {
   return formatHebrewText(currentVerse.value.torah, props.settings.showTrop)
 })
 
-const toggleReading = (field) => {
-  const currentValue = progress.value[field]
-  setVerseProgress(props.parasha, verseKey.value, field, !currentValue)
+const stepLabel = computed(() => {
+  if (currentStep.value === 1) return 'קריאה ראשונה'
+  if (currentStep.value === 2) return 'קריאה שנייה'
+  const labels = {
+    onkelos: 'תרגום אונקלוס',
+    rashi: 'רש"י',
+    english: 'English Translation'
+  }
+  return labels[props.settings.targumType] || 'תרגום'
+})
+
+// Determine starting step based on existing progress
+const determineStartingStep = () => {
+  const p = progress.value
+  if (!p.hebrew1) return 1
+  if (!p.hebrew2) return 2
+  if (!p.targum) return 3
+  return 1 // All done, start over
+}
+
+// Reset step when changing verses (unless skipped by arrow navigation)
+watch(currentIndex, () => {
+  if (skipStepReset.value) {
+    skipStepReset.value = false
+    return
+  }
+  currentStep.value = determineStartingStep()
+})
+
+// Initialize step on mount
+onMounted(() => {
+  currentStep.value = determineStartingStep()
+})
+
+const advanceStep = () => {
+  if (showSettings.value || showHelp.value) return // Don't advance when overlays are open
+
+  if (currentStep.value === 1) {
+    lastAction.value = { type: 'progress', parasha: props.parasha, key: verseKey.value, field: 'hebrew1', prevValue: progress.value.hebrew1 }
+    setVerseProgress(props.parasha, verseKey.value, 'hebrew1', true)
+    currentStep.value = 2
+  } else if (currentStep.value === 2) {
+    lastAction.value = { type: 'progress', parasha: props.parasha, key: verseKey.value, field: 'hebrew2', prevValue: progress.value.hebrew2 }
+    setVerseProgress(props.parasha, verseKey.value, 'hebrew2', true)
+    currentStep.value = 3
+  } else {
+    lastAction.value = { type: 'progress', parasha: props.parasha, key: verseKey.value, field: 'targum', prevValue: progress.value.targum }
+    setVerseProgress(props.parasha, verseKey.value, 'targum', true)
+
+    // Move to next verse or exit
+    if (currentIndex.value < totalVerses.value - 1) {
+      currentIndex.value++
+      currentStep.value = 1
+    } else {
+      emit('exit')
+    }
+  }
+}
+
+const jumpToStep = (step) => {
+  currentStep.value = step
+}
+
+const markCurrentComplete = () => {
+  const field = currentStep.value === 1 ? 'hebrew1' : currentStep.value === 2 ? 'hebrew2' : 'targum'
+  lastAction.value = { type: 'progress', parasha: props.parasha, key: verseKey.value, field, prevValue: progress.value[field] }
+  setVerseProgress(props.parasha, verseKey.value, field, true)
+}
+
+const undoLastAction = () => {
+  if (lastAction.value && lastAction.value.type === 'progress') {
+    setVerseProgress(lastAction.value.parasha, lastAction.value.key, lastAction.value.field, lastAction.value.prevValue)
+    lastAction.value = null
+  }
 }
 
 const nextVerse = () => {
@@ -204,12 +284,77 @@ const previousVerse = () => {
 
 // Keyboard navigation
 const handleKeydown = (e) => {
-  if (e.key === 'Escape') {
-    emit('exit')
-  } else if (e.key === 'ArrowRight') {
-    nextVerse()
-  } else if (e.key === 'ArrowLeft') {
-    previousVerse()
+  // Don't handle keys when typing in inputs
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+    return
+  }
+
+  // When overlays are open, only allow Escape to close them
+  if (showSettings.value || showHelp.value) {
+    if (e.key === 'Escape') {
+      showSettings.value = false
+      showHelp.value = false
+    }
+    return
+  }
+
+  switch (e.key) {
+    case 'Escape':
+      emit('exit')
+      break
+    case ' ':
+    case 'Enter':
+      e.preventDefault()
+      advanceStep()
+      break
+    case 'ArrowRight':
+      e.preventDefault()
+      nextVerse()
+      break
+    case 'ArrowLeft':
+      e.preventDefault()
+      previousVerse()
+      break
+    case 'ArrowDown':
+      e.preventDefault()
+      if (currentStep.value < 3) {
+        jumpToStep(currentStep.value + 1)
+      } else if (currentIndex.value < totalVerses.value - 1) {
+        skipStepReset.value = true
+        currentIndex.value++
+        currentStep.value = 1
+      }
+      break
+    case 'ArrowUp':
+      e.preventDefault()
+      if (currentStep.value > 1) {
+        jumpToStep(currentStep.value - 1)
+      } else if (currentIndex.value > 0) {
+        skipStepReset.value = true
+        currentIndex.value--
+        currentStep.value = 3
+      }
+      break
+    case '1':
+      jumpToStep(1)
+      break
+    case '2':
+      jumpToStep(2)
+      break
+    case '3':
+      jumpToStep(3)
+      break
+    case 'm':
+    case 'M':
+      markCurrentComplete()
+      break
+    case 'u':
+    case 'U':
+      undoLastAction()
+      break
+    case '?':
+      showHelp.value = !showHelp.value
+      break
   }
 }
 
@@ -249,6 +394,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .aliya-label {
@@ -280,12 +426,49 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
+/* Step Indicators */
+.step-indicator {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.step-indicator span {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #e5e7eb;
+  color: #9ca3af;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.step-indicator span.active {
+  background: #3b82f6;
+  color: white;
+  transform: scale(1.1);
+}
+
+.step-indicator span.done {
+  background: #10b981;
+  color: white;
+}
+
+.step-indicator span:hover {
+  transform: scale(1.2);
+}
+
 .header-controls {
   display: flex;
   gap: 0.5rem;
   align-items: center;
 }
 
+.help-btn,
 .settings-btn,
 .exit-btn {
   background: #374151;
@@ -299,66 +482,101 @@ onUnmounted(() => {
   font-weight: bold;
 }
 
+.help-btn {
+  background: #6366f1;
+}
+
+.help-btn:hover {
+  background: #4f46e5;
+}
+
 .settings-btn:hover,
 .exit-btn:hover {
   background: #1f2937;
 }
 
-.settings-overlay {
+/* Help Overlay */
+.help-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 101;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 102;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.settings-overlay .settings-panel {
+.help-panel {
   background: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  max-width: 400px;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 450px;
   width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
   padding: 2rem;
 }
 
-.settings-content h3 {
-  margin-bottom: 1rem;
+.help-panel h3 {
+  margin-bottom: 1.5rem;
   color: #1f2937;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  text-align: center;
 }
 
-.settings-content label {
-  display: block;
-  margin-bottom: 0.75rem;
-  color: #374151;
-  font-size: 1rem;
+.shortcuts-grid {
+  display: grid;
+  gap: 0.75rem;
 }
 
-.settings-content input[type="checkbox"] {
-  margin-left: 0.5rem;
+.shortcut {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  background: #f9fafb;
 }
 
-.settings-content select,
-.settings-content input[type="range"] {
-  margin-right: 0.5rem;
-}
-
-.settings-content select {
-  padding: 0.4rem;
+.shortcut kbd {
+  background: linear-gradient(180deg, #f9fafb 0%, #e5e7eb 100%);
   border: 1px solid #d1d5db;
   border-radius: 6px;
-  background: white;
+  padding: 0.3rem 0.6rem;
+  font-family: monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
   color: #374151;
+  min-width: 60px;
+  text-align: center;
+  box-shadow: 0 2px 0 #d1d5db;
+}
+
+.shortcut span {
+  color: #4b5563;
   font-size: 0.95rem;
 }
 
+.close-help-btn {
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 0.75rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.close-help-btn:hover {
+  background: #2563eb;
+}
+
+/* Main Content - Sequential Display */
 .focus-content {
   flex: 1;
   overflow-y: auto;
@@ -366,56 +584,84 @@ onUnmounted(() => {
   max-width: 900px;
   margin: 0 auto;
   width: 100%;
-}
-
-.clickable-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  border-radius: 8px;
-  border: 2px solid #d1d5db;
-  transition: all 0.2s ease;
+}
+
+.step-label {
+  font-size: 1.1rem;
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.text-display {
+  width: 100%;
+  max-width: 800px;
+  padding: 2.5rem;
   background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 3px solid transparent;
 }
 
-.clickable-text:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.text-display:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
-.clickable-text.reading-done {
-  background: #dcfce7;
+.text-display.step-complete {
   border-color: #10b981;
-  border-width: 3px;
-}
-
-.clickable-text.reading-done:hover {
-  background: #bbf7d0;
+  background: #f0fdf4;
 }
 
 .torah {
-  font-size: 1.8em;
-  line-height: 1.8;
+  font-size: 2rem;
+  line-height: 2;
   color: #1f2937;
 }
 
 .targum {
-  font-size: 1.3em;
-  color: #666;
-  line-height: 1.7;
+  font-size: 1.6rem;
+  color: #374151;
+  line-height: 1.9;
 }
 
 .english-targum {
   direction: ltr;
-  text-align: left;
+  text-align: center;
+}
+
+.instruction {
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  color: #9ca3af;
+  text-align: center;
+}
+
+/* Reference Sections */
+.reference-section {
+  width: 100%;
+  max-width: 800px;
+  margin-top: 1.5rem;
+}
+
+.reference-label {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
 }
 
 .reference-text {
   padding: 1.5rem;
-  margin-bottom: 1rem;
-  border-radius: 8px;
+  border-radius: 12px;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
 }
@@ -438,6 +684,7 @@ onUnmounted(() => {
   font-family: 'Rashi', serif;
 }
 
+/* Navigation Buttons */
 .nav-btn {
   position: fixed;
   top: 50%;
@@ -472,8 +719,10 @@ onUnmounted(() => {
   opacity: 0.3;
   cursor: not-allowed;
   background: #d1d5db;
+  box-shadow: none;
 }
 
+/* Footer */
 .focus-footer {
   background: white;
   padding: 1rem 1.5rem;
@@ -490,13 +739,33 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
+/* Mobile Responsive */
 @media (max-width: 768px) {
+  .focus-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .verse-info {
+    gap: 0.5rem;
+  }
+
+  .step-indicator {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.5rem;
+  }
+
   .torah {
-    font-size: 1.4em;
+    font-size: 1.5rem;
   }
 
   .targum {
-    font-size: 1.1em;
+    font-size: 1.3rem;
+  }
+
+  .text-display {
+    padding: 1.5rem;
   }
 
   .nav-btn {
@@ -510,6 +779,15 @@ onUnmounted(() => {
 
   .nav-btn-right {
     right: 0.5rem;
+  }
+
+  .help-panel {
+    padding: 1.5rem;
+  }
+
+  .shortcut kbd {
+    min-width: 50px;
+    font-size: 0.8rem;
   }
 }
 </style>

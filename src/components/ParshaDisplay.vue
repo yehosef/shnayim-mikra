@@ -5,11 +5,20 @@
       <div class="container">
         <div class="title-section">
           <h1>פרשת {{ parashaHe }}</h1>
-          <!-- Progress Indicator (shown only if progress > 0) -->
-          <div v-if="totalVerses > 0 && completedVerses > 0" class="progress-bar">
-            <div class="progress-text">התקדמות: {{ completedVerses }}/{{ totalVerses }} ({{ progressPercentage }}%)</div>
+          <!-- Aliyah Selector (shown in aliyah mode) -->
+          <div v-if="settings.displayMode === 'aliyah'" class="aliyah-selector">
+            <span class="aliyah-label">{{ isHebrew ? 'עליה:' : 'Aliyah:' }}</span>
+            <select v-model="settings.currentAliyah" class="aliyah-dropdown">
+              <option v-for="n in 7" :key="n" :value="n">{{ aliyahNames[n - 1] }}</option>
+            </select>
+          </div>
+          <!-- Progress Indicator -->
+          <div v-if="displayVerses.length > 0" class="progress-bar">
+            <div class="progress-text">
+              {{ isHebrew ? 'התקדמות:' : 'Progress:' }} {{ completedCount }}/{{ displayVerses.length }} ({{ progressPercent }}%)
+            </div>
             <div class="progress-track">
-              <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
+              <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
             </div>
           </div>
         </div>
@@ -22,77 +31,19 @@
       </div>
     </div>
 
-    <!-- Settings Panel -->
-    <div v-if="showSettings" class="settings-panel">
-      <div class="settings-content">
-        <h3>הגדרות</h3>
-        <label>
-          סוג תרגום למעקב:
-          <select v-model="settings.targumType">
-            <option value="onkelos">תרגום אונקלוס</option>
-            <option value="rashi">רש"י</option>
-            <option value="english">English</option>
-          </select>
-        </label>
-        <label>
-          גישת קריאה:
-          <select v-model="settings.readingApproach">
-            <option value="pasuk">פסוק אחרי פסוק</option>
-            <option value="aliyah">עליה אחרי עליה</option>
-          </select>
-        </label>
-        <label>
-          <input type="checkbox" v-model="settings.dailyAliyahGuide" />
-          הצג עליות היום
-        </label>
-        <label>
-          <input type="checkbox" v-model="settings.showTrop" />
-          הצג טעמים
-        </label>
-        <label>
-          <input type="checkbox" v-model="settings.showRashi" />
-          הצג רש"י
-        </label>
-        <label>
-          <input type="checkbox" v-model="settings.showEnglish" />
-          הצג תרגום אנגלי
-        </label>
-        <label>
-          תצוגה:
-          <select v-model="settings.order">
-            <option value="pasuk">פסוק פסוק</option>
-            <option value="parasha">לפי פרשה</option>
-            <option value="aliya">לפי עליה</option>
-          </select>
-        </label>
-        <label>
-          גודל גופן: {{ settings.fontSize }}
-          <input type="range" v-model.number="settings.fontSize" min="14" max="32" />
-        </label>
-        <label>
-          <input type="checkbox" v-model="settings.fontRashi" />
-          כתב רש"י
-        </label>
-        <label>
-          מיקום:
-          <select v-model="settings.location">
-            <option value="israel">ישראל</option>
-            <option value="chul">חו"ל</option>
-          </select>
-        </label>
-      </div>
-    </div>
+    <!-- Settings Modal -->
+    <SettingsModal v-if="showSettings" @close="showSettings = false" />
 
     <!-- Loading -->
-    <div v-if="loading" class="loading">טוען...</div>
+    <div v-if="loading" class="loading">{{ isHebrew ? 'טוען...' : 'Loading...' }}</div>
 
     <!-- Error -->
-    <div v-if="error" class="error">שגיאה: {{ error }}</div>
+    <div v-if="error" class="error">{{ isHebrew ? 'שגיאה:' : 'Error:' }} {{ error }}</div>
 
     <!-- Focus Mode (Fullscreen) -->
     <FocusMode
       v-if="showFocusMode"
-      :verses="data"
+      :verses="displayVerses"
       :startIndex="focusIndex"
       :parasha="parasha"
       :settings="settings"
@@ -101,38 +52,34 @@
 
     <!-- Content -->
     <div v-if="!loading && !error && !showFocusMode" class="content">
-      <!-- Aliyah Reading List (new system with useAliyahNavigation) -->
-      <AliyahReadingList
-        v-if="settings.readingApproach === 'aliyah'"
+      <VerseView
+        v-for="(verse, i) in displayVerses"
+        :key="`${verse.perekNum}-${verse.pasukNum}`"
+        :verse="verse"
+        :index="i"
         :parasha="parasha"
-        :verses="data"
+        :settings="settings"
+        :isSelected="selectedIndex === i"
+        :selectedPhase="selectedIndex === i ? selectedPhase : 0"
+        :data-verse-index="i"
+        @focus="enterFocusMode"
+        @click="selectedIndex = i"
+        @phase-click="(eventData) => handlePhaseClick(i, eventData)"
       />
-
-      <!-- Legacy Verse View (for verse-by-verse or parasha-grouped display) -->
-      <div v-else>
-        <VerseView
-          v-for="(verse, i) in data"
-          :key="i"
-          :verse="verse"
-          :index="i"
-          :parasha="parasha"
-          :settings="settings"
-          @focus="enterFocusMode"
-        />
-      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { useData } from '../composables/useData'
 import { useSettings } from '../composables/useSettings'
 import { useParsha } from '../composables/useParsha'
 import { useProgress } from '../composables/useProgress'
+import parshiyotData from '../data/parshiyot'
 import VerseView from './VerseView.vue'
 import FocusMode from './FocusMode.vue'
-import AliyahReadingList from './AliyahReadingList.vue'
+import SettingsModal from './SettingsModal.vue'
 
 const props = defineProps({
   parasha: {
@@ -144,12 +91,17 @@ const props = defineProps({
 const { loadParsha, loading, error, data } = useData()
 const { settings } = useSettings()
 const { parshiyotList } = useParsha()
-const { getParshaStats } = useProgress()
+const { setVerseProgress, getVerseProgress } = useProgress()
 
 const showSettings = ref(false)
 const selectedParsha = ref(props.parasha)
 const showFocusMode = ref(false)
 const focusIndex = ref(0)
+const selectedIndex = ref(0) // Which verse is selected
+const selectedPhase = ref(1) // Which phase within the verse (1=hebrew1, 2=hebrew2, 3=targum)
+
+// Aliyah names in Hebrew
+const aliyahNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שביעי']
 
 const enterFocusMode = (index) => {
   focusIndex.value = index
@@ -164,11 +116,77 @@ const parashaHe = computed(() => {
   return parshiyotList.find(p => p.route === props.parasha)?.he || ''
 })
 
-// Progress calculation
-const totalVerses = computed(() => data.value.length)
-const stats = computed(() => getParshaStats(props.parasha, totalVerses.value))
-const completedVerses = computed(() => stats.value.completed)
-const progressPercentage = computed(() => stats.value.percentage)
+const isHebrew = computed(() => settings.value.interfaceLanguage === 'he')
+
+// Get aliyah boundaries for filtering
+const aliyahBoundaries = computed(() => {
+  const parshaDef = parshiyotData[props.parasha]
+  if (!parshaDef) return []
+
+  const boundaries = []
+  const aliyot = parshaDef.aliyot
+
+  for (let i = 0; i < aliyot.length; i++) {
+    const start = aliyot[i]
+    // End is the verse before the next aliyah starts, or the parsha end
+    const end = i < aliyot.length - 1 ? aliyot[i + 1] : parshaDef.end
+    boundaries.push({ start, end, isLast: i === aliyot.length - 1 })
+  }
+
+  return boundaries
+})
+
+// Filter verses based on display mode
+const displayVerses = computed(() => {
+  if (settings.value.displayMode !== 'aliyah') {
+    return data.value
+  }
+
+  // Filter to current aliyah
+  const aliyahIndex = settings.value.currentAliyah - 1
+  const boundary = aliyahBoundaries.value[aliyahIndex]
+  if (!boundary) return data.value
+
+  const [startPerek, startPasuk] = boundary.start
+  const [endPerek, endPasuk] = boundary.end
+
+  return data.value.filter(verse => {
+    const vPerek = verse.perekNum
+    const vPasuk = verse.pasukNum
+
+    // Check if verse is within aliyah range
+    if (vPerek < startPerek) return false
+    if (vPerek > endPerek) return false
+    if (vPerek === startPerek && vPasuk < startPasuk) return false
+
+    // For the last aliyah, include the end verse; otherwise exclude it (it's the start of next aliyah)
+    if (boundary.isLast) {
+      if (vPerek === endPerek && vPasuk > endPasuk) return false
+    } else {
+      if (vPerek === endPerek && vPasuk >= endPasuk) return false
+    }
+
+    return true
+  })
+})
+
+// Progress calculation (relative to displayVerses)
+const completedCount = computed(() => {
+  let count = 0
+  for (const verse of displayVerses.value) {
+    const key = `${verse.perek || ''}:${verse.pasuk}`
+    const progress = getVerseProgress(props.parasha, key)
+    if (progress.hebrew1 && progress.hebrew2 && progress.targum) {
+      count++
+    }
+  }
+  return count
+})
+
+const progressPercent = computed(() => {
+  if (displayVerses.value.length === 0) return 0
+  return Math.round((completedCount.value / displayVerses.value.length) * 100)
+})
 
 // Load data when parasha changes
 watch(() => props.parasha, async (newParasha) => {
@@ -184,6 +202,146 @@ watch(() => settings.value.showRashi, async () => {
 const navigateToParsha = () => {
   window.location.hash = selectedParsha.value
 }
+
+// Get verse key for progress tracking
+const getVerseKey = (verse) => `${verse.perek || ''}:${verse.pasuk}`
+
+// Handle click on a phase in VerseView
+const handlePhaseClick = (verseIndex, { phase, field, wasRead }) => {
+  selectedIndex.value = verseIndex
+  selectedPhase.value = phase
+
+  const verse = displayVerses.value[verseIndex]
+  if (!verse) return
+
+  const verseKey = getVerseKey(verse)
+
+  // Toggle the value
+  setVerseProgress(props.parasha, verseKey, field, !wasRead)
+
+  // Only auto-advance if we just marked it as read (was unread before)
+  if (!wasRead) {
+    const maxIndex = displayVerses.value.length - 1
+    if (selectedPhase.value < 3) {
+      selectedPhase.value++
+    } else if (selectedIndex.value < maxIndex) {
+      selectedIndex.value++
+      selectedPhase.value = 1
+      scrollToSelected()
+    }
+  }
+}
+
+// Toggle current phase and advance only if marking as newly read
+const toggleCurrentPhase = () => {
+  const verse = displayVerses.value[selectedIndex.value]
+  if (!verse) return
+
+  const verseKey = getVerseKey(verse)
+  const phaseField = selectedPhase.value === 1 ? 'hebrew1' : selectedPhase.value === 2 ? 'hebrew2' : 'targum'
+
+  // Get current progress to check if already read
+  const currentProgress = getVerseProgress(props.parasha, verseKey)
+  const wasRead = currentProgress[phaseField]
+
+  // Toggle the value
+  setVerseProgress(props.parasha, verseKey, phaseField, !wasRead)
+
+  // Only auto-advance if we just marked it as read (was unread before)
+  if (!wasRead) {
+    const maxIndex = displayVerses.value.length - 1
+    if (selectedPhase.value < 3) {
+      selectedPhase.value++
+    } else if (selectedIndex.value < maxIndex) {
+      selectedIndex.value++
+      selectedPhase.value = 1
+      scrollToSelected()
+    }
+  }
+}
+
+// Keyboard navigation for list view - navigates by phase (section) within verses
+const handleKeydown = (e) => {
+  // Don't handle if focus mode is active, settings open, or typing in inputs
+  if (showFocusMode.value || showSettings.value) return
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return
+
+  const maxIndex = displayVerses.value.length - 1
+
+  switch (e.key) {
+    case 'ArrowDown':
+      e.preventDefault()
+      // Move to next phase, or next verse's phase 1 if at phase 3
+      if (selectedPhase.value < 3) {
+        selectedPhase.value++
+      } else if (selectedIndex.value < maxIndex) {
+        selectedIndex.value++
+        selectedPhase.value = 1
+        scrollToSelected()
+      }
+      break
+    case 'ArrowUp':
+      e.preventDefault()
+      // Move to previous phase, or previous verse's phase 3 if at phase 1
+      if (selectedPhase.value > 1) {
+        selectedPhase.value--
+      } else if (selectedIndex.value > 0) {
+        selectedIndex.value--
+        selectedPhase.value = 3
+        scrollToSelected()
+      }
+      break
+    case 'ArrowRight':
+      e.preventDefault()
+      // Move to next verse (same as FocusMode)
+      if (selectedIndex.value < maxIndex) {
+        selectedIndex.value++
+        scrollToSelected()
+      }
+      break
+    case 'ArrowLeft':
+      e.preventDefault()
+      // Move to previous verse (same as FocusMode)
+      if (selectedIndex.value > 0) {
+        selectedIndex.value--
+        scrollToSelected()
+      }
+      break
+    case ' ':
+      e.preventDefault()
+      // Toggle current phase - advance only if marking as newly read
+      toggleCurrentPhase()
+      break
+    case 'Enter':
+      e.preventDefault()
+      // Enter focus mode
+      enterFocusMode(selectedIndex.value)
+      break
+  }
+}
+
+const scrollToSelected = () => {
+  nextTick(() => {
+    const el = document.querySelector(`[data-verse-index="${selectedIndex.value}"]`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  })
+}
+
+// Reset selected index when display mode or aliyah changes
+watch([() => settings.value.displayMode, () => settings.value.currentAliyah], () => {
+  selectedIndex.value = 0
+  selectedPhase.value = 1
+})
+
+onMounted(() => {
+  document.addEventListener('keydown', handleKeydown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeydown)
+})
 </script>
 
 <style scoped>
@@ -320,46 +478,41 @@ h1 {
   font-family: inherit;
 }
 
-.settings-panel {
-  background: white;
-  border-bottom: 1px solid #e0e0e0;
-  padding: 1rem;
+/* Aliyah Selector */
+.aliyah-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0;
 }
 
-.settings-content {
-  max-width: 1200px;
-  margin: 0 auto;
+.aliyah-label {
+  font-size: 0.9rem;
+  color: #4b5563;
+  font-weight: 500;
 }
 
-.settings-content h3 {
-  margin-bottom: 1rem;
-  color: #1f2937;
-  font-size: 1.2rem;
-}
-
-.settings-content label {
-  display: block;
-  margin-bottom: 0.75rem;
-  color: #374151;
-  font-size: 1rem;
-}
-
-.settings-content input[type="checkbox"] {
-  margin-left: 0.5rem;
-}
-
-.settings-content select,
-.settings-content input[type="range"] {
-  margin-right: 0.5rem;
-}
-
-.settings-content select {
-  padding: 0.4rem;
-  border: 1px solid #d1d5db;
+.aliyah-dropdown {
+  padding: 0.4rem 0.75rem;
+  border: 2px solid #3b82f6;
   border-radius: 6px;
-  background: white;
-  color: #374151;
-  font-size: 0.95rem;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e40af;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.aliyah-dropdown:hover {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #2563eb;
+}
+
+.aliyah-dropdown:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
 }
 
 .loading, .error {

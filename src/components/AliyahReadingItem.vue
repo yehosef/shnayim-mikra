@@ -3,7 +3,8 @@
     class="reading-item"
     :class="{
       'is-current': isCurrent,
-      'is-completed': isCompleted
+      'is-completed': isCompleted,
+      'is-selected': isSelected
     }"
     :data-item-id="item.id"
     @click="$emit('click', item)"
@@ -61,6 +62,10 @@ const props = defineProps({
     default: false
   },
   isCompleted: {
+    type: Boolean,
+    default: false
+  },
+  isSelected: {
     type: Boolean,
     default: false
   }
@@ -130,9 +135,24 @@ watch(
   order: 0;
 }
 
+/* Selected item (keyboard navigation) - purple highlight */
+.reading-item.is-selected {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3), 0 4px 12px rgba(139, 92, 246, 0.15);
+}
+
+.reading-item.is-selected:not(.is-current) {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(139, 92, 246, 0.02) 100%);
+}
+
 .reading-item:hover:not(.is-completed) {
   border-color: #0ea5e9;
   box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+}
+
+.reading-item.is-selected:hover:not(.is-completed) {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 6px 16px rgba(139, 92, 246, 0.2);
 }
 
 /* Item Checkbox */

@@ -1,8 +1,12 @@
 import { ref, watch } from 'vue'
 
 const defaults = {
+  // Interface settings
+  interfaceLanguage: 'en', // 'en' | 'he'
+
   // Display settings
-  order: 'pasuk',
+  displayMode: 'pasuk', // 'pasuk' (verse-by-verse) | 'parasha' (by paragraph) | 'aliyah' (one aliyah at a time)
+  currentAliyah: 1, // Which aliyah to show when in aliyah mode (1-7)
   showRashi: false,
   showTrop: false,
   location: 'israel',
@@ -11,12 +15,6 @@ const defaults = {
   disableMeforshim: false,
   targumType: 'onkelos', // onkelos | rashi | english
   showEnglish: false,
-  aliyaByDay: false,
-
-  // Reading approach settings (NEW)
-  readingApproach: 'pasuk', // 'pasuk' (verse-by-verse) | 'aliyah' (aliyah-by-aliyah)
-  dailyAliyahGuide: false, // Show "today's aliyah" helper
-  animationSpeed: 'normal', // 'fast' (300ms) | 'normal' (500ms) | 'slow' (800ms)
 }
 
 function loadSettings() {

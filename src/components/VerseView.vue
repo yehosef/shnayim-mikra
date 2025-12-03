@@ -5,10 +5,12 @@
       'completed': isCompleted,
       'current-verse': isCurrent,
       'in-current-aliyah': isInCurrentAliyah,
-      'showing-completion': showingCompletion
+      'showing-completion': showingCompletion,
+      'selected': isSelected
     }"
     :data-perek="verse.perekNum"
     :data-pasuk="verse.pasukNum"
+    :data-verse-index="index"
   >
     <!-- Verse Pointer (Current verse indicator) -->
     <div v-if="isCurrent" class="verse-pointer">
@@ -41,8 +43,8 @@
     <!-- Hebrew Text - First Reading -->
     <div
       class="torah font-sbl clickable-text"
-      :class="{ 'reading-done': progress.hebrew1 }"
-      @click="toggleReading('hebrew1')"
+      :class="{ 'reading-done': progress.hebrew1, 'phase-selected': selectedPhase === 1 }"
+      @click="handlePhaseClick(1, 'hebrew1')"
     >
       {{ formattedTorahText }}
     </div>
@@ -50,8 +52,8 @@
     <!-- Hebrew Text - Second Reading -->
     <div
       class="torah font-sbl clickable-text"
-      :class="{ 'reading-done': progress.hebrew2 }"
-      @click="toggleReading('hebrew2')"
+      :class="{ 'reading-done': progress.hebrew2, 'phase-selected': selectedPhase === 2 }"
+      @click="handlePhaseClick(2, 'hebrew2')"
     >
       {{ formattedTorahText }}
     </div>
@@ -60,8 +62,8 @@
     <div
       v-if="settings.targumType === 'onkelos'"
       class="targum font-sbl clickable-text"
-      :class="{ 'reading-done': progress.targum }"
-      @click="toggleReading('targum')"
+      :class="{ 'reading-done': progress.targum, 'phase-selected': selectedPhase === 3 }"
+      @click="handlePhaseClick(3, 'targum')"
       v-html="verse.targum"
     ></div>
 
@@ -69,8 +71,8 @@
     <div
       v-if="settings.targumType === 'rashi' && verse.rashi"
       class="rashi clickable-text"
-      :class="{ 'reading-done': progress.targum, 'font-rashi': settings.fontRashi }"
-      @click="toggleReading('targum')"
+      :class="{ 'reading-done': progress.targum, 'font-rashi': settings.fontRashi, 'phase-selected': selectedPhase === 3 }"
+      @click="handlePhaseClick(3, 'targum')"
       v-html="verse.rashi.join('  ')"
     ></div>
 
@@ -78,8 +80,8 @@
     <div
       v-if="settings.targumType === 'english' && verse.english"
       class="english clickable-text"
-      :class="{ 'reading-done': progress.targum }"
-      @click="toggleReading('targum')"
+      :class="{ 'reading-done': progress.targum, 'phase-selected': selectedPhase === 3 }"
+      @click="handlePhaseClick(3, 'targum')"
       v-html="verse.english"
     ></div>
 
@@ -122,8 +124,18 @@ const props = defineProps({
   settings: {
     type: Object,
     required: true
+  },
+  isSelected: {
+    type: Boolean,
+    default: false
+  },
+  selectedPhase: {
+    type: Number,
+    default: 0 // 0 = none, 1 = hebrew1, 2 = hebrew2, 3 = targum
   }
 })
+
+const emit = defineEmits(['focus', 'phase-click'])
 
 const { getVerseProgress, setVerseProgress } = useProgress()
 const { currentPosition, completionFeedback, initializeParsha: initNavigation, isVerseInCurrentAliyah, isFirstVerseOfCurrentAliyah } = useAliyahNavigation()
@@ -185,6 +197,13 @@ const toggleReading = (field) => {
       celebrating.value = false
     }, 800)
   }
+}
+
+// Handle click on a phase - emit to parent which handles toggle + advance logic
+const handlePhaseClick = (phase, field) => {
+  // Check if currently read before emitting
+  const wasRead = progress.value[field]
+  emit('phase-click', { phase, field, wasRead })
 }
 
 const formattedTorahText = computed(() => {
@@ -331,6 +350,21 @@ const formattedTorahText = computed(() => {
   background: #bbf7d0;
 }
 
+/* Phase selected (keyboard navigation) */
+.clickable-text.phase-selected {
+  border-color: #8b5cf6 !important;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%) !important;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 2px 8px rgba(139, 92, 246, 0.2);
+}
+
+.clickable-text.phase-selected:hover {
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5), 0 4px 12px rgba(139, 92, 246, 0.25);
+}
+
+.clickable-text.phase-selected.reading-done {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, #dcfce7 100%) !important;
+}
+
 .torah {
   font-size: 1.5em;
   line-height: 1.8;
@@ -454,5 +488,16 @@ const formattedTorahText = computed(() => {
 .verse.current-verse {
   border-right-color: #d4a574 !important;
   background: linear-gradient(to left, rgba(212, 165, 116, 0.1) 0%, #ffffff 100%) !important;
+}
+
+/* Selected verse (keyboard navigation) */
+.verse.selected {
+  border-right-color: #8b5cf6 !important;
+  background: linear-gradient(to left, rgba(139, 92, 246, 0.08) 0%, #ffffff 100%) !important;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3), 0 4px 12px rgba(139, 92, 246, 0.15) !important;
+}
+
+.verse.selected:hover {
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 6px 16px rgba(139, 92, 246, 0.2) !important;
 }
 </style>

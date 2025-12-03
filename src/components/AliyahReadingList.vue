@@ -17,23 +17,24 @@
       <AliyahReadingItem
         v-for="(item, idx) in readingItems"
         :key="item.id"
-        :data-item-id="item.id"
+        :data-item-index="idx"
         :item="item"
         :isCurrent="isCurrent(item)"
         :isCompleted="isCompleted(item)"
-        @click="jumpToItem(item)"
+        :isSelected="idx === selectedIndex"
+        @click="selectAndJump(idx, item)"
       />
     </div>
 
-    <!-- Spacebar Hint -->
+    <!-- Keyboard Hint -->
     <div class="spacebar-hint">
-      💡 הקש <kbd>SPACE</kbd> כדי לסימן כמתוגמר
+      💡 <kbd>↑</kbd><kbd>↓</kbd> לנווט · <kbd>SPACE</kbd> לסמן כקראתי · <kbd>ENTER</kbd> לפרטים
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useAliyahNavigation } from '../composables/useAliyahNavigation'
 import { useData } from '../composables/useData'
 import AliyahReadingItem from './AliyahReadingItem.vue'
@@ -61,6 +62,7 @@ const {
 } = useAliyahNavigation()
 
 const readingItems = ref([])
+const selectedIndex = ref(0) // For keyboard navigation
 
 /**
  * Generate reading items from aliyot data
@@ -208,21 +210,83 @@ function isCompleted(item) {
 }
 
 /**
- * Jump to a specific reading item
+ * Select and jump to a specific reading item
  */
-function jumpToItem(item) {
-  // This would require a method to set current position to a specific item
-  // For now, just inform the user this will be implemented
-  console.log('Jump to:', item.label)
+function selectAndJump(idx, item) {
+  selectedIndex.value = idx
+  console.log('Selected:', item.label)
 }
 
 /**
- * Handle spacebar press
+ * Scroll selected item into view
+ */
+function scrollToSelected() {
+  nextTick(() => {
+    const el = document.querySelector(`[data-item-index="${selectedIndex.value}"]`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  })
+}
+
+/**
+ * Handle keyboard navigation
  */
 function handleKeydown(event) {
-  if (event.code === 'Space' || event.key === ' ') {
-    event.preventDefault()
-    completeCurrentPhase()
+  // Don't handle if typing in inputs
+  if (event.target.tagName === 'INPUT' || event.target.tagName === 'SELECT' || event.target.tagName === 'TEXTAREA') return
+
+  const maxIndex = readingItems.value.length - 1
+
+  switch (event.key) {
+    case 'ArrowDown':
+      event.preventDefault()
+      event.stopPropagation()
+      if (selectedIndex.value < maxIndex) {
+        selectedIndex.value++
+        scrollToSelected()
+      }
+      break
+    case 'ArrowUp':
+      event.preventDefault()
+      event.stopPropagation()
+      if (selectedIndex.value > 0) {
+        selectedIndex.value--
+        scrollToSelected()
+      }
+      break
+    case 'ArrowRight':
+      event.preventDefault()
+      event.stopPropagation()
+      // Move to next aliyah (3 items per aliyah)
+      if (selectedIndex.value < maxIndex) {
+        selectedIndex.value = Math.min(selectedIndex.value + 3, maxIndex)
+        scrollToSelected()
+      }
+      break
+    case 'ArrowLeft':
+      event.preventDefault()
+      event.stopPropagation()
+      // Move to previous aliyah (3 items per aliyah)
+      if (selectedIndex.value > 0) {
+        selectedIndex.value = Math.max(selectedIndex.value - 3, 0)
+        scrollToSelected()
+      }
+      break
+    case ' ':
+      event.preventDefault()
+      event.stopPropagation()
+      completeCurrentPhase()
+      break
+    case 'Enter':
+      event.preventDefault()
+      event.stopPropagation()
+      // Could expand to show details or enter focus mode in future
+      const item = readingItems.value[selectedIndex.value]
+      if (item) {
+        console.log('Enter pressed on:', item.label)
+      }
+      break
   }
 }
 
