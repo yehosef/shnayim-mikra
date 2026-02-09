@@ -4,7 +4,7 @@
     <div class="progress-section">
       <div class="progress-info">
         <span class="progress-label">התקדמות:</span>
-        <span class="progress-numbers">{{ completedCount }}/21</span>
+        <span class="progress-numbers">{{ completedCount }}/{{ readingItems.length }}</span>
         <span class="progress-percent">{{ progressPercent }}%</span>
       </div>
       <div class="progress-bar">

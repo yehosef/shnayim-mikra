@@ -13,8 +13,12 @@ function loadProgress() {
 
 const progress = ref(loadProgress())
 
+let progressTimer = null
 watch(progress, (val) => {
-  localStorage.setItem('shnayim-progress', JSON.stringify(val))
+  clearTimeout(progressTimer)
+  progressTimer = setTimeout(() => {
+    localStorage.setItem('shnayim-progress', JSON.stringify(val))
+  }, 300)
 }, { deep: true })
 
 export function useProgress() {

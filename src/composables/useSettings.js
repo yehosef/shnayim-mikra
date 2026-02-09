@@ -30,8 +30,12 @@ function loadSettings() {
 
 const settings = ref(loadSettings())
 
+let settingsTimer = null
 watch(settings, (val) => {
-  localStorage.setItem('shnayim-settings', JSON.stringify(val))
+  clearTimeout(settingsTimer)
+  settingsTimer = setTimeout(() => {
+    localStorage.setItem('shnayim-settings', JSON.stringify(val))
+  }, 300)
 }, { deep: true })
 
 export function useSettings() {

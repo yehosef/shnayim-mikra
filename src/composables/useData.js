@@ -23,6 +23,9 @@ function toHebrew(num) {
   return result
 }
 
+// Module-level cache: keyed by chumash name, stores fetched JSON data
+const chumashCache = new Map()
+
 export function useData() {
   const loading = ref(false)
   const error = ref(null)
@@ -39,15 +42,27 @@ export function useData() {
       }
 
       const chumash = parshaDef.chumash
+      let cached = chumashCache.get(chumash)
 
-      // Load all data files in parallel
-      const [torahData, targumData, rashiData, englishData, meforshimIndexData] = await Promise.all([
-        fetch(`/data/torah/${chumash}.json`).then(r => r.json()),
-        fetch(`/data/targum/${chumash}.json`).then(r => r.json()),
-        showRashi ? fetch(`/data/rashi/${chumash}.json`).then(r => r.json()) : Promise.resolve({ text: [] }),
-        fetch(`/data/english/${chumash}.json`).then(r => r.json()),
-        fetch(`/data/meforshim-index/${chumash}.json`).then(r => r.json()).catch(() => ({ text: [] }))
-      ])
+      // Fetch base data (torah, targum, english, meforshim-index) only if not cached
+      if (!cached) {
+        const [torahData, targumData, englishData, meforshimIndexData] = await Promise.all([
+          fetch(`/data/torah/${chumash}.json`).then(r => r.json()),
+          fetch(`/data/targum/${chumash}.json`).then(r => r.json()),
+          fetch(`/data/english/${chumash}.json`).then(r => r.json()),
+          fetch(`/data/meforshim-index/${chumash}.json`).then(r => r.json()).catch(() => ({ text: [] }))
+        ])
+        cached = { torahData, targumData, englishData, meforshimIndexData, rashiData: null }
+        chumashCache.set(chumash, cached)
+      }
+
+      // Fetch rashi data only if needed and not already cached for this chumash
+      if (showRashi && !cached.rashiData) {
+        cached.rashiData = await fetch(`/data/rashi/${chumash}.json`).then(r => r.json())
+      }
+
+      const { torahData, targumData, englishData, meforshimIndexData } = cached
+      const rashiData = showRashi ? cached.rashiData : { text: [] }
 
       // Extract verses for this parsha
       const verses = []
