@@ -135,6 +135,6 @@ A successful solution will:
 2. Add **reading validation** to ensure 2×Hebrew + 1×additional per verse
 3. Implement **PWA features** for offline capability
 4. Add **daily aliyah reminders** option
-5. Create **reset/resume** functionality for new parsha week
+5. Create **reset/resume** functionality for new parsha weeexk
 6. Build **completion summary** view (which verses/aliyot completed)
 7. Add **methodology selector** (pasuk-by-pasuk, paragraph, whole)

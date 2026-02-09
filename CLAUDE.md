@@ -1,92 +1,84 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with this repository.
 
 ## Project Overview
 
-This is a Hebrew Torah study web application called "שניים מקרא ואחד תרגום" (Shnayim Mikra V'Echad Targum). It displays weekly Torah portions (parshiyot) with the original Hebrew text, Aramaic translation (Targum), and various commentaries (meforshim) including Rashi, Ramban, Ibn Ezra, Rashbam, and others.
+Hebrew Torah study web app - "שניים מקרא ואחד תרגום" (Shnayim Mikra V'Echad Targum). Displays weekly Torah portions with Hebrew text (read twice), Aramaic Targum, English translation, and commentaries (Rashi, Ramban, Ibn Ezra, etc.).
 
-The application is built with Nuxt 3 and Vue 3, using RTL (right-to-left) layout for Hebrew text.
+**Stack**: Vue 3 (Composition API with `<script setup>`) + Vite. No backend - all data is static JSON.
 
 ## Development Commands
 
 ```bash
-# Install dependencies
 npm install
-
-# Development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-
-# Generate static site
-npm run generate
+npm run dev      # Dev server (usually port 5173 or 5174)
+npm run build    # Production build to dist/
+npm run preview  # Preview production build
 ```
 
 ## Architecture
 
-### Data Structure
+### Data Files (static JSON in `public/data/`)
 
-The core data is organized by Chumash (Torah book) and stored in `/server/assets/`:
-- `torah/` - Hebrew text of the Torah
-- `targum/` - Aramaic translation (Targum Onkelos)
-- `rashi/` - Rashi commentary
-- `meforshim/` - Additional commentaries (Ramban, Ibn Ezra, Rashbam, Daat Zekenim, Chizkuni, Sforno, Or HaChaim)
-- `meforshim-index/` - Index mapping which commentaries exist for each verse
+| Directory | Content | Size |
+|-----------|---------|------|
+| `torah/` | Hebrew Torah text by chumash | 1.4 MB |
+| `targum/` | Targum Onkelos by chumash | 1.4 MB |
+| `rashi/` | Rashi commentary by chumash | 2.2 MB |
+| `english/` | English translation by chumash | 988 KB |
+| `meforshim/` | Other commentaries (35 files) | ~13 MB |
+| `parshas.json` | Parsha list for selector | small |
+| `aliyot.json` | Aliyah boundaries | 64 KB |
+
+Data is indexed as `text[perek][pasuk]` where both are **0-indexed**.
 
 ### Parsha Configuration
 
-`/server/parshiyot.ts` contains the canonical definition of all Torah portions with:
-- Chumash name (bereishit, shmot, vayikra, bamidbar, dvarim)
-- Start/end positions as `[perek, pasuk]` (chapter, verse)
-- Aliyot positions (seven divisions for Torah reading)
-- Combined parsha definitions (e.g., "vayakhel-pekudei" for years when portions are combined)
+`src/data/parshiyot.js` defines all 54+ Torah portions with:
+- Chumash mapping (bereishit, shmot, vayikra, bamidbar, dvarim)
+- Start/end positions as `[perek, pasuk]` (0-indexed)
+- Aliyah boundaries (note: some parshas have <7 aliyot: eikev=6, nitzavim=6, vzot-haberachah=5)
+- Combined parsha definitions for doubled weeks
 
-### API Endpoints
+### Key Composables (`src/composables/`)
 
-- `GET /api/data/[parasha]?showRashi=true|false` - Returns all verses for a parsha with optional Rashi/meforshim
-- `GET /api/meforshim/[pirush]?parasha=<name>` - Lazy-loads a specific commentary for a parsha
+- **useData.js** - Loads entire chumash JSON per parsha. 5 parallel fetches (Torah, Targum, Rashi, English, Meforshim-index). Builds verse objects with `perekNum`/`pasukNum` (numeric) and `perek`/`pasuk` (Hebrew display).
+- **useParsha.js** - Uses `@hebcal/core` to detect weekly parsha. Returns parsha name for hash routing.
+- **useProgress.js** - Module-level singleton. Progress stored in localStorage key `shnayim-progress`. Structure: `{ [parshaName]: { [chapterNum:verseNum]: { hebrew1, hebrew2, targum } } }`
+- **useSettings.js** - Module-level singleton. Settings in localStorage key `shnayim-settings`. Includes: interfaceLanguage, displayMode, currentAliyah, showRashi, showTrop, location, fontSize, fontRashi, targumType, showEnglish.
+- **useAliyahNavigation.ts** - Only TypeScript file. Manages aliyah-level progress with daily reset.
+- **useDailyAliyah.js** - Daily study schedule (Mon: aliyot 1-2, Tue: 3, etc.)
 
-Both endpoints use `defineCachedEventHandler` with 1-year cache (`maxAge: 60 * 60 * 24 * 365`)
+### Components (`src/components/`)
 
-### Composables
+- **ParshaDisplay.vue** - Main view. Header, aliyah selector, progress bar, verse list. Keyboard nav (arrows, Space, Enter).
+- **VerseView.vue** - Individual verse card. Shows Hebrew x2, Targum, English, Rashi. Click phases to mark read.
+- **FocusMode.vue** - Immersive 3-step study mode. Keyboard: Space/Enter advance, arrows navigate (RTL-aware), 1/2/3 jump step, M mark, U undo, ? help, Esc exit.
+- **SettingsModal.vue** - All settings controls.
+- **ParshaSelector.vue** - Parsha picker dropdown.
 
-- `useParsha()` - Uses `@hebcal/core` to determine current week's Torah portion based on Israeli/Diaspora calendar, filters parshiyot list by current year's cycle
-- `useSettings()` - Cookie-based settings (display order, location, font size, etc.) with 10-year expiration
+### Routing
 
-### Display Modes
+Hash-based: `#bereshit`, `#noach`, etc. App.vue listens to `hashchange`. Falls back to weekly parsha detection.
 
-Three viewing modes controlled by `settings.order`:
-- `pasuk` - Verse-by-verse (default)
-- `parasha` - Grouped by paragraph breaks (פ/ס)
-- `aliya` - Grouped by the seven Torah reading divisions
+### Fonts
 
-### Client-Side Features
+- `public/SBL_Hbrw.ttf` - SBL Hebrew for biblical text (315 KB)
+- `public/Mekorot-Rashi.ttf` - Rashi script for Rashi commentary (17 KB)
+- Both declared as `@font-face` in App.vue
 
-- Automatic scroll to today's aliya (controlled by `settings.aliyaByDay`)
-- Navigation between aliyot with sticky header
-- Lazy-loading of commentaries (click badge to load/toggle)
-- Print-friendly styling (font size override, hide controls)
-- Dark mode support via Nuxt UI
-- Weekly parsha detection and redirect via global middleware
+### Progress Tracking
+
+Verse keys use numeric format: `${perekNum}:${pasukNum}` (0-indexed chapter:verse). Each verse tracks 3 boolean phases: hebrew1, hebrew2, targum. All stored in localStorage.
 
 ## Important Notes
 
-- The app is RTL by default (`htmlAttrs: { dir: 'rtl', lang: 'he' }` in nuxt.config.ts)
-- Uses custom Hebrew fonts: `font-sbl` for biblical text, optional `font-rashi` for Rashi script
-- Sitemap is auto-generated for all parshiyot defined in nuxt.config.ts
-- Google Analytics is enabled only in production (`gtag` module)
-- Uses `@hebcal/core` for Jewish calendar calculations - location setting affects which parsha is current (Israel vs. Diaspora)
-
-## Data Format
-
-Verses are indexed as `[perek, pasuk]` where both are 0-indexed integers:
-- Perek (chapter) starts at 0
-- Pasuk (verse) starts at 0
-- The `toHebrew()` function converts these to Hebrew numerals for display
-
-Commentary data is stored as arrays where `text[perek][pasuk]` returns the commentary for that verse, or an empty array if none exists.
+- App is RTL (`dir="rtl"` on root div in App.vue)
+- Arrow keys are RTL-aware: ArrowRight = backward, ArrowLeft = forward
+- Data uses 0-indexed `[chapter, verse]` arrays
+- `toHebrew()` in `src/utils/hebrewUtils.js` converts numbers to Hebrew numerals for display
+- `removeTrop()` strips cantillation marks (Unicode U+0591-U+05AF range)
+- Multiple `v-html` usages with Sefaria-sourced data (low XSS risk since data is local JSON)
+- No service worker or offline caching currently
+- Single JS bundle (~253 KB), no code splitting configured

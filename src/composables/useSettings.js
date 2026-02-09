@@ -19,7 +19,13 @@ const defaults = {
 
 function loadSettings() {
   const stored = localStorage.getItem('shnayim-settings')
-  return stored ? { ...defaults, ...JSON.parse(stored) } : { ...defaults }
+  if (!stored) return { ...defaults }
+  try {
+    return { ...defaults, ...JSON.parse(stored) }
+  } catch (e) {
+    console.warn('Could not parse saved settings, using defaults:', e)
+    return { ...defaults }
+  }
 }
 
 const settings = ref(loadSettings())

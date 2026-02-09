@@ -5,8 +5,7 @@ export function useParsha() {
   const getWeeklyParsha = (location = 'israel') => {
     try {
       const il = location === 'israel'
-      // Use current year but clamp to valid range
-      const year = Math.min(new Date().getFullYear(), 2024)
+      const year = new Date().getFullYear()
       const sedra = HebrewCalendar.getSedra(year, il)
       const today = new HDate()
       const parsha = sedra.lookup(today)

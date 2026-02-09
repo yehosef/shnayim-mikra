@@ -185,7 +185,7 @@ const totalVerses = computed(() => props.verses.length)
 
 const verseKey = computed(() => {
   const v = currentVerse.value
-  return `${v.perek || ''}:${v.pasuk}`
+  return `${v.perekNum}:${v.pasukNum}`
 })
 
 const progress = computed(() => getVerseProgress(props.parasha, verseKey.value))
@@ -309,11 +309,11 @@ const handleKeydown = (e) => {
       break
     case 'ArrowRight':
       e.preventDefault()
-      nextVerse()
+      previousVerse() // RTL: right = backward
       break
     case 'ArrowLeft':
       e.preventDefault()
-      previousVerse()
+      nextVerse() // RTL: left = forward
       break
     case 'ArrowDown':
       e.preventDefault()

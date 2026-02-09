@@ -174,7 +174,7 @@ const displayVerses = computed(() => {
 const completedCount = computed(() => {
   let count = 0
   for (const verse of displayVerses.value) {
-    const key = `${verse.perek || ''}:${verse.pasuk}`
+    const key = `${verse.perekNum}:${verse.pasukNum}`
     const progress = getVerseProgress(props.parasha, key)
     if (progress.hebrew1 && progress.hebrew2 && progress.targum) {
       count++
@@ -204,7 +204,7 @@ const navigateToParsha = () => {
 }
 
 // Get verse key for progress tracking
-const getVerseKey = (verse) => `${verse.perek || ''}:${verse.pasuk}`
+const getVerseKey = (verse) => `${verse.perekNum}:${verse.pasukNum}`
 
 // Handle click on a phase in VerseView
 const handlePhaseClick = (verseIndex, { phase, field, wasRead }) => {
@@ -293,17 +293,17 @@ const handleKeydown = (e) => {
       break
     case 'ArrowRight':
       e.preventDefault()
-      // Move to next verse (same as FocusMode)
-      if (selectedIndex.value < maxIndex) {
-        selectedIndex.value++
+      // RTL: right = backward (previous verse)
+      if (selectedIndex.value > 0) {
+        selectedIndex.value--
         scrollToSelected()
       }
       break
     case 'ArrowLeft':
       e.preventDefault()
-      // Move to previous verse (same as FocusMode)
-      if (selectedIndex.value > 0) {
-        selectedIndex.value--
+      // RTL: left = forward (next verse)
+      if (selectedIndex.value < maxIndex) {
+        selectedIndex.value++
         scrollToSelected()
       }
       break

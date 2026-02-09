@@ -5,7 +5,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useParsha } from './composables/useParsha'
 import { useSettings } from './composables/useSettings'
 import ParshaDisplay from './components/ParshaDisplay.vue'
@@ -33,6 +33,10 @@ onMounted(() => {
   updateParsha()
   window.addEventListener('hashchange', updateParsha)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('hashchange', updateParsha)
+})
 </script>
 
 <style>
@@ -49,7 +53,14 @@ body {
 
 @font-face {
   font-family: 'SBL Hebrew';
-  src: url('/SBLHebrew.woff2') format('woff2');
+  src: url('/SBL_Hbrw.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Rashi';
+  src: url('/Mekorot-Rashi.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }

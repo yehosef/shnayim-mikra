@@ -2,7 +2,13 @@ import { ref, watch } from 'vue'
 
 function loadProgress() {
   const stored = localStorage.getItem('shnayim-progress')
-  return stored ? JSON.parse(stored) : {}
+  if (!stored) return {}
+  try {
+    return JSON.parse(stored)
+  } catch (e) {
+    console.warn('Could not parse saved progress, starting fresh:', e)
+    return {}
+  }
 }
 
 const progress = ref(loadProgress())

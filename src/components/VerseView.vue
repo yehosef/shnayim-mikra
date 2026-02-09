@@ -140,7 +140,7 @@ const emit = defineEmits(['focus', 'phase-click'])
 const { getVerseProgress, setVerseProgress } = useProgress()
 const { currentPosition, completionFeedback, initializeParsha: initNavigation, isVerseInCurrentAliyah, isFirstVerseOfCurrentAliyah } = useAliyahNavigation()
 
-const verseKey = computed(() => `${props.verse.perek || ''}:${props.verse.pasuk}`)
+const verseKey = computed(() => `${props.verse.perekNum}:${props.verse.pasukNum}`)
 const progress = computed(() => getVerseProgress(props.parasha, verseKey.value))
 const celebrating = ref(false)
 const showingCompletion = ref(false)
