@@ -56,6 +56,7 @@ body {
   src: url('/SBL_Hbrw.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 @font-face {
@@ -63,6 +64,7 @@ body {
   src: url('/Mekorot-Rashi.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
 .font-sbl {

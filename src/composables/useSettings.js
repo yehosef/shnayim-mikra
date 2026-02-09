@@ -35,8 +35,16 @@ watch(settings, (val) => {
   clearTimeout(settingsTimer)
   settingsTimer = setTimeout(() => {
     localStorage.setItem('shnayim-settings', JSON.stringify(val))
+    settingsTimer = null
   }, 300)
 }, { deep: true })
+
+window.addEventListener('beforeunload', () => {
+  if (settingsTimer) {
+    clearTimeout(settingsTimer)
+    localStorage.setItem('shnayim-settings', JSON.stringify(settings.value))
+  }
+})
 
 export function useSettings() {
   return { settings }

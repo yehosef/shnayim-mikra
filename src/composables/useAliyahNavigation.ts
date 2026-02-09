@@ -1,7 +1,9 @@
 /**
- * Aliyah Navigation Composable
+ * Aliyah Navigation Composable (Singleton)
  * Manages Torah study tracking at the aliyah level with three phases:
  * Rishon (first reading), Sheni (second reading), Shlishi (Targum reading)
+ *
+ * All reactive state lives at module level so every caller shares the same instance.
  */
 
 import { ref, computed, watch } from 'vue'
@@ -40,52 +42,68 @@ const PHASE_ORDER: Phase[] = ['rishon', 'sheni', 'shlishi']
 // Cache for aliyot data
 let aliyotDataCache: Record<string, AliyahData[]> | null = null
 
+// --------------- Module-level singleton state ---------------
+
+function loadProgressState(): AliyahProgressState {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (!stored) return {}
+    const parsed = JSON.parse(stored)
+    return parsed.state || {}
+  } catch (e) {
+    console.warn('Failed to load aliyah progress state:', e)
+    return {}
+  }
+}
+
+const progressState = ref<AliyahProgressState>(loadProgressState())
+const currentParsha = ref<string>('')
+const aliyotData = ref<AliyahData[]>([])
+const completionFeedback = ref<CompletionFeedback>({
+  isVisible: false,
+  position: null
+})
+
+// Debounced save with beforeunload flush
+let saveTimer: ReturnType<typeof setTimeout> | null = null
+
+function saveProgressState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      version: STORAGE_STATE_VERSION,
+      state: progressState.value
+    }))
+  } catch (e) {
+    console.warn('Failed to save aliyah progress state:', e)
+  }
+}
+
+// Auto-save on state changes (single watcher, set up once at module level)
+watch(progressState, () => {
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => {
+    saveProgressState()
+    saveTimer = null
+  }, 300)
+}, { deep: true })
+
+// Flush pending save on tab close
+window.addEventListener('beforeunload', () => {
+  if (saveTimer) {
+    clearTimeout(saveTimer)
+    saveProgressState()
+  }
+})
+
+// --------------- Composable function ---------------
+
 export function useAliyahNavigation() {
-  // State
-  const progressState = ref<AliyahProgressState>(loadProgressState())
-  const currentParsha = ref<string>('')
-  const aliyotData = ref<AliyahData[]>([])
-  const completionFeedback = ref<CompletionFeedback>({
-    isVisible: false,
-    position: null
-  })
-
-  /**
-   * Load progress state from localStorage
-   */
-  function loadProgressState(): AliyahProgressState {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (!stored) return {}
-
-      const parsed = JSON.parse(stored)
-      return parsed.state || {}
-    } catch (e) {
-      console.warn('Failed to load aliyah progress state:', e)
-      return {}
-    }
-  }
-
-  /**
-   * Save progress state to localStorage
-   */
-  function saveProgressState() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        version: STORAGE_STATE_VERSION,
-        state: progressState.value
-      }))
-    } catch (e) {
-      console.warn('Failed to save aliyah progress state:', e)
-    }
-  }
 
   /**
    * Load aliyot data from JSON file
    */
   async function loadAliyotData(parsha: string): Promise<AliyahData[]> {
     try {
-      // Check cache first
       if (aliyotDataCache && aliyotDataCache[parsha]) {
         return aliyotDataCache[parsha]
       }
@@ -93,7 +111,6 @@ export function useAliyahNavigation() {
       const response = await fetch('/data/aliyot.json')
       const data = await response.json()
 
-      // Initialize cache if needed
       if (!aliyotDataCache) {
         aliyotDataCache = data
       }
@@ -111,7 +128,6 @@ export function useAliyahNavigation() {
   async function initializeParsha(parsha: string) {
     currentParsha.value = parsha
 
-    // Load aliyot data
     const data = await loadAliyotData(parsha)
     aliyotData.value = data
 
@@ -122,7 +138,6 @@ export function useAliyahNavigation() {
         completedPhases: []
       }
     } else {
-      // Check if it's a new day - if so, reset progress
       const lastDate = progressState.value[parsha].date
       const today = getTodayDateString()
       if (lastDate !== today) {
@@ -137,9 +152,6 @@ export function useAliyahNavigation() {
     saveProgressState()
   }
 
-  /**
-   * Get current position for the active parsha
-   */
   function getCurrentPosition(): AliyahPosition | null {
     if (!currentParsha.value || !progressState.value[currentParsha.value]) {
       return null
@@ -147,9 +159,6 @@ export function useAliyahNavigation() {
     return progressState.value[currentParsha.value].currentPosition
   }
 
-  /**
-   * Set current position
-   */
   function setCurrentPosition(position: AliyahPosition | null) {
     if (!currentParsha.value || !progressState.value[currentParsha.value]) {
       return
@@ -158,21 +167,14 @@ export function useAliyahNavigation() {
     saveProgressState()
   }
 
-  /**
-   * Check if an aliyah phase is completed
-   */
   function isPhaseCompleted(aliyahNum: number, phase: Phase): boolean {
     if (!currentParsha.value || !progressState.value[currentParsha.value]) {
       return false
     }
-
     const completed = progressState.value[currentParsha.value].completedPhases
     return completed.some(p => p.aliyahNum === aliyahNum && p.phase === phase)
   }
 
-  /**
-   * Mark current phase as complete and advance to next
-   */
   function completeCurrentPhase() {
     if (!currentParsha.value || !progressState.value[currentParsha.value]) {
       return
@@ -183,25 +185,18 @@ export function useAliyahNavigation() {
 
     const completed = progressState.value[currentParsha.value].completedPhases
 
-    // Don't add if already completed
     if (!isPhaseCompleted(current.aliyahNum, current.phase)) {
       completed.push({ aliyahNum: current.aliyahNum, phase: current.phase })
     }
 
-    // Show feedback
     showCompletionFeedback(current)
-
     saveProgressState()
 
-    // Auto-advance after delay
     setTimeout(() => {
       advanceToNextPhase()
-    }, 600) // 600ms delay as per design
+    }, 600)
   }
 
-  /**
-   * Advance to next phase or aliyah
-   */
   function advanceToNextPhase() {
     if (!currentParsha.value || !progressState.value[currentParsha.value]) {
       return
@@ -213,12 +208,10 @@ export function useAliyahNavigation() {
     let nextAliyahNum = current.aliyahNum
     let nextPhaseIndex = PHASE_ORDER.indexOf(current.phase) + 1
 
-    // If we've completed all phases of this aliyah, move to next aliyah
     if (nextPhaseIndex >= PHASE_ORDER.length) {
       nextAliyahNum++
       nextPhaseIndex = 0
 
-      // If we've completed all aliyot, wrap to first aliyah
       if (nextAliyahNum > aliyotData.value.length) {
         nextAliyahNum = 1
       }
@@ -226,14 +219,9 @@ export function useAliyahNavigation() {
 
     const nextPhase = PHASE_ORDER[nextPhaseIndex]
     setCurrentPosition({ aliyahNum: nextAliyahNum, phase: nextPhase })
-
-    // Scroll to first verse of current aliyah
     scrollToAliyah(nextAliyahNum)
   }
 
-  /**
-   * Get aliyah data for a specific aliyah number
-   */
   function getAliyahData(aliyahNum: number): AliyahData | null {
     if (!aliyotData.value || aliyahNum < 1 || aliyahNum > aliyotData.value.length) {
       return null
@@ -241,20 +229,16 @@ export function useAliyahNavigation() {
     return aliyotData.value[aliyahNum - 1]
   }
 
-  /**
-   * Check if a verse (perek, pasuk) is in the current aliyah
-   */
   function isVerseInCurrentAliyah(perek: number, pasuk: number): boolean {
     const current = getCurrentPosition()
     if (!current) return false
 
-    const aliyahData = getAliyahData(current.aliyahNum)
-    if (!aliyahData) return false
+    const ad = getAliyahData(current.aliyahNum)
+    if (!ad) return false
 
-    const [startPerek, startPasuk] = aliyahData.start
-    const [endPerek, endPasuk] = aliyahData.end
+    const [startPerek, startPasuk] = ad.start
+    const [endPerek, endPasuk] = ad.end
 
-    // Check if verse is within range
     if (perek < startPerek || perek > endPerek) return false
     if (perek === startPerek && pasuk < startPasuk) return false
     if (perek === endPerek && pasuk > endPasuk) return false
@@ -262,36 +246,24 @@ export function useAliyahNavigation() {
     return true
   }
 
-  /**
-   * Get current aliyah number
-   */
   function getCurrentAliyahNum(): number {
     const current = getCurrentPosition()
     return current?.aliyahNum || 1
   }
 
-  /**
-   * Get current phase
-   */
   function getCurrentPhase(): Phase {
     const current = getCurrentPosition()
     return current?.phase || 'rishon'
   }
 
-  /**
-   * Get display text for phase (Hebrew or transliterated)
-   */
   function getPhaseDisplay(phase: Phase): string {
     switch (phase) {
-      case 'rishon': return 'ראשון'
-      case 'sheni': return 'שני'
-      case 'shlishi': return 'שלישי'
+      case 'rishon': return '\u05E8\u05D0\u05E9\u05D5\u05DF'
+      case 'sheni': return '\u05E9\u05E0\u05D9'
+      case 'shlishi': return '\u05E9\u05DC\u05D9\u05E9\u05D9'
     }
   }
 
-  /**
-   * Get progress display (e.g., "Aliyah 3 of 7, Rishon")
-   */
   function getProgressDisplay(): string {
     const aliyahNum = getCurrentAliyahNum()
     const phase = getCurrentPhase()
@@ -299,16 +271,12 @@ export function useAliyahNavigation() {
     return `Aliyah ${aliyahNum} of ${totalAliyot}, ${getPhaseDisplay(phase)}`
   }
 
-  /**
-   * Show completion feedback animation
-   */
   function showCompletionFeedback(position: AliyahPosition) {
     completionFeedback.value = {
       isVisible: true,
       position: { ...position }
     }
 
-    // Hide after animation completes
     setTimeout(() => {
       completionFeedback.value = {
         isVisible: false,
@@ -317,14 +285,11 @@ export function useAliyahNavigation() {
     }, 400)
   }
 
-  /**
-   * Scroll to first verse of specified aliyah
-   */
   function scrollToAliyah(aliyahNum: number) {
-    const aliyahData = getAliyahData(aliyahNum)
-    if (!aliyahData) return
+    const ad = getAliyahData(aliyahNum)
+    if (!ad) return
 
-    const [perek, pasuk] = aliyahData.start
+    const [perek, pasuk] = ad.start
     const selector = `[data-perek="${perek}"][data-pasuk="${pasuk}"]`
     const element = document.querySelector(selector)
 
@@ -333,17 +298,11 @@ export function useAliyahNavigation() {
     }
   }
 
-  /**
-   * Get today's date string in YYYY-MM-DD format
-   */
   function getTodayDateString(): string {
     const today = new Date()
     return today.toISOString().split('T')[0]
   }
 
-  /**
-   * Handle spacebar key press
-   */
   function handleSpacebarPress(event: KeyboardEvent) {
     if (event.code === 'Space' || event.key === ' ') {
       event.preventDefault()
@@ -351,9 +310,6 @@ export function useAliyahNavigation() {
     }
   }
 
-  /**
-   * Reset progress for current parsha
-   */
   function resetProgress() {
     if (!currentParsha.value || !progressState.value[currentParsha.value]) {
       return
@@ -368,23 +324,17 @@ export function useAliyahNavigation() {
     saveProgressState()
   }
 
-  /**
-   * Check if a verse is the first verse of the current aliyah
-   */
   function isFirstVerseOfCurrentAliyah(perek: number, pasuk: number): boolean {
     const current = getCurrentPosition()
     if (!current) return false
 
-    const aliyahData = getAliyahData(current.aliyahNum)
-    if (!aliyahData) return false
+    const ad = getAliyahData(current.aliyahNum)
+    if (!ad) return false
 
-    const [startPerek, startPasuk] = aliyahData.start
+    const [startPerek, startPasuk] = ad.start
     return perek === startPerek && pasuk === startPasuk
   }
 
-  /**
-   * Get all aliyot with completion status
-   */
   function getAliyotWithStatus() {
     return aliyotData.value.map((aliyah, idx) => ({
       ...aliyah,
@@ -398,11 +348,8 @@ export function useAliyahNavigation() {
     }))
   }
 
-  // Auto-save on state changes
-  watch(progressState, saveProgressState, { deep: true })
-
   return {
-    // State
+    // State (shared across all callers)
     currentPosition: computed(() => getCurrentPosition()),
     completionFeedback: computed(() => completionFeedback.value),
     progressState: computed(() => progressState.value),

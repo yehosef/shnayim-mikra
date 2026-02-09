@@ -94,7 +94,7 @@ const targumLabel = computed(() => {
 
 const verseKey = computed(() => {
   const v = currentVerse.value
-  return `${v.perek || ''}:${v.pasuk}`
+  return `${v.perekNum}:${v.pasukNum}`
 })
 
 const formattedTorahText = computed(() => {

@@ -18,8 +18,16 @@ watch(progress, (val) => {
   clearTimeout(progressTimer)
   progressTimer = setTimeout(() => {
     localStorage.setItem('shnayim-progress', JSON.stringify(val))
+    progressTimer = null
   }, 300)
 }, { deep: true })
+
+window.addEventListener('beforeunload', () => {
+  if (progressTimer) {
+    clearTimeout(progressTimer)
+    localStorage.setItem('shnayim-progress', JSON.stringify(progress.value))
+  }
+})
 
 export function useProgress() {
   const getVerseProgress = (parasha, verseKey) => {

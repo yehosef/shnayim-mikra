@@ -73,13 +73,38 @@
             <option value="chul">{{ isHebrew ? 'חו"ל' : 'Diaspora' }}</option>
           </select>
         </label>
+
+        <!-- Offline Download -->
+        <div class="offline-section">
+          <div class="offline-label">{{ isHebrew ? 'שימוש ללא רשת:' : 'Offline Use:' }}</div>
+          <div v-if="offlineStatus === 'ready'" class="offline-ready">
+            {{ isHebrew ? 'מוכן לשימוש ללא רשת' : 'Ready for offline use' }}
+          </div>
+          <div v-else-if="offlineStatus === 'downloading'" class="offline-progress">
+            <div class="offline-progress-text">
+              {{ isHebrew ? 'מוריד...' : 'Downloading...' }} {{ offlineDownloaded }}/{{ offlineTotal }}
+            </div>
+            <div class="offline-progress-track">
+              <div class="offline-progress-fill" :style="{ width: offlinePercent + '%' }"></div>
+            </div>
+          </div>
+          <div v-else-if="offlineStatus === 'error'" class="offline-error">
+            {{ isHebrew ? 'שגיאה בהורדה' : 'Download failed' }}
+            <button class="offline-btn" @click="downloadForOffline">
+              {{ isHebrew ? 'נסה שוב' : 'Retry' }}
+            </button>
+          </div>
+          <button v-else class="offline-btn" @click="downloadForOffline">
+            {{ isHebrew ? 'הורד לשימוש ללא רשת' : 'Download for Offline' }}
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useSettings } from '../composables/useSettings'
 
 const props = defineProps({
@@ -94,6 +119,53 @@ defineEmits(['close'])
 const { settings } = useSettings()
 
 const isHebrew = computed(() => settings.value.interfaceLanguage === 'he')
+
+// Offline download state
+const offlineStatus = ref('idle') // idle | downloading | ready | error
+const offlineDownloaded = ref(0)
+const offlineTotal = ref(0)
+
+const offlinePercent = computed(() => {
+  if (offlineTotal.value === 0) return 0
+  return Math.round((offlineDownloaded.value / offlineTotal.value) * 100)
+})
+
+const downloadForOffline = async () => {
+  const chumashim = ['bereishit', 'shmot', 'vayikra', 'bamidbar', 'dvarim']
+  const baseDirs = ['torah', 'targum', 'rashi', 'english', 'meforshim-index']
+  const meforshim = ['chizkuni', 'daat-zekenim', 'iben-ezra', 'or-hachaim', 'ramban', 'rashbam', 'sforno']
+
+  const urls = ['/data/aliyot.json']
+
+  for (const chumash of chumashim) {
+    for (const dir of baseDirs) {
+      urls.push(`/data/${dir}/${chumash}.json`)
+    }
+    for (const m of meforshim) {
+      urls.push(`/data/meforshim/${m}/${chumash}.json`)
+    }
+  }
+
+  offlineTotal.value = urls.length
+  offlineDownloaded.value = 0
+  offlineStatus.value = 'downloading'
+
+  try {
+    // Fetch in batches of 5 to avoid overwhelming the browser
+    for (let i = 0; i < urls.length; i += 5) {
+      const batch = urls.slice(i, i + 5)
+      await Promise.all(batch.map(url =>
+        fetch(url).then(() => {
+          offlineDownloaded.value++
+        })
+      ))
+    }
+    offlineStatus.value = 'ready'
+  } catch (e) {
+    console.error('Offline download failed:', e)
+    offlineStatus.value = 'error'
+  }
+}
 </script>
 
 <style scoped>
@@ -187,5 +259,67 @@ const isHebrew = computed(() => settings.value.interfaceLanguage === 'he')
 .settings-content input[type="range"] {
   width: 100%;
   margin-top: 0.5rem;
+}
+
+.offline-section {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.offline-label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.offline-btn {
+  padding: 0.5rem 1rem;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: background 0.2s;
+}
+
+.offline-btn:hover {
+  background: #2563eb;
+}
+
+.offline-progress-text {
+  font-size: 0.9rem;
+  color: #4b5563;
+  margin-bottom: 0.35rem;
+}
+
+.offline-progress-track {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.offline-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.offline-ready {
+  color: #059669;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.offline-error {
+  color: #dc2626;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 </style>

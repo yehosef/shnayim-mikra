@@ -9,7 +9,7 @@
           <div v-if="settings.displayMode === 'aliyah'" class="aliyah-selector">
             <span class="aliyah-label">{{ isHebrew ? 'עליה:' : 'Aliyah:' }}</span>
             <select v-model="settings.currentAliyah" class="aliyah-dropdown">
-              <option v-for="n in 7" :key="n" :value="n">{{ aliyahNames[n - 1] }}</option>
+              <option v-for="n in aliyahCount" :key="n" :value="n">{{ aliyahNames[n - 1] }}</option>
             </select>
           </div>
           <!-- Progress Indicator -->
@@ -118,6 +118,12 @@ const parashaHe = computed(() => {
 
 const isHebrew = computed(() => settings.value.interfaceLanguage === 'he')
 
+// Number of aliyot for the current parsha (varies: most have 7, some have 5 or 6)
+const aliyahCount = computed(() => {
+  const parshaDef = parshiyotData[props.parasha]
+  return parshaDef ? parshaDef.aliyot.length : 7
+})
+
 // Get aliyah boundaries for filtering
 const aliyahBoundaries = computed(() => {
   const parshaDef = parshiyotData[props.parasha]
@@ -186,6 +192,13 @@ const completedCount = computed(() => {
 const progressPercent = computed(() => {
   if (displayVerses.value.length === 0) return 0
   return Math.round((completedCount.value / displayVerses.value.length) * 100)
+})
+
+// Clamp currentAliyah when parsha changes or aliyahCount updates
+watch(aliyahCount, (count) => {
+  if (settings.value.currentAliyah > count) {
+    settings.value.currentAliyah = count
+  }
 })
 
 // Load data when parasha changes

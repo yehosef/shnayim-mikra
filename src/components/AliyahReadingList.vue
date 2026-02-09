@@ -167,17 +167,17 @@ function toHebrewNum(num) {
   const tens = ['', 'י', 'כ', 'ל', 'מ', 'נ', 'ס', 'ע', 'פ', 'צ']
   const hundreds = ['', 'ק', 'ר', 'ש', 'ת']
 
-  if (num === 15 || num === 16) {
-    // Special cases for 15 and 16
-    return ones[9] + ones[num - 9]
-  }
-
   let result = ''
 
   if (num >= 100) {
     const h = Math.floor(num / 100)
     result += hundreds[h]
     num = num % 100
+  }
+
+  if (num === 15 || num === 16) {
+    result += ones[9] + ones[num - 9]
+    return result
   }
 
   if (num >= 10) {
