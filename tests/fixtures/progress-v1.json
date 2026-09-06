@@ -1,0 +1,17 @@
+{
+  "bereshit": {
+    "0:0": { "hebrew1": true, "hebrew2": true, "targum": true },
+    "0:1": { "hebrew1": true, "hebrew2": true, "targum": true },
+    "0:2": { "hebrew1": true, "hebrew2": true, "targum": false },
+    "0:3": { "hebrew1": true, "hebrew2": false, "targum": false },
+    "0:30": { "hebrew1": true, "hebrew2": true, "targum": true },
+    "1:0": { "hebrew1": false, "hebrew2": false, "targum": false }
+  },
+  "noach": {
+    "5:8": { "hebrew1": true, "hebrew2": true, "targum": true },
+    "5:9": { "hebrew1": true, "hebrew2": false, "targum": false }
+  },
+  "matot-masei": {
+    "29:1": { "hebrew1": true, "hebrew2": true, "targum": true }
+  }
+}
