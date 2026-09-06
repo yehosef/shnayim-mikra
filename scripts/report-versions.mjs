@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * report-versions.mjs — list Sefaria versions (title, language, licence,
+ * report-versions.mjs — list Sefaria versions (GET /api/texts/versions/{index}) (title, language, licence,
  * source, status) for every text layer this app ships, so licences can be
  * checked before fetching. Read-only; writes scripts/out/versions-*.json
  * (gitignored) and prints a summary table.
@@ -26,6 +26,9 @@ const LAYERS = {
 }
 
 const UA = 'shnayim-mikra-build (https://github.com/yehosef/shnayim-mikra)'
+// Sefaria geo-redirects Israeli traffic to sefaria.org.il and mangles /api/v3
+// paths on the way; set SEFARIA_BASE=https://www.sefaria.org.il there.
+const BASE = (process.env.SEFARIA_BASE || 'https://www.sefaria.org').replace(/\/$/, '')
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 async function getJson(url, tries = 3) {
@@ -45,7 +48,7 @@ for (const b of BOOKS) for (const fn of Object.values(LAYERS)) indexes.add(fn(b)
 
 const rows = []
 for (const index of only ? [only] : [...indexes]) {
-  const url = `https://www.sefaria.org/api/v3/versions/${encodeURIComponent(index)}`
+  const url = `${BASE}/api/texts/versions/${encodeURIComponent(index)}`
   let versions
   try {
     versions = await getJson(url)

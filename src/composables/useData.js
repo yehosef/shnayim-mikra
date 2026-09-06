@@ -12,6 +12,16 @@ async function fetchJson(url) {
   return r.json()
 }
 
+/** Optional layer: null on any failure instead of throwing. */
+async function fetchOptional(url) {
+  try {
+    return await fetchJson(url)
+  } catch (e) {
+    console.warn(`Optional layer unavailable: ${e.message}`)
+    return null
+  }
+}
+
 // Module-level cache: keyed by chumash name, stores fetched JSON data
 const chumashCache = new Map()
 
@@ -37,27 +47,34 @@ export function useData() {
       const chumash = parshaDef.chumash
       let cached = chumashCache.get(chumash)
 
-      // Fetch base data (torah, targum, english) only if not cached
+      // Torah + Targum are required (precached by the service worker, so
+      // available offline from first install). English and Rashi are optional
+      // layers: if they cannot be fetched (offline, never downloaded) the
+      // parsha still loads without them and we retry on the next load.
       if (!cached) {
-        const [torahData, targumData, englishData] = await Promise.all([
+        const [torahData, targumData] = await Promise.all([
           fetchJson(`/data/torah/${chumash}.json`),
-          fetchJson(`/data/targum/${chumash}.json`),
-          fetchJson(`/data/english/${chumash}.json`)
+          fetchJson(`/data/targum/${chumash}.json`)
         ])
-        cached = { torahData, targumData, englishData, rashiData: null }
+        cached = { torahData, targumData, englishData: null, rashiData: null }
         chumashCache.set(chumash, cached)
+      }
+
+      if (!cached.englishData) {
+        cached.englishData = await fetchOptional(`/data/english/${chumash}.json`)
       }
 
       // Fetch rashi data only if needed and not already cached for this chumash
       if (showRashi && !cached.rashiData) {
-        cached.rashiData = await fetchJson(`/data/rashi/${chumash}.json`)
+        cached.rashiData = await fetchOptional(`/data/rashi/${chumash}.json`)
       }
 
       // A newer loadParsha() call superseded this one: drop the result
       if (token !== loadToken) return []
 
-      const { torahData, targumData, englishData } = cached
-      const rashiData = showRashi ? cached.rashiData : { text: [] }
+      const { torahData, targumData } = cached
+      const englishData = cached.englishData || { text: [] }
+      const rashiData = (showRashi && cached.rashiData) || { text: [] }
 
       // Extract verses for this parsha
       const verses = []

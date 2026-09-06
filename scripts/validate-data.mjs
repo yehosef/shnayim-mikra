@@ -15,8 +15,8 @@
  *  5. aliyot.json re-asserts the generator rules (coverage, contiguity, counts)
  *  6. no '<' in torah text
  *
- * Mode: STRICT=1 (or --strict) makes every finding fatal. Otherwise findings
- * are printed as warnings and the exit code is 0.
+ * Mode: findings are fatal (exit 1) by default. WARN=1 (or --warn) prints
+ * them as warnings and exits 0 — only for local data work, never in CI.
  */
 
 import fs from 'node:fs'
@@ -27,7 +27,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 const DATA = path.join(ROOT, 'public', 'data')
 
-const STRICT = process.env.STRICT === '1' || process.argv.includes('--strict')
+const STRICT = !(process.env.WARN === '1' || process.argv.includes('--warn'))
 
 const BOOKS = ['bereishit', 'shmot', 'vayikra', 'bamidbar', 'dvarim']
 const LICENSE_ALLOWLIST = [

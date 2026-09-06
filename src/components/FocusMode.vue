@@ -77,21 +77,21 @@
 
       <!-- Targum (Step 3) -->
       <div
-        v-if="currentStep === 3 && settings.targumType === 'onkelos'"
+        v-if="currentStep === 3 && targumLayer === 'onkelos'"
         class="text-display targum font-sbl"
         :class="{ 'step-complete': progress.targum }"
         v-html="currentVerse.targum"
       ></div>
 
       <div
-        v-if="currentStep === 3 && settings.targumType === 'rashi' && currentVerse.rashi"
+        v-if="currentStep === 3 && targumLayer === 'rashi'"
         class="text-display targum"
         :class="{ 'step-complete': progress.targum, 'font-rashi': settings.fontRashi }"
         v-html="currentVerse.rashi.join('  ')"
       ></div>
 
       <div
-        v-if="currentStep === 3 && settings.targumType === 'english'"
+        v-if="currentStep === 3 && targumLayer === 'english'"
         class="text-display targum english-targum"
         :class="{ 'step-complete': progress.targum }"
       >
@@ -223,6 +223,16 @@ const formattedTorahText = computed(() => {
   return formatHebrewText(currentVerse.value.torah, props.settings.showTrop)
 })
 
+// Layer shown as "targum" for this verse; Onkelos when the chosen layer is
+// unavailable (offline before download, or a verse with no Rashi).
+const targumLayer = computed(() => {
+  const type = props.settings.targumType
+  const v = currentVerse.value
+  if (type === 'rashi' && v.rashi?.length) return 'rashi'
+  if (type === 'english' && v.english) return 'english'
+  return 'onkelos'
+})
+
 const stepLabel = computed(() => {
   if (currentStep.value === 1) return 'קריאה ראשונה'
   if (currentStep.value === 2) return 'קריאה שנייה'
@@ -231,7 +241,7 @@ const stepLabel = computed(() => {
     rashi: 'רש"י',
     english: 'English Translation'
   }
-  return labels[props.settings.targumType] || 'תרגום'
+  return labels[targumLayer.value] || 'תרגום'
 })
 
 // Determine starting step: the pointer's phase when the pointer is on this

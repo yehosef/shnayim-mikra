@@ -49,6 +49,9 @@ const RASHI_CHAIN = [
 ]
 
 const UA = 'shnayim-mikra-build (https://github.com/yehosef/shnayim-mikra)'
+// Sefaria geo-redirects Israeli traffic to sefaria.org.il and mangles /api/v3
+// paths on the way; set SEFARIA_BASE=https://www.sefaria.org.il there.
+const BASE = (process.env.SEFARIA_BASE || 'https://www.sefaria.org').replace(/\/$/, '')
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 
 function licenseOk(license) {
@@ -77,9 +80,10 @@ async function getJson(url, tries = 3) {
 }
 
 async function chooseVersion(index, lang, chain) {
-  const versions = await getJson(`https://www.sefaria.org/api/v3/versions/${encodeURIComponent(index)}`)
+  const versions = await getJson(`${BASE}/api/texts/versions/${encodeURIComponent(index)}`)
+  const code = lang === 'hebrew' ? 'he' : 'en' // the versions list uses ISO codes
   for (const title of chain) {
-    const v = versions.find(x => x.language === lang && x.versionTitle === title)
+    const v = versions.find(x => x.language === code && x.versionTitle === title)
     if (!v) continue
     if (!licenseOk(v.license)) {
       console.error(`  ${index}: "${title}" licence "${v.license}" not allowlisted — skipping`)
@@ -116,7 +120,7 @@ async function fetchLayer(layer, books) {
     const text = []
     for (let ch = 1; ch <= chapters; ch++) {
       const ref = `${index} ${ch}`
-      const url = `https://www.sefaria.org/api/v3/texts/${encodeURIComponent(ref)}?version=${lang}|${encodeURIComponent(version.versionTitle)}&return_format=${fmt}`
+      const url = `${BASE}/api/v3/texts/${encodeURIComponent(ref)}?version=${lang}|${encodeURIComponent(version.versionTitle)}&return_format=${fmt}`
       const json = await getJson(url)
       const v = json.versions?.[0]
       if (!v) throw new Error(`${ref}: no versions in response`)

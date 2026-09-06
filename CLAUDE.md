@@ -60,14 +60,16 @@ are matched via `hebcalName` in `parshiyot.js` after stripping apostrophes on bo
 |---|---|---|
 | `torah/*.json` | `text[ch][v]` string | plain Hebrew with trop, no HTML |
 | `targum/*.json` | `text[ch][v]` string | verse-aligned with torah |
-| `english/*.json` | `text[ch][v]` string (HTML) | refetch via `scripts/fetch-sefaria.mjs` |
-| `rashi/*.json` | `text[ch][v]` string[] (HTML) | short chapter arrays are legal (trailing truncation) |
+| `english/*.json` | `text[ch][v]` string (HTML) | JPS 2006 Contemporary Torah, CC-BY-NC, footnotes stripped |
+| `rashi/*.json` | `text[ch][v]` string[] (HTML) | Metsudah 2009, CC-BY; short chapter arrays are legal (trailing verses with no Rashi, e.g. Deut 8:9–20) |
 | `aliyot.json` | generated, see above | |
 
 Meforshim (7 commentators + index) live in `data-v2/` — versioned, out of deploy and PWA. v2 work.
 
-`scripts/validate-data.mjs` checks alignment, provenance, and the aliyot rules. `STRICT=1` makes
-findings fatal. `scripts/report-versions.mjs` lists Sefaria versions/licences (network).
+`scripts/validate-data.mjs` checks alignment, provenance, and the aliyot rules; findings are fatal
+(`WARN=1` downgrades them for local data work only). `scripts/report-versions.mjs` lists Sefaria
+versions/licences and `scripts/fetch-sefaria.mjs` refetches english/rashi with a licence gate. From
+Israel set `SEFARIA_BASE=https://www.sefaria.org.il` (sefaria.org geo-redirects and mangles API paths).
 
 ## Style contract (enforced by `scripts/check-styles.mjs`)
 

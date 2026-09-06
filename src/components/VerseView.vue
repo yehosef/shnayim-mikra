@@ -54,7 +54,7 @@
 
     <!-- Targum - Clickable (shown if Onkelos is selected as targum type) -->
     <div
-      v-if="settings.targumType === 'onkelos'"
+      v-if="targumLayer === 'onkelos'"
       class="targum font-sbl clickable-text"
       :class="{ 'reading-done': progress.targum, 'phase-selected': selectedPhase === 3 }"
       @click="handlePhaseClick(3, 'targum')"
@@ -63,7 +63,7 @@
 
     <!-- Rashi - Clickable (shown if selected as targum type) -->
     <div
-      v-if="settings.targumType === 'rashi' && verse.rashi?.length"
+      v-if="targumLayer === 'rashi'"
       class="rashi clickable-text"
       :class="{ 'reading-done': progress.targum, 'font-rashi': settings.fontRashi, 'phase-selected': selectedPhase === 3 }"
       @click="handlePhaseClick(3, 'targum')"
@@ -72,7 +72,7 @@
 
     <!-- English - Clickable (shown if selected as targum type) -->
     <div
-      v-if="settings.targumType === 'english' && verse.english"
+      v-if="targumLayer === 'english'"
       class="english clickable-text"
       :class="{ 'reading-done': progress.targum, 'phase-selected': selectedPhase === 3 }"
       @click="handlePhaseClick(3, 'targum')"
@@ -146,6 +146,16 @@ const progress = computed(() => getVerseProgress(props.parasha, verseKey.value))
 
 const isCompleted = computed(() => {
   return progress.value.hebrew1 && progress.value.hebrew2 && progress.value.targum
+})
+
+// The layer that counts as "targum" for this verse. Falls back to Onkelos
+// when the chosen layer is unavailable (offline before Rashi/English were
+// downloaded, or a verse with no Rashi), so the obligation stays completable.
+const targumLayer = computed(() => {
+  const type = props.settings.targumType
+  if (type === 'rashi' && props.verse.rashi?.length) return 'rashi'
+  if (type === 'english' && props.verse.english) return 'english'
+  return 'onkelos'
 })
 
 const pointerTitle = computed(() => {
