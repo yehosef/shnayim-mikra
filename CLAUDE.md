@@ -1,84 +1,99 @@
-# CLAUDE.md
+# Shnayim Mikra — project notes for Claude
 
-This file provides guidance to Claude Code when working with this repository.
+Vue 3 + Vite 7 + vite-plugin-pwa. Deployed on Vercel (auto-deploys `master`).
+Static Sefaria JSON under `public/data/`. No backend. All state in `localStorage`.
 
-## Project Overview
+## Commands
 
-Hebrew Torah study web app - "שניים מקרא ואחד תרגום" (Shnayim Mikra V'Echad Targum). Displays weekly Torah portions with Hebrew text (read twice), Aramaic Targum, English translation, and commentaries (Rashi, Ramban, Ibn Ezra, etc.).
-
-**Stack**: Vue 3 (Composition API with `<script setup>`) + Vite. No backend - all data is static JSON.
-
-## Development Commands
-
-```bash
-npm install
-npm run dev      # Dev server (usually port 5173 or 5174)
-npm run build    # Production build to dist/
-npm run preview  # Preview production build
+```
+npm run dev        # vite dev server
+npm test           # vitest (node env, no jsdom)
+npm run validate   # scripts/validate-data.mjs + scripts/check-styles.mjs
+npm run build      # prebuild: generate aliyot.json + validate, then vite build
 ```
 
-## Architecture
+CI (`.github/workflows/ci.yml`) runs `npm ci && npm run validate && npm test && npm run build` on Node 22.
 
-### Data Files (static JSON in `public/data/`)
+## The one source of truth
 
-| Directory | Content | Size |
-|-----------|---------|------|
-| `torah/` | Hebrew Torah text by chumash | 1.4 MB |
-| `targum/` | Targum Onkelos by chumash | 1.4 MB |
-| `rashi/` | Rashi commentary by chumash | 2.2 MB |
-| `english/` | English translation by chumash | 988 KB |
-| `meforshim/` | Other commentaries (35 files) | ~13 MB |
-| `parshas.json` | Parsha list for selector | small |
-| `aliyot.json` | Aliyah boundaries | 64 KB |
+`localStorage['shnayim-progress']` is the only stored progress:
 
-Data is indexed as `text[perek][pasuk]` where both are **0-indexed**.
+```
+{ [parshaRoute]: { "perekNum:pasukNum": { hebrew1, hebrew2, targum } } }
+```
 
-### Parsha Configuration
+Keys are 0-indexed (`"0:0"` = Genesis 1:1). `tests/progress-compat.test.js` guards this
+contract; changing it requires a migration and an explicit decision from the user.
 
-`src/data/parshiyot.js` defines all 54+ Torah portions with:
-- Chumash mapping (bereishit, shmot, vayikra, bamidbar, dvarim)
-- Start/end positions as `[perek, pasuk]` (0-indexed)
-- Aliyah boundaries (note: some parshas have <7 aliyot: eikev=6, nitzavim=6, vzot-haberachah=5)
-- Combined parsha definitions for doubled weeks
+Everything else is **derived**, never stored:
 
-### Key Composables (`src/composables/`)
+- **Aliyah completion, the reading pointer, per-aliyah stats** — `src/lib/progressMath.js`
+  (pure, zero Vue, zero localStorage) wrapped by `src/composables/useReadingState.js`
+  (all `computed`, no position ref — a stored position is what froze the old pointer).
+- **Reading style** (`settings.readingStyle`: `'verse'` | `'aliyah'`) is only a traversal-order
+  parameter for `nextUnread`. Both styles read the same booleans.
+- **Daily guide / urgency** (`useDailyGuide.js`) is advisory only. Nothing it returns may hide,
+  disable, or gate content. `tests/daily-guide.test.js` asserts that.
 
-- **useData.js** - Loads entire chumash JSON per parsha. 5 parallel fetches (Torah, Targum, Rashi, English, Meforshim-index). Builds verse objects with `perekNum`/`pasukNum` (numeric) and `perek`/`pasuk` (Hebrew display).
-- **useParsha.js** - Uses `@hebcal/core` to detect weekly parsha. Returns parsha name for hash routing.
-- **useProgress.js** - Module-level singleton. Progress stored in localStorage key `shnayim-progress`. Structure: `{ [parshaName]: { [chapterNum:verseNum]: { hebrew1, hebrew2, targum } } }`
-- **useSettings.js** - Module-level singleton. Settings in localStorage key `shnayim-settings`. Includes: interfaceLanguage, displayMode, currentAliyah, showRashi, showTrop, location, fontSize, fontRashi, targumType, showEnglish.
-- **useAliyahNavigation.ts** - Only TypeScript file. Manages aliyah-level progress with daily reset.
-- **useDailyAliyah.js** - Daily study schedule (Mon: aliyot 1-2, Tue: 3, etc.)
+## Aliyah boundaries
 
-### Components (`src/components/`)
+`public/data/aliyot.json` is **generated** by `scripts/generate-aliyot.js` from `@hebcal/leyning`
+(`getLeyningForParsha`, never the date-overlay API). Never hand-edit it. `prebuild` regenerates it;
+the generator hard-fails if the boundaries disagree with `src/data/parshiyot.js` start/end.
+Maftir is folded into aliyah 7. `parshiyot.js` carries `chumash`, `hebcalName`, `start`, `end`
+only; it has no aliyah data.
 
-- **ParshaDisplay.vue** - Main view. Header, aliyah selector, progress bar, verse list. Keyboard nav (arrows, Space, Enter).
-- **VerseView.vue** - Individual verse card. Shows Hebrew x2, Targum, English, Rashi. Click phases to mark read.
-- **FocusMode.vue** - Immersive 3-step study mode. Keyboard: Space/Enter advance, arrows navigate (RTL-aware), 1/2/3 jump step, M mark, U undo, ? help, Esc exit.
-- **SettingsModal.vue** - All settings controls.
-- **ParshaSelector.vue** - Parsha picker dropdown.
+History: the old `aliyot` arrays in `parshiyot.js` were the starts of aliyot 2–7 plus maftir but
+were read as 1–7, so every label was off by one and aliyah 1 was unreachable. If a boundary looks
+"shifted" compared with the previous release, the new data is the correct one.
 
-### Routing
+## Weekly parsha
 
-Hash-based: `#bereshit`, `#noach`, etc. App.vue listens to `hashchange`. Falls back to weekly parsha detection.
+`src/composables/useParsha.js` → `resolveWeek(date, il)`. Target is the next Shabbat; chag
+Shabbatot walk forward; Yom Kippur → Hoshana Rabbah resolves to Vezot Haberachah; hebcal names
+are matched via `hebcalName` in `parshiyot.js` after stripping apostrophes on both sides.
+`tests/parsha.test.js` sweeps 5786–5795 in Israel and diaspora.
 
-### Fonts
+## Data layers (`public/data/`)
 
-- `public/SBL_Hbrw.ttf` - SBL Hebrew for biblical text (315 KB)
-- `public/Mekorot-Rashi.ttf` - Rashi script for Rashi commentary (17 KB)
-- Both declared as `@font-face` in App.vue
+| layer | shape | notes |
+|---|---|---|
+| `torah/*.json` | `text[ch][v]` string | plain Hebrew with trop, no HTML |
+| `targum/*.json` | `text[ch][v]` string | verse-aligned with torah |
+| `english/*.json` | `text[ch][v]` string (HTML) | refetch via `scripts/fetch-sefaria.mjs` |
+| `rashi/*.json` | `text[ch][v]` string[] (HTML) | short chapter arrays are legal (trailing truncation) |
+| `aliyot.json` | generated, see above | |
 
-### Progress Tracking
+Meforshim (7 commentators + index) live in `data-v2/` — versioned, out of deploy and PWA. v2 work.
 
-Verse keys use numeric format: `${perekNum}:${pasukNum}` (0-indexed chapter:verse). Each verse tracks 3 boolean phases: hebrew1, hebrew2, targum. All stored in localStorage.
+`scripts/validate-data.mjs` checks alignment, provenance, and the aliyot rules. `STRICT=1` makes
+findings fatal. `scripts/report-versions.mjs` lists Sefaria versions/licences (network).
 
-## Important Notes
+## Style contract (enforced by `scripts/check-styles.mjs`)
 
-- App is RTL (`dir="rtl"` on root div in App.vue)
-- Arrow keys are RTL-aware: ArrowRight = backward, ArrowLeft = forward
-- Data uses 0-indexed `[chapter, verse]` arrays
-- `toHebrew()` in `src/utils/hebrewUtils.js` converts numbers to Hebrew numerals for display
-- `removeTrop()` strips cantillation marks (Unicode U+0591-U+05AF range)
-- Multiple `v-html` usages with Sefaria-sourced data (low XSS risk since data is local JSON)
-- No service worker or offline caching currently
-- Single JS bundle (~253 KB), no code splitting configured
+- No `!important`. No `line-through`. No `opacity` on text
+  (escape: `/* allow-opacity: reason */` on the same or previous line, for non-text UI only).
+- Read state, pointer, and in-scope aliyah are three orthogonal channels expressed with borders,
+  backgrounds, and markers. Never dim or strike completed text.
+- Do not restyle components unasked. Keep existing CSS classes; change triggers, not looks.
+
+## Binding UX requirements (from the user, Oct 2025)
+
+- Each pasuk is shown twice; the text itself is the click target to toggle read state.
+- Pasuk font larger than targum.
+- Focus mode: one pasuk, side buttons in the middle of the page edges, header shows
+  aliyah / perek / pasuk. Keyboard works: Space/Enter advance, arrows navigate, 1/2/3 jump.
+- English above Rashi, HTML rendered.
+- Space marks the next thing to read as read and advances; a visible pointer shows where you are.
+- Only ONE of Onkelos / Rashi / English counts for the obligation (`settings.targumType`).
+
+## Browser verification
+
+Full-parsha DOM overflows snapshot tools. Verify through focus mode, a single aliyah
+(`displayMode: 'aliyah'`), or `page.evaluate` strings.
+
+## Scope kept out of v1
+
+Meforshim display, `displayMode: 'parasha'`, keyboard-handler consolidation (two non-conflicting
+handlers exist), `v-html` sanitising (local data only), progress schema versioning, combined ↔
+single parsha progress credit.
