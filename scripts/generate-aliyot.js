@@ -1,182 +1,215 @@
 #!/usr/bin/env node
 
 /**
- * Generate aliyot (Torah reading portions) data
- * Processes existing parshiyot.js data and enhances it with verse range information
- * Output: /server/assets/aliyot.json
+ * Generate aliyot (Torah reading portion) boundaries.
+ *
+ * Source of truth for aliyah boundaries is @hebcal/leyning's
+ * `getLeyningForParsha` (never `getLeyningForParshaHaShavua`, which applies
+ * date-specific overlays). For each route in src/data/parshiyot.js we read
+ * `fullkriyah` keys '1'..'7' (and 'M' when present) and fold the maftir
+ * reading into aliyah 7.
+ *
+ * Output: public/data/aliyot.json
+ *   {
+ *     [route]: {
+ *       book: 'bereishit',
+ *       aliyot: [ { n: 1, start: [perek, pasuk], end: [perek, pasuk], verseCount }, ... ],
+ *       total: number
+ *     },
+ *     ...
+ *   }
+ * perek/pasuk are 0-indexed. Chapter lengths (needed to convert positions to
+ * a linear ordinal for contiguity/verse-count checks against the stored
+ * corpus) come from the actual public/data/torah/*.json files, not a
+ * hardcoded table.
+ *
+ * Known versification variants (corpus vs. hebcal's Masoretic NUM_VERSES):
+ *  - Numbers 25/26: hebcal counts "vayehi acharei hamagefah" as its own
+ *    verse 25:19 (so hebcal ch25 = 19 verses); the corpus (Sefaria) merges
+ *    it into chapter 26 verse 1 instead (corpus ch25 = 18 verses). Both
+ *    agree chapter 26 has 65 verses, so every hebcal chapter:verse boundary
+ *    still maps 1:1 onto the corpus EXCEPT a reference to 25:19 itself —
+ *    and no aliyah/maftir boundary in the whole leyning cycle lands there.
+ *  - Exodus 20 (Aseret HaDibrot): hebcal counts 26 verses in ch20 (each
+ *    "lo ..." commandment split out), the corpus counts 23 (combined). No
+ *    aliyah boundary in Yitro/Mishpatim references past corpus verse 23,
+ *    so this never surfaces either.
+ * Because of these variants we cannot use the corpus's own chapter lengths
+ * to sanity-check hebcal's reported `v` (verse count) for an aliyah — a
+ * boundary that is legitimately positioned relative to hebcal's own
+ * versification can look "wrong" against the corpus's shorter chapter. So
+ * the `v` check below is done in hebcal's own versification (NUM_VERSES),
+ * proving only that our chapter:verse *parsing* of `b`/`e` is internally
+ * consistent with hebcal's `v` — not that it matches the corpus. Every
+ * corpus-relative assertion (start/end vs. def, contiguity, verse totals)
+ * still uses the corpus's own chapter lengths, and every converted boundary
+ * is additionally checked to actually exist in the corpus.
  */
 
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import { getLeyningForParsha, NUM_VERSES } from '@hebcal/leyning'
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+import parshiyot from '../src/data/parshiyot.js'
 
-// Import existing parshiyot data
-import parshiyot from '../src/data/parshiyot.js';
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const ROOT = path.join(__dirname, '..')
 
-// Torah book structures: number of chapters and verses
-const torahStructure = {
-  bereishit: {
-    chapters: [
-      31, 25, 24, 26, 32, 22, 29, 34, 30, 23, 29, 50, 31, 24, 21, 16, 27, 33, 38, 18, 34, 24, 20, 67, 34, 35, 46, 22, 35, 43, 55, 32, 20, 31, 29, 43, 36, 30, 23, 23, 28, 37, 37, 6, 24, 33, 31, 36, 22, 30, 33
-    ]
-  },
-  shmot: {
-    chapters: [
-      22, 25, 22, 31, 23, 30, 25, 32, 35, 29, 10, 51, 22, 31, 27, 36, 16, 27, 25, 26, 36, 31, 33, 18, 40, 37, 21, 43, 20, 28, 39, 20, 58, 36, 39, 40
-    ]
-  },
-  vayikra: {
-    chapters: [
-      17, 16, 17, 35, 19, 30, 38, 36, 24, 20, 47, 8, 59, 57, 33, 34, 16, 30, 37, 27, 24, 33, 44, 23, 55, 46, 34
-    ]
-  },
-  bamidbar: {
-    chapters: [
-      54, 34, 51, 49, 31, 27, 89, 26, 23, 36, 35, 16, 33, 45, 60, 30, 52, 29, 12, 13, 58, 30, 55, 24, 28, 11, 45, 25, 35, 37, 38, 42, 26, 22, 40, 23
-    ]
-  },
-  dvarim: {
-    chapters: [
-      46, 37, 29, 30, 33, 34, 24, 46, 37, 42, 29, 40, 52, 39, 56, 27, 34, 44, 37, 45, 50, 42, 41, 3, 43, 33, 23, 26, 40, 40, 34, 52, 34
-    ]
+const BOOKS = ['bereishit', 'shmot', 'vayikra', 'bamidbar', 'dvarim']
+
+const BOOK_MAP = {
+  Genesis: 'bereishit',
+  Exodus: 'shmot',
+  Leviticus: 'vayikra',
+  Numbers: 'bamidbar',
+  Deuteronomy: 'dvarim'
+}
+
+function fail(route, message) {
+  console.error(`✗ ${route}: ${message}`)
+  process.exit(1)
+}
+
+// ---------------------------------------------------------------------------
+// Chapter lengths, straight from the corpus.
+// ---------------------------------------------------------------------------
+const chapterLengths = {}
+for (const book of BOOKS) {
+  const file = path.join(ROOT, 'public', 'data', 'torah', `${book}.json`)
+  const data = JSON.parse(fs.readFileSync(file, 'utf8'))
+  chapterLengths[book] = data.text.map(ch => ch.length)
+}
+
+function ordinal(book, [perek, pasuk]) {
+  const lens = chapterLengths[book]
+  let n = 0
+  for (let i = 0; i < perek; i++) n += lens[i]
+  return n + pasuk
+}
+
+// hebcal's own chapter lengths (its NUM_VERSES tables are 1-indexed with a
+// leading dummy 0 at index 0), used only to sanity-check hebcal's reported
+// `v` against our parsing of `b`/`e` — see versification note above.
+const hebcalChapterLengths = {}
+for (const [hebcalName, book] of Object.entries(BOOK_MAP)) {
+  const table = NUM_VERSES[hebcalName]
+  hebcalChapterLengths[book] = table.slice(1)
+}
+
+function hebcalOrdinal(book, [perek, pasuk]) {
+  const lens = hebcalChapterLengths[book]
+  let n = 0
+  for (let i = 0; i < perek; i++) n += lens[i]
+  return n + pasuk
+}
+
+// Parse hebcal's 1-indexed "chapter:verse" into a 0-indexed [perek, pasuk].
+function parseRef(ref) {
+  const [chapter, verse] = ref.split(':').map(Number)
+  return [chapter - 1, verse - 1]
+}
+
+// A hebcal boundary must actually exist in the corpus (guards against the
+// versification variants above ever silently producing a bogus position).
+function assertInCorpus(route, label, book, [perek, pasuk]) {
+  const lens = chapterLengths[book]
+  if (perek < 0 || perek >= lens.length || pasuk < 0 || pasuk >= lens[perek]) {
+    fail(route, `${label} [${perek},${pasuk}] does not exist in corpus book ${book} (chapter has ${lens[perek]} verses)`)
   }
-};
+}
 
-/**
- * Calculate verse count between two positions
- * Both [perek, pasuk] are 0-indexed
- */
-function calculateVerseCount(start, end, chumashKey) {
-  const [startPerek, startPasuk] = start;
-  const [endPerek, endPasuk] = end;
+// ---------------------------------------------------------------------------
+// Per-route generation.
+// ---------------------------------------------------------------------------
+const routes = Object.keys(parshiyot)
+const output = {}
 
-  if (startPerek === endPerek) {
-    return endPasuk - startPasuk + 1;
+for (const route of routes) {
+  const def = parshiyot[route]
+  const leyning = getLeyningForParsha(def.hebcalName)
+  const fk = leyning.fullkriyah
+
+  const aliyot = []
+  let book = null
+
+  for (let n = 1; n <= 7; n++) {
+    const part = fk[String(n)]
+    if (!part) fail(route, `missing fullkriyah aliyah ${n}`)
+
+    const partBook = BOOK_MAP[part.k]
+    if (!partBook) fail(route, `unknown leyning book "${part.k}" for aliyah ${n}`)
+    if (book === null) book = partBook
+    else if (partBook !== book) fail(route, `aliyah ${n} book ${partBook} != aliyah 1 book ${book}`)
+
+    const start = parseRef(part.b)
+    const end = parseRef(part.e)
+
+    // Check hebcal's `v` against hebcal's own versification (proves our
+    // b/e parsing is right), not against the corpus (see note above).
+    const hebcalCount = hebcalOrdinal(partBook, end) - hebcalOrdinal(partBook, start) + 1
+    if (hebcalCount !== part.v) {
+      fail(route, `aliyah ${n}: leyning v=${part.v} != hebcal-versification computed ${hebcalCount} (b=${part.b}, e=${part.e})`)
+    }
+
+    assertInCorpus(route, `aliyah ${n} start`, partBook, start)
+    assertInCorpus(route, `aliyah ${n} end`, partBook, end)
+
+    let finalEnd = end
+    if (n === 7 && fk.M) {
+      const maftirBook = BOOK_MAP[fk.M.k]
+      if (!maftirBook) fail(route, `unknown leyning book "${fk.M.k}" for maftir`)
+      if (maftirBook !== book) fail(route, `maftir book ${maftirBook} != aliyah 7 book ${book}`)
+      const maftirEnd = parseRef(fk.M.e)
+      assertInCorpus(route, 'maftir end', maftirBook, maftirEnd)
+      finalEnd = ordinal(book, maftirEnd) > ordinal(book, end) ? maftirEnd : end
+    }
+
+    const verseCount = ordinal(partBook, finalEnd) - ordinal(partBook, start) + 1
+    aliyot.push({ n, start, end: finalEnd, verseCount })
   }
 
-  let count = 0;
-
-  // Add remaining verses in start chapter
-  const chapters = torahStructure[chumashKey]?.chapters || [];
-  if (chapters[startPerek]) {
-    count += chapters[startPerek] - startPasuk;
+  if (book !== def.chumash) {
+    fail(route, `book from leyning (${book}) != def.chumash (${def.chumash})`)
   }
 
-  // Add all verses in middle chapters
-  for (let i = startPerek + 1; i < endPerek; i++) {
-    if (chapters[i]) {
-      count += chapters[i];
+  const first = aliyot[0]
+  const last = aliyot[aliyot.length - 1]
+
+  if (first.start[0] !== def.start[0] || first.start[1] !== def.start[1]) {
+    fail(route, `aliyot[0].start ${JSON.stringify(first.start)} != def.start ${JSON.stringify(def.start)}`)
+  }
+  if (last.end[0] !== def.end[0] || last.end[1] !== def.end[1]) {
+    fail(route, `last.end ${JSON.stringify(last.end)} != def.end ${JSON.stringify(def.end)}`)
+  }
+
+  for (let i = 1; i < aliyot.length; i++) {
+    const prevEnd = ordinal(book, aliyot[i - 1].end)
+    const start = ordinal(book, aliyot[i].start)
+    if (start !== prevEnd + 1) {
+      fail(
+        route,
+        `aliyah ${i + 1} not contiguous with aliyah ${i}: aliyah ${i} end ordinal ${prevEnd}, aliyah ${i + 1} start ordinal ${start}`
+      )
     }
   }
 
-  // Add verses in end chapter
-  count += endPasuk + 1;
-
-  return count;
-}
-
-/**
- * Generate aliyot data for all parshiyot
- */
-function generateAliyot() {
-  console.log('Generating aliyot data from parshiyot definitions...\n');
-
-  const aliyotData = {};
-  let successCount = 0;
-  let failCount = 0;
-
-  // Map each parsha to its aliyot
-  for (const [parshaKey, parshaDef] of Object.entries(parshiyot)) {
-    try {
-      const aliyot = [];
-      const chumashKey = parshaDef.chumash;
-
-      if (!parshaDef.aliyot || parshaDef.aliyot.length === 0) {
-        console.log(`⚠ ${parshaKey}: No aliyot defined`);
-        failCount++;
-        continue;
-      }
-
-      // Process each aliyah
-      for (let i = 0; i < parshaDef.aliyot.length; i++) {
-        const aliyahStart = parshaDef.aliyot[i];
-
-        // Determine aliyah end: either the next aliyah start or the parsha end
-        let aliyahEnd;
-        if (i < parshaDef.aliyot.length - 1) {
-          // Next aliyah starts at the next aliyah's first verse
-          // Go back one verse from that
-          const nextStart = parshaDef.aliyot[i + 1];
-          const [nextPerek, nextPasuk] = nextStart;
-
-          if (nextPasuk === 0) {
-            // Previous chapter, last verse
-            if (nextPerek > 0) {
-              const prevChapter = nextPerek - 1;
-              const chapters = torahStructure[chumashKey]?.chapters || [];
-              aliyahEnd = [prevChapter, (chapters[prevChapter] || 0) - 1];
-            } else {
-              aliyahEnd = nextStart;
-            }
-          } else {
-            // Same chapter, previous verse
-            aliyahEnd = [nextPerek, nextPasuk - 1];
-          }
-        } else {
-          // Last aliyah goes to parsha end
-          aliyahEnd = parshaDef.end;
-        }
-
-        const verseCount = calculateVerseCount(aliyahStart, aliyahEnd, chumashKey);
-
-        aliyot.push({
-          aliya: i + 1,
-          start: aliyahStart,
-          end: aliyahEnd,
-          verseCount: Math.max(1, verseCount)
-        });
-      }
-
-      if (aliyot.length > 0) {
-        aliyotData[parshaKey] = aliyot;
-        successCount++;
-        console.log(`✓ ${parshaKey}: ${aliyot.length} aliyot`);
-      } else {
-        failCount++;
-      }
-    } catch (err) {
-      console.error(`✗ ${parshaKey}: ${err.message}`);
-      failCount++;
-    }
+  const total = aliyot.reduce((sum, a) => sum + a.verseCount, 0)
+  const expectedTotal = ordinal(book, def.end) - ordinal(book, def.start) + 1
+  if (total !== expectedTotal) {
+    fail(route, `sum(verseCount) ${total} != corpus verse count ${expectedTotal} (def.start=${JSON.stringify(def.start)}, def.end=${JSON.stringify(def.end)})`)
   }
 
-  // Write output file
-  const outputDir = path.join(__dirname, '..', 'server', 'assets');
-  const outputFile = path.join(outputDir, 'aliyot.json');
-
-  // Ensure directory exists
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-  }
-
-  fs.writeFileSync(outputFile, JSON.stringify(aliyotData, null, 2));
-
-  console.log(`\n✓ Generated aliyot data`);
-  console.log(`  Success: ${successCount}/${Object.keys(parshiyot).length}`);
-  console.log(`  Failed: ${failCount}/${Object.keys(parshiyot).length}`);
-  console.log(`  Output: ${outputFile}`);
-
-  return aliyotData;
+  output[route] = { book, aliyot, total }
+  console.log(`${route}: ${aliyot.length} aliyot, ${total} verses`)
 }
 
-// Run the generator
-try {
-  const result = generateAliyot();
-  process.exit(0);
-} catch (err) {
-  console.error('Fatal error:', err);
-  process.exit(1);
+if (routes.length < 61) {
+  fail('generate-aliyot', `only ${routes.length} routes processed, expected at least 61`)
 }
+
+const outputFile = path.join(ROOT, 'public', 'data', 'aliyot.json')
+fs.writeFileSync(outputFile, JSON.stringify(output, null, 2) + '\n')
+
+console.log(`\nOK: generated ${routes.length} routes -> ${path.relative(ROOT, outputFile)}`)

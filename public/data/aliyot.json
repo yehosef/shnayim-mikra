@@ -1,5188 +1,5492 @@
 {
-  "bereshit": [
-    {
-      "aliya": 1,
-      "start": [
-        1,
-        3
-      ],
-      "end": [
-        1,
-        18
-      ],
-      "verseCount": 16
-    },
-    {
-      "aliya": 2,
-      "start": [
-        1,
-        19
-      ],
-      "end": [
-        2,
-        20
-      ],
-      "verseCount": 27
-    },
-    {
-      "aliya": 3,
-      "start": [
-        2,
-        21
-      ],
-      "end": [
-        3,
-        17
-      ],
-      "verseCount": 21
-    },
-    {
-      "aliya": 4,
-      "start": [
-        3,
-        18
-      ],
-      "end": [
-        3,
-        21
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 5,
-      "start": [
-        3,
-        22
-      ],
-      "end": [
-        4,
-        23
-      ],
-      "verseCount": 28
-    },
-    {
-      "aliya": 6,
-      "start": [
-        4,
-        24
-      ],
-      "end": [
-        5,
-        3
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 7,
-      "start": [
-        5,
-        4
-      ],
-      "end": [
-        5,
-        7
-      ],
-      "verseCount": 4
-    }
-  ],
-  "noach": [
-    {
-      "aliya": 1,
-      "start": [
-        6,
-        0
-      ],
-      "end": [
-        6,
-        15
-      ],
-      "verseCount": 16
-    },
-    {
-      "aliya": 2,
-      "start": [
-        6,
-        16
-      ],
-      "end": [
-        7,
-        13
-      ],
-      "verseCount": 27
-    },
-    {
-      "aliya": 3,
-      "start": [
-        7,
-        14
-      ],
-      "end": [
-        8,
-        6
-      ],
-      "verseCount": 27
-    },
-    {
-      "aliya": 4,
-      "start": [
-        8,
-        7
-      ],
-      "end": [
-        8,
-        16
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 5,
-      "start": [
-        8,
-        17
-      ],
-      "end": [
-        9,
-        22
-      ],
-      "verseCount": 36
-    },
-    {
-      "aliya": 6,
-      "start": [
-        10,
-        0
-      ],
-      "end": [
-        10,
-        27
-      ],
-      "verseCount": 28
-    },
-    {
-      "aliya": 7,
-      "start": [
-        10,
-        28
-      ],
-      "end": [
-        10,
-        31
-      ],
-      "verseCount": 4
-    }
-  ],
-  "lech-lecha": [
-    {
-      "aliya": 1,
-      "start": [
-        11,
-        13
-      ],
-      "end": [
-        12,
-        3
-      ],
-      "verseCount": 41
-    },
-    {
-      "aliya": 2,
-      "start": [
-        12,
-        4
-      ],
-      "end": [
-        12,
-        30
-      ],
-      "verseCount": 27
-    },
-    {
-      "aliya": 3,
-      "start": [
-        13,
-        0
-      ],
-      "end": [
-        13,
-        19
-      ],
-      "verseCount": 20
-    },
-    {
-      "aliya": 4,
-      "start": [
-        13,
-        20
-      ],
-      "end": [
-        14,
-        5
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 5,
-      "start": [
-        14,
-        6
-      ],
-      "end": [
-        16,
-        5
-      ],
-      "verseCount": 37
-    },
-    {
-      "aliya": 6,
-      "start": [
-        16,
-        6
-      ],
-      "end": [
-        16,
-        22
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 7,
-      "start": [
-        16,
-        23
-      ],
-      "end": [
-        16,
-        26
-      ],
-      "verseCount": 4
-    }
-  ],
-  "vayera": [
-    {
-      "aliya": 1,
-      "start": [
-        17,
-        14
-      ],
-      "end": [
-        17,
-        32
-      ],
-      "verseCount": 19
-    },
-    {
-      "aliya": 2,
-      "start": [
-        18,
-        0
-      ],
-      "end": [
-        18,
-        19
-      ],
-      "verseCount": 20
-    },
-    {
-      "aliya": 3,
-      "start": [
-        18,
-        20
-      ],
-      "end": [
-        20,
-        3
-      ],
-      "verseCount": 40
-    },
-    {
-      "aliya": 4,
-      "start": [
-        20,
-        4
-      ],
-      "end": [
-        20,
-        20
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 5,
-      "start": [
-        20,
-        21
-      ],
-      "end": [
-        20,
-        33
-      ],
-      "verseCount": 13
-    },
-    {
-      "aliya": 6,
-      "start": [
-        21,
-        0
-      ],
-      "end": [
-        21,
-        18
-      ],
-      "verseCount": 19
-    },
-    {
-      "aliya": 7,
-      "start": [
-        21,
-        19
-      ],
-      "end": [
-        21,
-        23
-      ],
-      "verseCount": 5
-    }
-  ],
-  "chayei-sara": [
-    {
-      "aliya": 1,
-      "start": [
-        22,
-        16
-      ],
-      "end": [
-        23,
-        8
-      ],
-      "verseCount": 13
-    },
-    {
-      "aliya": 2,
-      "start": [
-        23,
-        9
-      ],
-      "end": [
-        23,
-        25
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 3,
-      "start": [
-        23,
-        26
-      ],
-      "end": [
-        23,
-        51
-      ],
-      "verseCount": 26
-    },
-    {
-      "aliya": 4,
-      "start": [
-        23,
-        52
-      ],
-      "end": [
-        23,
-        66
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 5,
-      "start": [
-        24,
-        0
-      ],
-      "end": [
-        24,
-        10
-      ],
-      "verseCount": 11
-    },
-    {
-      "aliya": 6,
-      "start": [
-        24,
-        11
-      ],
-      "end": [
-        24,
-        14
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 7,
-      "start": [
-        24,
-        15
-      ],
-      "end": [
-        24,
-        17
-      ],
-      "verseCount": 3
-    }
-  ],
-  "toldot": [
-    {
-      "aliya": 1,
-      "start": [
-        25,
-        5
-      ],
-      "end": [
-        25,
-        11
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 2,
-      "start": [
-        25,
-        12
-      ],
-      "end": [
-        25,
-        21
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 3,
-      "start": [
-        25,
-        22
-      ],
-      "end": [
-        25,
-        28
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 4,
-      "start": [
-        25,
-        29
-      ],
-      "end": [
-        26,
-        26
-      ],
-      "verseCount": 33
-    },
-    {
-      "aliya": 5,
-      "start": [
-        26,
-        27
-      ],
-      "end": [
-        27,
-        3
-      ],
-      "verseCount": 23
-    },
-    {
-      "aliya": 6,
-      "start": [
-        27,
-        4
-      ],
-      "end": [
-        27,
-        5
-      ],
-      "verseCount": 2
-    },
-    {
-      "aliya": 7,
-      "start": [
-        27,
-        6
-      ],
-      "end": [
-        27,
-        8
-      ],
-      "verseCount": 3
-    }
-  ],
-  "vayetzei": [
-    {
-      "aliya": 1,
-      "start": [
-        28,
-        0
-      ],
-      "end": [
-        28,
-        16
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 2,
-      "start": [
-        28,
-        17
-      ],
-      "end": [
-        29,
-        12
-      ],
-      "verseCount": 31
-    },
-    {
-      "aliya": 3,
-      "start": [
-        29,
-        13
-      ],
-      "end": [
-        29,
-        26
-      ],
-      "verseCount": 14
-    },
-    {
-      "aliya": 4,
-      "start": [
-        29,
-        27
-      ],
-      "end": [
-        30,
-        15
-      ],
-      "verseCount": 32
-    },
-    {
-      "aliya": 5,
-      "start": [
-        30,
-        16
-      ],
-      "end": [
-        30,
-        41
-      ],
-      "verseCount": 26
-    },
-    {
-      "aliya": 6,
-      "start": [
-        30,
-        42
-      ],
-      "end": [
-        30,
-        54
-      ],
-      "verseCount": 13
-    },
-    {
-      "aliya": 7,
-      "start": [
-        31,
-        0
-      ],
-      "end": [
-        31,
-        2
-      ],
-      "verseCount": 3
-    }
-  ],
-  "vayishlach": [
-    {
-      "aliya": 1,
-      "start": [
-        31,
-        13
-      ],
-      "end": [
-        31,
-        29
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 2,
-      "start": [
-        31,
-        30
-      ],
-      "end": [
-        32,
-        4
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 3,
-      "start": [
-        32,
-        5
-      ],
-      "end": [
-        32,
-        19
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 4,
-      "start": [
-        33,
-        0
-      ],
-      "end": [
-        34,
-        10
-      ],
-      "verseCount": 42
-    },
-    {
-      "aliya": 5,
-      "start": [
-        34,
-        11
-      ],
-      "end": [
-        35,
-        18
-      ],
-      "verseCount": 37
-    },
-    {
-      "aliya": 6,
-      "start": [
-        35,
-        19
-      ],
-      "end": [
-        35,
-        38
-      ],
-      "verseCount": 20
-    },
-    {
-      "aliya": 7,
-      "start": [
-        35,
-        39
-      ],
-      "end": [
-        35,
-        42
-      ],
-      "verseCount": 4
-    }
-  ],
-  "vayeshev": [
-    {
-      "aliya": 1,
-      "start": [
-        36,
-        11
-      ],
-      "end": [
-        36,
-        21
-      ],
-      "verseCount": 11
-    },
-    {
-      "aliya": 2,
-      "start": [
-        36,
-        22
-      ],
-      "end": [
-        36,
-        35
-      ],
-      "verseCount": 14
-    },
-    {
-      "aliya": 3,
-      "start": [
-        37,
-        0
-      ],
-      "end": [
-        37,
-        29
-      ],
-      "verseCount": 30
-    },
-    {
-      "aliya": 4,
-      "start": [
-        38,
-        0
-      ],
-      "end": [
-        38,
-        5
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 5,
-      "start": [
-        38,
-        6
-      ],
-      "end": [
-        38,
-        22
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 6,
-      "start": [
-        39,
-        0
-      ],
-      "end": [
-        39,
-        18
-      ],
-      "verseCount": 19
-    },
-    {
-      "aliya": 7,
-      "start": [
-        39,
-        19
-      ],
-      "end": [
-        39,
-        22
-      ],
-      "verseCount": 4
-    }
-  ],
-  "miketz": [
-    {
-      "aliya": 1,
-      "start": [
-        40,
-        14
-      ],
-      "end": [
-        40,
-        37
-      ],
-      "verseCount": 24
-    },
-    {
-      "aliya": 2,
-      "start": [
-        40,
-        38
-      ],
-      "end": [
-        40,
-        51
-      ],
-      "verseCount": 14
-    },
-    {
-      "aliya": 3,
-      "start": [
-        40,
-        52
-      ],
-      "end": [
-        41,
-        17
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 4,
-      "start": [
-        41,
-        18
-      ],
-      "end": [
-        42,
-        14
-      ],
-      "verseCount": 34
-    },
-    {
-      "aliya": 5,
-      "start": [
-        42,
-        15
-      ],
-      "end": [
-        42,
-        28
-      ],
-      "verseCount": 14
-    },
-    {
-      "aliya": 6,
-      "start": [
-        42,
-        29
-      ],
-      "end": [
-        43,
-        13
-      ],
-      "verseCount": 22
-    },
-    {
-      "aliya": 7,
-      "start": [
-        43,
-        14
-      ],
-      "end": [
-        43,
-        16
-      ],
-      "verseCount": 3
-    }
-  ],
-  "vayigash": [
-    {
-      "aliya": 1,
-      "start": [
-        43,
-        30
-      ],
-      "end": [
-        44,
-        6
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 2,
-      "start": [
-        44,
-        7
-      ],
-      "end": [
-        44,
-        17
-      ],
-      "verseCount": 11
-    },
-    {
-      "aliya": 3,
-      "start": [
-        44,
-        18
-      ],
-      "end": [
-        44,
-        26
-      ],
-      "verseCount": 9
-    },
-    {
-      "aliya": 4,
-      "start": [
-        44,
-        27
-      ],
-      "end": [
-        45,
-        26
-      ],
-      "verseCount": 24
-    },
-    {
-      "aliya": 5,
-      "start": [
-        45,
-        27
-      ],
-      "end": [
-        46,
-        9
-      ],
-      "verseCount": 16
-    },
-    {
-      "aliya": 6,
-      "start": [
-        46,
-        10
-      ],
-      "end": [
-        46,
-        23
-      ],
-      "verseCount": 14
-    },
-    {
-      "aliya": 7,
-      "start": [
-        46,
-        24
-      ],
-      "end": [
-        46,
-        26
-      ],
-      "verseCount": 3
-    }
-  ],
-  "vayechi": [
-    {
-      "aliya": 1,
-      "start": [
-        47,
-        9
-      ],
-      "end": [
-        47,
-        15
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 2,
-      "start": [
-        47,
-        16
-      ],
-      "end": [
-        47,
-        35
-      ],
-      "verseCount": 20
-    },
-    {
-      "aliya": 3,
-      "start": [
-        48,
-        0
-      ],
-      "end": [
-        48,
-        17
-      ],
-      "verseCount": 18
-    },
-    {
-      "aliya": 4,
-      "start": [
-        48,
-        18
-      ],
-      "end": [
-        48,
-        25
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 5,
-      "start": [
-        48,
-        26
-      ],
-      "end": [
-        49,
-        19
-      ],
-      "verseCount": 16
-    },
-    {
-      "aliya": 6,
-      "start": [
-        49,
-        20
-      ],
-      "end": [
-        49,
-        21
-      ],
-      "verseCount": 2
-    },
-    {
-      "aliya": 7,
-      "start": [
-        49,
-        22
-      ],
-      "end": [
-        49,
-        25
-      ],
-      "verseCount": 4
-    }
-  ],
-  "shemot": [
-    {
-      "aliya": 1,
-      "start": [
-        0,
-        17
-      ],
-      "end": [
-        1,
-        9
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 2,
-      "start": [
-        1,
-        10
-      ],
-      "end": [
-        1,
-        24
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 3,
-      "start": [
-        2,
-        0
-      ],
-      "end": [
-        2,
-        14
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 4,
-      "start": [
-        2,
-        15
-      ],
-      "end": [
-        3,
-        16
-      ],
-      "verseCount": 24
-    },
-    {
-      "aliya": 5,
-      "start": [
-        3,
-        17
-      ],
-      "end": [
-        3,
-        30
-      ],
-      "verseCount": 14
-    },
-    {
-      "aliya": 6,
-      "start": [
-        4,
-        0
-      ],
-      "end": [
-        4,
-        20
-      ],
-      "verseCount": 21
-    },
-    {
-      "aliya": 7,
-      "start": [
-        4,
-        21
-      ],
-      "end": [
-        5,
-        0
-      ],
-      "verseCount": 3
-    }
-  ],
-  "vaera": [
-    {
-      "aliya": 1,
-      "start": [
-        5,
-        13
-      ],
-      "end": [
-        5,
-        27
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 2,
-      "start": [
-        5,
-        28
-      ],
-      "end": [
-        6,
-        6
-      ],
-      "verseCount": 9
-    },
-    {
-      "aliya": 3,
-      "start": [
-        6,
-        7
-      ],
-      "end": [
-        7,
-        5
-      ],
-      "verseCount": 24
-    },
-    {
-      "aliya": 4,
-      "start": [
-        7,
-        6
-      ],
-      "end": [
-        7,
-        17
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 5,
-      "start": [
-        7,
-        18
-      ],
-      "end": [
-        8,
-        15
-      ],
-      "verseCount": 30
-    },
-    {
-      "aliya": 6,
-      "start": [
-        8,
-        16
-      ],
-      "end": [
-        8,
-        31
-      ],
-      "verseCount": 16
-    },
-    {
-      "aliya": 7,
-      "start": [
-        8,
-        32
-      ],
-      "end": [
-        8,
-        34
-      ],
-      "verseCount": 3
-    }
-  ],
-  "bo": [
-    {
-      "aliya": 1,
-      "start": [
-        9,
-        11
-      ],
-      "end": [
-        9,
-        22
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 2,
-      "start": [
-        9,
-        23
-      ],
-      "end": [
-        10,
-        2
-      ],
-      "verseCount": 9
-    },
-    {
-      "aliya": 3,
-      "start": [
-        10,
-        3
-      ],
-      "end": [
-        11,
-        19
-      ],
-      "verseCount": 27
-    },
-    {
-      "aliya": 4,
-      "start": [
-        11,
-        20
-      ],
-      "end": [
-        11,
-        27
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 5,
-      "start": [
-        11,
-        28
-      ],
-      "end": [
-        11,
-        50
-      ],
-      "verseCount": 23
-    },
-    {
-      "aliya": 6,
-      "start": [
-        12,
-        0
-      ],
-      "end": [
-        12,
-        12
-      ],
-      "verseCount": 13
-    },
-    {
-      "aliya": 7,
-      "start": [
-        12,
-        13
-      ],
-      "end": [
-        12,
-        15
-      ],
-      "verseCount": 3
-    }
-  ],
-  "beshalach": [
-    {
-      "aliya": 1,
-      "start": [
-        13,
-        8
-      ],
-      "end": [
-        13,
-        13
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 2,
-      "start": [
-        13,
-        14
-      ],
-      "end": [
-        13,
-        24
-      ],
-      "verseCount": 11
-    },
-    {
-      "aliya": 3,
-      "start": [
-        13,
-        25
-      ],
-      "end": [
-        14,
-        25
-      ],
-      "verseCount": 32
-    },
-    {
-      "aliya": 4,
-      "start": [
-        14,
-        26
-      ],
-      "end": [
-        15,
-        9
-      ],
-      "verseCount": 11
-    },
-    {
-      "aliya": 5,
-      "start": [
-        15,
-        10
-      ],
-      "end": [
-        15,
-        35
-      ],
-      "verseCount": 26
-    },
-    {
-      "aliya": 6,
-      "start": [
-        16,
-        0
-      ],
-      "end": [
-        16,
-        12
-      ],
-      "verseCount": 13
-    },
-    {
-      "aliya": 7,
-      "start": [
-        16,
-        13
-      ],
-      "end": [
-        16,
-        15
-      ],
-      "verseCount": 3
-    }
-  ],
-  "yitro": [
-    {
-      "aliya": 1,
-      "start": [
-        17,
-        12
-      ],
-      "end": [
-        17,
-        22
-      ],
-      "verseCount": 11
-    },
-    {
-      "aliya": 2,
-      "start": [
-        17,
-        23
-      ],
-      "end": [
-        17,
-        26
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 3,
-      "start": [
-        18,
-        0
-      ],
-      "end": [
-        18,
-        5
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 4,
-      "start": [
-        18,
-        6
-      ],
-      "end": [
-        18,
-        18
-      ],
-      "verseCount": 13
-    },
-    {
-      "aliya": 5,
-      "start": [
-        18,
-        19
-      ],
-      "end": [
-        19,
-        13
-      ],
-      "verseCount": 20
-    },
-    {
-      "aliya": 6,
-      "start": [
-        19,
-        14
-      ],
-      "end": [
-        19,
-        17
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 7,
-      "start": [
-        19,
-        18
-      ],
-      "end": [
-        19,
-        22
-      ],
-      "verseCount": 5
-    }
-  ],
-  "mishpatim": [
-    {
-      "aliya": 1,
-      "start": [
-        20,
-        19
-      ],
-      "end": [
-        21,
-        2
-      ],
-      "verseCount": 20
-    },
-    {
-      "aliya": 2,
-      "start": [
-        21,
-        3
-      ],
-      "end": [
-        21,
-        25
-      ],
-      "verseCount": 23
-    },
-    {
-      "aliya": 3,
-      "start": [
-        21,
-        26
-      ],
-      "end": [
-        22,
-        4
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 4,
-      "start": [
-        22,
-        5
-      ],
-      "end": [
-        22,
-        18
-      ],
-      "verseCount": 14
-    },
-    {
-      "aliya": 5,
-      "start": [
-        22,
-        19
-      ],
-      "end": [
-        22,
-        24
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 6,
-      "start": [
-        22,
-        25
-      ],
-      "end": [
-        23,
-        13
-      ],
-      "verseCount": 22
-    },
-    {
-      "aliya": 7,
-      "start": [
-        23,
-        14
-      ],
-      "end": [
-        23,
-        17
-      ],
-      "verseCount": 4
-    }
-  ],
-  "terumah": [
-    {
-      "aliya": 1,
-      "start": [
-        24,
-        16
-      ],
-      "end": [
-        24,
-        29
-      ],
-      "verseCount": 14
-    },
-    {
-      "aliya": 2,
-      "start": [
-        24,
-        30
-      ],
-      "end": [
-        25,
-        13
-      ],
-      "verseCount": 24
-    },
-    {
-      "aliya": 3,
-      "start": [
-        25,
-        14
-      ],
-      "end": [
-        25,
-        29
-      ],
-      "verseCount": 16
-    },
-    {
-      "aliya": 4,
-      "start": [
-        25,
-        30
-      ],
-      "end": [
-        25,
-        36
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 5,
-      "start": [
-        26,
-        0
-      ],
-      "end": [
-        26,
-        7
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 6,
-      "start": [
-        26,
-        8
-      ],
-      "end": [
-        26,
-        15
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 7,
-      "start": [
-        26,
-        16
-      ],
-      "end": [
-        26,
-        18
-      ],
-      "verseCount": 3
-    }
-  ],
-  "tetzaveh": [
-    {
-      "aliya": 1,
-      "start": [
-        27,
-        12
-      ],
-      "end": [
-        27,
-        29
-      ],
-      "verseCount": 18
-    },
-    {
-      "aliya": 2,
-      "start": [
-        27,
-        30
-      ],
-      "end": [
-        27,
-        42
-      ],
-      "verseCount": 13
-    },
-    {
-      "aliya": 3,
-      "start": [
-        28,
-        0
-      ],
-      "end": [
-        28,
-        17
-      ],
-      "verseCount": 18
-    },
-    {
-      "aliya": 4,
-      "start": [
-        28,
-        18
-      ],
-      "end": [
-        28,
-        36
-      ],
-      "verseCount": 19
-    },
-    {
-      "aliya": 5,
-      "start": [
-        28,
-        37
-      ],
-      "end": [
-        28,
-        19
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 6,
-      "start": [
-        29,
-        0
-      ],
-      "end": [
-        29,
-        6
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 7,
-      "start": [
-        29,
-        7
-      ],
-      "end": [
-        29,
-        9
-      ],
-      "verseCount": 3
-    }
-  ],
-  "ki-tisa": [
-    {
-      "aliya": 1,
-      "start": [
-        30,
-        17
-      ],
-      "end": [
-        32,
-        10
-      ],
-      "verseCount": 53
-    },
-    {
-      "aliya": 2,
-      "start": [
-        32,
-        11
-      ],
-      "end": [
-        32,
-        15
-      ],
-      "verseCount": 5
-    },
-    {
-      "aliya": 3,
-      "start": [
-        32,
-        16
-      ],
-      "end": [
-        32,
-        57
-      ],
-      "verseCount": 42
-    },
-    {
-      "aliya": 4,
-      "start": [
-        33,
-        0
-      ],
-      "end": [
-        33,
-        8
-      ],
-      "verseCount": 9
-    },
-    {
-      "aliya": 5,
-      "start": [
-        33,
-        9
-      ],
-      "end": [
-        33,
-        25
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 6,
-      "start": [
-        33,
-        26
-      ],
-      "end": [
-        33,
-        31
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 7,
-      "start": [
-        33,
-        32
-      ],
-      "end": [
-        33,
-        34
-      ],
-      "verseCount": 3
-    }
-  ],
-  "vayakhel": [
-    {
-      "aliya": 1,
-      "start": [
-        34,
-        20
-      ],
-      "end": [
-        34,
-        28
-      ],
-      "verseCount": 9
-    },
-    {
-      "aliya": 2,
-      "start": [
-        34,
-        29
-      ],
-      "end": [
-        35,
-        6
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 3,
-      "start": [
-        35,
-        7
-      ],
-      "end": [
-        35,
-        18
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 4,
-      "start": [
-        35,
-        19
-      ],
-      "end": [
-        36,
-        15
-      ],
-      "verseCount": 37
-    },
-    {
-      "aliya": 5,
-      "start": [
-        36,
-        16
-      ],
-      "end": [
-        36,
-        -1
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 6,
-      "start": [
-        37,
-        0
-      ],
-      "end": [
-        37,
-        16
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 7,
-      "start": [
-        37,
-        17
-      ],
-      "end": [
-        37,
-        19
-      ],
-      "verseCount": 3
-    }
-  ],
-  "pekudei": [
-    {
-      "aliya": 1,
-      "start": [
-        38,
-        1
-      ],
-      "end": [
-        38,
-        20
-      ],
-      "verseCount": 20
-    },
-    {
-      "aliya": 2,
-      "start": [
-        38,
-        21
-      ],
-      "end": [
-        38,
-        31
-      ],
-      "verseCount": 11
-    },
-    {
-      "aliya": 3,
-      "start": [
-        38,
-        32
-      ],
-      "end": [
-        38,
-        -1
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 4,
-      "start": [
-        39,
-        0
-      ],
-      "end": [
-        39,
-        15
-      ],
-      "verseCount": 16
-    },
-    {
-      "aliya": 5,
-      "start": [
-        39,
-        16
-      ],
-      "end": [
-        39,
-        26
-      ],
-      "verseCount": 11
-    },
-    {
-      "aliya": 6,
-      "start": [
-        39,
-        27
-      ],
-      "end": [
-        39,
-        32
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 7,
-      "start": [
-        39,
-        33
-      ],
-      "end": [
-        39,
-        37
-      ],
-      "verseCount": 5
-    }
-  ],
-  "vayakhel-pekudei": [
-    {
-      "aliya": 1,
-      "start": [
-        34,
-        29
-      ],
-      "end": [
-        36,
-        15
-      ],
-      "verseCount": 66
-    },
-    {
-      "aliya": 2,
-      "start": [
-        36,
-        16
-      ],
-      "end": [
-        36,
-        -1
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 3,
-      "start": [
-        37,
-        0
-      ],
-      "end": [
-        38,
-        0
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 4,
-      "start": [
-        38,
-        1
-      ],
-      "end": [
-        38,
-        20
-      ],
-      "verseCount": 20
-    },
-    {
-      "aliya": 5,
-      "start": [
-        38,
-        21
-      ],
-      "end": [
-        38,
-        -1
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 6,
-      "start": [
-        39,
-        0
-      ],
-      "end": [
-        39,
-        32
-      ],
-      "verseCount": 33
-    },
-    {
-      "aliya": 7,
-      "start": [
-        39,
-        33
-      ],
-      "end": [
-        39,
-        37
-      ],
-      "verseCount": 5
-    }
-  ],
-  "vayikra": [
-    {
-      "aliya": 1,
-      "start": [
-        0,
-        13
-      ],
-      "end": [
-        1,
-        5
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 2,
-      "start": [
-        1,
-        6
-      ],
-      "end": [
-        1,
-        15
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 3,
-      "start": [
-        2,
-        0
-      ],
-      "end": [
-        2,
-        16
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 4,
-      "start": [
-        3,
-        0
-      ],
-      "end": [
-        3,
-        25
-      ],
-      "verseCount": 26
-    },
-    {
-      "aliya": 5,
-      "start": [
-        3,
-        26
-      ],
-      "end": [
-        4,
-        9
-      ],
-      "verseCount": 19
-    },
-    {
-      "aliya": 6,
-      "start": [
-        4,
-        10
-      ],
-      "end": [
-        4,
-        22
-      ],
-      "verseCount": 13
-    },
-    {
-      "aliya": 7,
-      "start": [
-        4,
-        23
-      ],
-      "end": [
-        4,
-        25
-      ],
-      "verseCount": 3
-    }
-  ],
-  "tzav": [
-    {
-      "aliya": 1,
-      "start": [
-        5,
-        11
-      ],
-      "end": [
-        6,
-        9
-      ],
-      "verseCount": 29
-    },
-    {
-      "aliya": 2,
-      "start": [
-        6,
-        10
-      ],
-      "end": [
-        6,
-        37
-      ],
-      "verseCount": 28
-    },
-    {
-      "aliya": 3,
-      "start": [
-        7,
-        0
-      ],
-      "end": [
-        7,
-        12
-      ],
-      "verseCount": 13
-    },
-    {
-      "aliya": 4,
-      "start": [
-        7,
-        13
-      ],
-      "end": [
-        7,
-        20
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 5,
-      "start": [
-        7,
-        21
-      ],
-      "end": [
-        7,
-        28
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 6,
-      "start": [
-        7,
-        29
-      ],
-      "end": [
-        7,
-        31
-      ],
-      "verseCount": 3
-    },
-    {
-      "aliya": 7,
-      "start": [
-        7,
-        32
-      ],
-      "end": [
-        7,
-        35
-      ],
-      "verseCount": 4
-    }
-  ],
-  "shmini": [
-    {
-      "aliya": 1,
-      "start": [
-        8,
-        16
-      ],
-      "end": [
-        8,
-        22
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 2,
-      "start": [
-        8,
-        23
-      ],
-      "end": [
-        9,
-        10
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 3,
-      "start": [
-        9,
-        11
-      ],
-      "end": [
-        9,
-        14
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 4,
-      "start": [
-        9,
-        15
-      ],
-      "end": [
-        9,
-        19
-      ],
-      "verseCount": 5
-    },
-    {
-      "aliya": 5,
-      "start": [
-        10,
-        0
-      ],
-      "end": [
-        10,
-        31
-      ],
-      "verseCount": 32
-    },
-    {
-      "aliya": 6,
-      "start": [
-        10,
-        32
-      ],
-      "end": [
-        10,
-        43
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 7,
-      "start": [
-        10,
-        44
-      ],
-      "end": [
-        10,
-        46
-      ],
-      "verseCount": 3
-    }
-  ],
-  "tazria": [
-    {
-      "aliya": 1,
-      "start": [
-        12,
-        5
-      ],
-      "end": [
-        12,
-        16
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 2,
-      "start": [
-        12,
-        17
-      ],
-      "end": [
-        12,
-        22
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 3,
-      "start": [
-        12,
-        23
-      ],
-      "end": [
-        12,
-        27
-      ],
-      "verseCount": 5
-    },
-    {
-      "aliya": 4,
-      "start": [
-        12,
-        28
-      ],
-      "end": [
-        12,
-        38
-      ],
-      "verseCount": 11
-    },
-    {
-      "aliya": 5,
-      "start": [
-        12,
-        39
-      ],
-      "end": [
-        12,
-        53
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 6,
-      "start": [
-        12,
-        54
-      ],
-      "end": [
-        12,
-        55
-      ],
-      "verseCount": 2
-    },
-    {
-      "aliya": 7,
-      "start": [
-        12,
-        56
-      ],
-      "end": [
-        12,
-        58
-      ],
-      "verseCount": 3
-    }
-  ],
-  "metzora": [
-    {
-      "aliya": 1,
-      "start": [
-        13,
-        12
-      ],
-      "end": [
-        13,
-        19
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 2,
-      "start": [
-        13,
-        20
-      ],
-      "end": [
-        13,
-        31
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 3,
-      "start": [
-        13,
-        32
-      ],
-      "end": [
-        13,
-        52
-      ],
-      "verseCount": 21
-    },
-    {
-      "aliya": 4,
-      "start": [
-        13,
-        53
-      ],
-      "end": [
-        14,
-        14
-      ],
-      "verseCount": 19
-    },
-    {
-      "aliya": 5,
-      "start": [
-        14,
-        15
-      ],
-      "end": [
-        14,
-        27
-      ],
-      "verseCount": 13
-    },
-    {
-      "aliya": 6,
-      "start": [
-        14,
-        28
-      ],
-      "end": [
-        14,
-        29
-      ],
-      "verseCount": 2
-    },
-    {
-      "aliya": 7,
-      "start": [
-        14,
-        30
-      ],
-      "end": [
-        14,
-        32
-      ],
-      "verseCount": 3
-    }
-  ],
-  "tazria-metzora": [
-    {
-      "aliya": 1,
-      "start": [
-        12,
-        23
-      ],
-      "end": [
-        12,
-        38
-      ],
-      "verseCount": 16
-    },
-    {
-      "aliya": 2,
-      "start": [
-        12,
-        39
-      ],
-      "end": [
-        12,
-        53
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 3,
-      "start": [
-        12,
-        54
-      ],
-      "end": [
-        13,
-        19
-      ],
-      "verseCount": 25
-    },
-    {
-      "aliya": 4,
-      "start": [
-        13,
-        20
-      ],
-      "end": [
-        13,
-        31
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 5,
-      "start": [
-        13,
-        32
-      ],
-      "end": [
-        14,
-        14
-      ],
-      "verseCount": 40
-    },
-    {
-      "aliya": 6,
-      "start": [
-        14,
-        15
-      ],
-      "end": [
-        14,
-        29
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 7,
-      "start": [
-        14,
-        30
-      ],
-      "end": [
-        14,
-        32
-      ],
-      "verseCount": 3
-    }
-  ],
-  "achrei-mot": [
-    {
-      "aliya": 1,
-      "start": [
-        15,
-        17
-      ],
-      "end": [
-        15,
-        23
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 2,
-      "start": [
-        15,
-        24
-      ],
-      "end": [
-        15,
-        33
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 3,
-      "start": [
-        16,
-        0
-      ],
-      "end": [
-        16,
-        6
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 4,
-      "start": [
-        16,
-        7
-      ],
-      "end": [
-        17,
-        4
-      ],
-      "verseCount": 14
-    },
-    {
-      "aliya": 5,
-      "start": [
-        17,
-        5
-      ],
-      "end": [
-        17,
-        20
-      ],
-      "verseCount": 16
-    },
-    {
-      "aliya": 6,
-      "start": [
-        17,
-        21
-      ],
-      "end": [
-        17,
-        26
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 7,
-      "start": [
-        17,
-        27
-      ],
-      "end": [
-        17,
-        29
-      ],
-      "verseCount": 3
-    }
-  ],
-  "kedoshim": [
-    {
-      "aliya": 1,
-      "start": [
-        18,
-        14
-      ],
-      "end": [
-        18,
-        21
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 2,
-      "start": [
-        18,
-        22
-      ],
-      "end": [
-        18,
-        31
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 3,
-      "start": [
-        18,
-        32
-      ],
-      "end": [
-        18,
-        36
-      ],
-      "verseCount": 5
-    },
-    {
-      "aliya": 4,
-      "start": [
-        19,
-        0
-      ],
-      "end": [
-        19,
-        6
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 5,
-      "start": [
-        19,
-        7
-      ],
-      "end": [
-        19,
-        21
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 6,
-      "start": [
-        19,
-        22
-      ],
-      "end": [
-        19,
-        23
-      ],
-      "verseCount": 2
-    },
-    {
-      "aliya": 7,
-      "start": [
-        19,
-        24
-      ],
-      "end": [
-        19,
-        26
-      ],
-      "verseCount": 3
-    }
-  ],
-  "achrei-mot-kedoshim": [
-    {
-      "aliya": 1,
-      "start": [
-        15,
-        24
-      ],
-      "end": [
-        16,
-        6
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 2,
-      "start": [
-        16,
-        7
-      ],
-      "end": [
-        17,
-        20
-      ],
-      "verseCount": 30
-    },
-    {
-      "aliya": 3,
-      "start": [
-        17,
-        21
-      ],
-      "end": [
-        18,
-        13
-      ],
-      "verseCount": 23
-    },
-    {
-      "aliya": 4,
-      "start": [
-        18,
-        14
-      ],
-      "end": [
-        18,
-        31
-      ],
-      "verseCount": 18
-    },
-    {
-      "aliya": 5,
-      "start": [
-        18,
-        32
-      ],
-      "end": [
-        19,
-        6
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 6,
-      "start": [
-        19,
-        7
-      ],
-      "end": [
-        19,
-        23
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 7,
-      "start": [
-        19,
-        24
-      ],
-      "end": [
-        19,
-        26
-      ],
-      "verseCount": 3
-    }
-  ],
-  "emor": [
-    {
-      "aliya": 1,
-      "start": [
-        20,
-        15
-      ],
-      "end": [
-        21,
-        15
-      ],
-      "verseCount": 25
-    },
-    {
-      "aliya": 2,
-      "start": [
-        21,
-        16
-      ],
-      "end": [
-        21,
-        32
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 3,
-      "start": [
-        22,
-        0
-      ],
-      "end": [
-        22,
-        21
-      ],
-      "verseCount": 22
-    },
-    {
-      "aliya": 4,
-      "start": [
-        22,
-        22
-      ],
-      "end": [
-        22,
-        31
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 5,
-      "start": [
-        22,
-        32
-      ],
-      "end": [
-        22,
-        43
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 6,
-      "start": [
-        23,
-        0
-      ],
-      "end": [
-        23,
-        19
-      ],
-      "verseCount": 20
-    },
-    {
-      "aliya": 7,
-      "start": [
-        23,
-        20
-      ],
-      "end": [
-        23,
-        22
-      ],
-      "verseCount": 3
-    }
-  ],
-  "behar": [
-    {
-      "aliya": 1,
-      "start": [
-        24,
-        13
-      ],
-      "end": [
-        24,
-        17
-      ],
-      "verseCount": 5
-    },
-    {
-      "aliya": 2,
-      "start": [
-        24,
-        18
-      ],
-      "end": [
-        24,
-        23
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 3,
-      "start": [
-        24,
-        24
-      ],
-      "end": [
-        24,
-        27
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 4,
-      "start": [
-        24,
-        28
-      ],
-      "end": [
-        24,
-        37
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 5,
-      "start": [
-        24,
-        38
-      ],
-      "end": [
-        24,
-        45
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 6,
-      "start": [
-        24,
-        46
-      ],
-      "end": [
-        24,
-        53
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 7,
-      "start": [
-        24,
-        54
-      ],
-      "end": [
-        25,
-        1
-      ],
-      "verseCount": 3
-    }
-  ],
-  "bechukotai": [
-    {
-      "aliya": 1,
-      "start": [
-        25,
-        5
-      ],
-      "end": [
-        25,
-        8
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 2,
-      "start": [
-        25,
-        9
-      ],
-      "end": [
-        25,
-        45
-      ],
-      "verseCount": 37
-    },
-    {
-      "aliya": 3,
-      "start": [
-        26,
-        0
-      ],
-      "end": [
-        26,
-        14
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 4,
-      "start": [
-        26,
-        15
-      ],
-      "end": [
-        26,
-        20
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 5,
-      "start": [
-        26,
-        21
-      ],
-      "end": [
-        26,
-        27
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 6,
-      "start": [
-        26,
-        28
-      ],
-      "end": [
-        26,
-        30
-      ],
-      "verseCount": 3
-    },
-    {
-      "aliya": 7,
-      "start": [
-        26,
-        31
-      ],
-      "end": [
-        26,
-        33
-      ],
-      "verseCount": 3
-    }
-  ],
-  "behar-bechukotai": [
-    {
-      "aliya": 1,
-      "start": [
-        24,
-        18
-      ],
-      "end": [
-        24,
-        27
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 2,
-      "start": [
-        24,
-        28
-      ],
-      "end": [
-        24,
-        37
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 3,
-      "start": [
-        24,
-        38
-      ],
-      "end": [
-        25,
-        8
-      ],
-      "verseCount": 26
-    },
-    {
-      "aliya": 4,
-      "start": [
-        25,
-        9
-      ],
-      "end": [
-        25,
-        45
-      ],
-      "verseCount": 37
-    },
-    {
-      "aliya": 5,
-      "start": [
-        26,
-        0
-      ],
-      "end": [
-        26,
-        14
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 6,
-      "start": [
-        26,
-        15
-      ],
-      "end": [
-        26,
-        30
-      ],
-      "verseCount": 16
-    },
-    {
-      "aliya": 7,
-      "start": [
-        26,
-        31
-      ],
-      "end": [
-        26,
-        33
-      ],
-      "verseCount": 3
-    }
-  ],
-  "bamidbar": [
-    {
-      "aliya": 1,
-      "start": [
-        0,
-        19
-      ],
-      "end": [
-        0,
-        53
-      ],
-      "verseCount": 35
-    },
-    {
-      "aliya": 2,
-      "start": [
-        1,
-        0
-      ],
-      "end": [
-        1,
-        33
-      ],
-      "verseCount": 34
-    },
-    {
-      "aliya": 3,
-      "start": [
-        2,
-        0
-      ],
-      "end": [
-        2,
-        12
-      ],
-      "verseCount": 13
-    },
-    {
-      "aliya": 4,
-      "start": [
-        2,
-        13
-      ],
-      "end": [
-        2,
-        38
-      ],
-      "verseCount": 26
-    },
-    {
-      "aliya": 5,
-      "start": [
-        2,
-        39
-      ],
-      "end": [
-        2,
-        50
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 6,
-      "start": [
-        3,
-        0
-      ],
-      "end": [
-        3,
-        15
-      ],
-      "verseCount": 16
-    },
-    {
-      "aliya": 7,
-      "start": [
-        3,
-        16
-      ],
-      "end": [
-        3,
-        19
-      ],
-      "verseCount": 4
-    }
-  ],
-  "nasso": [
-    {
-      "aliya": 1,
-      "start": [
-        3,
-        37
-      ],
-      "end": [
-        3,
-        48
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 2,
-      "start": [
-        4,
-        0
-      ],
-      "end": [
-        4,
-        9
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 3,
-      "start": [
-        4,
-        10
-      ],
-      "end": [
-        5,
-        26
-      ],
-      "verseCount": 48
-    },
-    {
-      "aliya": 4,
-      "start": [
-        6,
-        0
-      ],
-      "end": [
-        6,
-        40
-      ],
-      "verseCount": 41
-    },
-    {
-      "aliya": 5,
-      "start": [
-        6,
-        41
-      ],
-      "end": [
-        6,
-        70
-      ],
-      "verseCount": 30
-    },
-    {
-      "aliya": 6,
-      "start": [
-        6,
-        71
-      ],
-      "end": [
-        6,
-        85
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 7,
-      "start": [
-        6,
-        86
-      ],
-      "end": [
-        6,
-        88
-      ],
-      "verseCount": 3
-    }
-  ],
-  "behaalotcha": [
-    {
-      "aliya": 1,
-      "start": [
-        7,
-        14
-      ],
-      "end": [
-        7,
-        25
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 2,
-      "start": [
-        8,
-        0
-      ],
-      "end": [
-        8,
-        13
-      ],
-      "verseCount": 14
-    },
-    {
-      "aliya": 3,
-      "start": [
-        8,
-        14
-      ],
-      "end": [
-        9,
-        9
-      ],
-      "verseCount": 19
-    },
-    {
-      "aliya": 4,
-      "start": [
-        9,
-        10
-      ],
-      "end": [
-        9,
-        33
-      ],
-      "verseCount": 24
-    },
-    {
-      "aliya": 5,
-      "start": [
-        9,
-        34
-      ],
-      "end": [
-        10,
-        28
-      ],
-      "verseCount": 31
-    },
-    {
-      "aliya": 6,
-      "start": [
-        10,
-        29
-      ],
-      "end": [
-        11,
-        12
-      ],
-      "verseCount": 19
-    },
-    {
-      "aliya": 7,
-      "start": [
-        11,
-        13
-      ],
-      "end": [
-        11,
-        15
-      ],
-      "verseCount": 3
-    }
-  ],
-  "shlach": [
-    {
-      "aliya": 1,
-      "start": [
-        12,
-        20
-      ],
-      "end": [
-        13,
-        6
-      ],
-      "verseCount": 20
-    },
-    {
-      "aliya": 2,
-      "start": [
-        13,
-        7
-      ],
-      "end": [
-        13,
-        24
-      ],
-      "verseCount": 18
-    },
-    {
-      "aliya": 3,
-      "start": [
-        13,
-        25
-      ],
-      "end": [
-        14,
-        6
-      ],
-      "verseCount": 27
-    },
-    {
-      "aliya": 4,
-      "start": [
-        14,
-        7
-      ],
-      "end": [
-        14,
-        15
-      ],
-      "verseCount": 9
-    },
-    {
-      "aliya": 5,
-      "start": [
-        14,
-        16
-      ],
-      "end": [
-        14,
-        25
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 6,
-      "start": [
-        14,
-        26
-      ],
-      "end": [
-        14,
-        35
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 7,
-      "start": [
-        14,
-        36
-      ],
-      "end": [
-        14,
-        40
-      ],
-      "verseCount": 5
-    }
-  ],
-  "korach": [
-    {
-      "aliya": 1,
-      "start": [
-        15,
-        13
-      ],
-      "end": [
-        15,
-        18
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 2,
-      "start": [
-        15,
-        19
-      ],
-      "end": [
-        16,
-        7
-      ],
-      "verseCount": 19
-    },
-    {
-      "aliya": 3,
-      "start": [
-        16,
-        8
-      ],
-      "end": [
-        16,
-        14
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 4,
-      "start": [
-        16,
-        15
-      ],
-      "end": [
-        16,
-        23
-      ],
-      "verseCount": 9
-    },
-    {
-      "aliya": 5,
-      "start": [
-        16,
-        24
-      ],
-      "end": [
-        17,
-        19
-      ],
-      "verseCount": 48
-    },
-    {
-      "aliya": 6,
-      "start": [
-        17,
-        20
-      ],
-      "end": [
-        17,
-        28
-      ],
-      "verseCount": 9
-    },
-    {
-      "aliya": 7,
-      "start": [
-        17,
-        29
-      ],
-      "end": [
-        17,
-        31
-      ],
-      "verseCount": 3
-    }
-  ],
-  "chukat": [
-    {
-      "aliya": 1,
-      "start": [
-        18,
-        17
-      ],
-      "end": [
-        19,
-        5
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 2,
-      "start": [
-        19,
-        6
-      ],
-      "end": [
-        19,
-        12
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 3,
-      "start": [
-        19,
-        13
-      ],
-      "end": [
-        19,
-        20
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 4,
-      "start": [
-        19,
-        21
-      ],
-      "end": [
-        20,
-        8
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 5,
-      "start": [
-        20,
-        9
-      ],
-      "end": [
-        20,
-        19
-      ],
-      "verseCount": 11
-    },
-    {
-      "aliya": 6,
-      "start": [
-        20,
-        20
-      ],
-      "end": [
-        20,
-        32
-      ],
-      "verseCount": 13
-    },
-    {
-      "aliya": 7,
-      "start": [
-        20,
-        33
-      ],
-      "end": [
-        21,
-        0
-      ],
-      "verseCount": 26
-    }
-  ],
-  "balak": [
-    {
-      "aliya": 1,
-      "start": [
-        21,
-        12
-      ],
-      "end": [
-        21,
-        19
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 2,
-      "start": [
-        21,
-        20
-      ],
-      "end": [
-        21,
-        37
-      ],
-      "verseCount": 18
-    },
-    {
-      "aliya": 3,
-      "start": [
-        21,
-        38
-      ],
-      "end": [
-        22,
-        11
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 4,
-      "start": [
-        22,
-        12
-      ],
-      "end": [
-        22,
-        25
-      ],
-      "verseCount": 14
-    },
-    {
-      "aliya": 5,
-      "start": [
-        22,
-        26
-      ],
-      "end": [
-        23,
-        12
-      ],
-      "verseCount": 42
-    },
-    {
-      "aliya": 6,
-      "start": [
-        23,
-        13
-      ],
-      "end": [
-        24,
-        5
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 7,
-      "start": [
-        24,
-        6
-      ],
-      "end": [
-        24,
-        8
-      ],
-      "verseCount": 3
-    }
-  ],
-  "chukat-balak": [
-    {
-      "aliya": 1,
-      "start": [
-        19,
-        6
-      ],
-      "end": [
-        19,
-        20
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 2,
-      "start": [
-        19,
-        21
-      ],
-      "end": [
-        20,
-        19
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 3,
-      "start": [
-        20,
-        20
-      ],
-      "end": [
-        21,
-        11
-      ],
-      "verseCount": 50
-    },
-    {
-      "aliya": 4,
-      "start": [
-        21,
-        12
-      ],
-      "end": [
-        21,
-        37
-      ],
-      "verseCount": 26
-    },
-    {
-      "aliya": 5,
-      "start": [
-        21,
-        38
-      ],
-      "end": [
-        22,
-        25
-      ],
-      "verseCount": 18
-    },
-    {
-      "aliya": 6,
-      "start": [
-        22,
-        26
-      ],
-      "end": [
-        24,
-        5
-      ],
-      "verseCount": 59
-    },
-    {
-      "aliya": 7,
-      "start": [
-        24,
-        6
-      ],
-      "end": [
-        24,
-        8
-      ],
-      "verseCount": 3
-    }
-  ],
-  "pinchas": [
-    {
-      "aliya": 1,
-      "start": [
-        25,
-        4
-      ],
-      "end": [
-        25,
-        50
-      ],
-      "verseCount": 47
-    },
-    {
-      "aliya": 2,
-      "start": [
-        25,
-        51
-      ],
-      "end": [
-        26,
-        4
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 3,
-      "start": [
-        26,
-        5
-      ],
-      "end": [
-        26,
-        44
-      ],
-      "verseCount": 40
-    },
-    {
-      "aliya": 4,
-      "start": [
-        27,
-        0
-      ],
-      "end": [
-        27,
-        14
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 5,
-      "start": [
-        27,
-        15
-      ],
-      "end": [
-        28,
-        10
-      ],
-      "verseCount": 21
-    },
-    {
-      "aliya": 6,
-      "start": [
-        28,
-        11
-      ],
-      "end": [
-        28,
-        33
-      ],
-      "verseCount": 23
-    },
-    {
-      "aliya": 7,
-      "start": [
-        28,
-        34
-      ],
-      "end": [
-        29,
-        0
-      ],
-      "verseCount": 2
-    }
-  ],
-  "matot": [
-    {
-      "aliya": 1,
-      "start": [
-        30,
-        0
-      ],
-      "end": [
-        30,
-        11
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 2,
-      "start": [
-        30,
-        12
-      ],
-      "end": [
-        30,
-        23
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 3,
-      "start": [
-        30,
-        24
-      ],
-      "end": [
-        30,
-        40
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 4,
-      "start": [
-        30,
-        41
-      ],
-      "end": [
-        30,
-        37
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 5,
-      "start": [
-        31,
-        0
-      ],
-      "end": [
-        31,
-        18
-      ],
-      "verseCount": 19
-    },
-    {
-      "aliya": 6,
-      "start": [
-        31,
-        19
-      ],
-      "end": [
-        31,
-        37
-      ],
-      "verseCount": 19
-    },
-    {
-      "aliya": 7,
-      "start": [
-        31,
-        38
-      ],
-      "end": [
-        31,
-        41
-      ],
-      "verseCount": 4
-    }
-  ],
-  "masei": [
-    {
-      "aliya": 1,
-      "start": [
-        32,
-        10
-      ],
-      "end": [
-        32,
-        48
-      ],
-      "verseCount": 39
-    },
-    {
-      "aliya": 2,
-      "start": [
-        32,
-        49
-      ],
-      "end": [
-        33,
-        14
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 3,
-      "start": [
-        33,
-        15
-      ],
-      "end": [
-        33,
-        21
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 4,
-      "start": [
-        34,
-        0
-      ],
-      "end": [
-        34,
-        7
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 5,
-      "start": [
-        34,
-        8
-      ],
-      "end": [
-        34,
-        39
-      ],
-      "verseCount": 32
-    },
-    {
-      "aliya": 6,
-      "start": [
-        35,
-        0
-      ],
-      "end": [
-        35,
-        9
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 7,
-      "start": [
-        35,
-        10
-      ],
-      "end": [
-        35,
-        12
-      ],
-      "verseCount": 3
-    }
-  ],
-  "matot-masei": [
-    {
-      "aliya": 1,
-      "start": [
-        30,
-        12
-      ],
-      "end": [
-        30,
-        37
-      ],
-      "verseCount": 26
-    },
-    {
-      "aliya": 2,
-      "start": [
-        31,
-        0
-      ],
-      "end": [
-        31,
-        18
-      ],
-      "verseCount": 19
-    },
-    {
-      "aliya": 3,
-      "start": [
-        31,
-        19
-      ],
-      "end": [
-        32,
-        48
-      ],
-      "verseCount": 72
-    },
-    {
-      "aliya": 4,
-      "start": [
-        32,
-        49
-      ],
-      "end": [
-        33,
-        14
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 5,
-      "start": [
-        33,
-        15
-      ],
-      "end": [
-        34,
-        7
-      ],
-      "verseCount": 15
-    },
-    {
-      "aliya": 6,
-      "start": [
-        34,
-        8
-      ],
-      "end": [
-        35,
-        9
-      ],
-      "verseCount": 42
-    },
-    {
-      "aliya": 7,
-      "start": [
-        35,
-        10
-      ],
-      "end": [
-        35,
-        12
-      ],
-      "verseCount": 3
-    }
-  ],
-  "devarim": [
-    {
-      "aliya": 1,
-      "start": [
-        0,
-        11
-      ],
-      "end": [
-        0,
-        20
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 2,
-      "start": [
-        0,
-        21
-      ],
-      "end": [
-        0,
-        37
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 3,
-      "start": [
-        0,
-        38
-      ],
-      "end": [
-        1,
-        0
-      ],
-      "verseCount": 9
-    },
-    {
-      "aliya": 4,
-      "start": [
-        1,
-        1
-      ],
-      "end": [
-        1,
-        29
-      ],
-      "verseCount": 29
-    },
-    {
-      "aliya": 5,
-      "start": [
-        1,
-        30
-      ],
-      "end": [
-        2,
-        13
-      ],
-      "verseCount": 21
-    },
-    {
-      "aliya": 6,
-      "start": [
-        2,
-        14
-      ],
-      "end": [
-        2,
-        18
-      ],
-      "verseCount": 5
-    },
-    {
-      "aliya": 7,
-      "start": [
-        2,
-        19
-      ],
-      "end": [
-        2,
-        21
-      ],
-      "verseCount": 3
-    }
-  ],
-  "vaetchanan": [
-    {
-      "aliya": 1,
-      "start": [
-        3,
-        4
-      ],
-      "end": [
-        3,
-        39
-      ],
-      "verseCount": 36
-    },
-    {
-      "aliya": 2,
-      "start": [
-        3,
-        40
-      ],
-      "end": [
-        3,
-        29
-      ],
-      "verseCount": 1
-    },
-    {
-      "aliya": 3,
-      "start": [
-        4,
-        0
-      ],
-      "end": [
-        4,
-        17
-      ],
-      "verseCount": 18
-    },
-    {
-      "aliya": 4,
-      "start": [
-        4,
-        18
-      ],
-      "end": [
-        5,
-        2
-      ],
-      "verseCount": 18
-    },
-    {
-      "aliya": 5,
-      "start": [
-        5,
-        3
-      ],
-      "end": [
-        5,
-        33
-      ],
-      "verseCount": 31
-    },
-    {
-      "aliya": 6,
-      "start": [
-        6,
-        0
-      ],
-      "end": [
-        6,
-        7
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 7,
-      "start": [
-        6,
-        8
-      ],
-      "end": [
-        6,
-        10
-      ],
-      "verseCount": 3
-    }
-  ],
-  "eikev": [
-    {
-      "aliya": 1,
-      "start": [
-        7,
-        10
-      ],
-      "end": [
-        8,
-        2
-      ],
-      "verseCount": 39
-    },
-    {
-      "aliya": 2,
-      "start": [
-        8,
-        3
-      ],
-      "end": [
-        8,
-        36
-      ],
-      "verseCount": 34
-    },
-    {
-      "aliya": 3,
-      "start": [
-        9,
-        0
-      ],
-      "end": [
-        9,
-        10
-      ],
-      "verseCount": 11
-    },
-    {
-      "aliya": 4,
-      "start": [
-        9,
-        11
-      ],
-      "end": [
-        10,
-        8
-      ],
-      "verseCount": 40
-    },
-    {
-      "aliya": 5,
-      "start": [
-        10,
-        9
-      ],
-      "end": [
-        10,
-        20
-      ],
-      "verseCount": 12
-    },
-    {
-      "aliya": 6,
-      "start": [
-        10,
-        21
-      ],
-      "end": [
-        10,
-        24
-      ],
-      "verseCount": 4
-    }
-  ],
-  "reeh": [
-    {
-      "aliya": 1,
-      "start": [
-        11,
-        10
-      ],
-      "end": [
-        11,
-        27
-      ],
-      "verseCount": 18
-    },
-    {
-      "aliya": 2,
-      "start": [
-        11,
-        28
-      ],
-      "end": [
-        12,
-        51
-      ],
-      "verseCount": 64
-    },
-    {
-      "aliya": 3,
-      "start": [
-        13,
-        0
-      ],
-      "end": [
-        13,
-        20
-      ],
-      "verseCount": 21
-    },
-    {
-      "aliya": 4,
-      "start": [
-        13,
-        21
-      ],
-      "end": [
-        13,
-        38
-      ],
-      "verseCount": 18
-    },
-    {
-      "aliya": 5,
-      "start": [
-        14,
-        0
-      ],
-      "end": [
-        14,
-        17
-      ],
-      "verseCount": 18
-    },
-    {
-      "aliya": 6,
-      "start": [
-        14,
-        18
-      ],
-      "end": [
-        15,
-        11
-      ],
-      "verseCount": 50
-    },
-    {
-      "aliya": 7,
-      "start": [
-        15,
-        12
-      ],
-      "end": [
-        15,
-        16
-      ],
-      "verseCount": 5
-    }
-  ],
-  "shoftim": [
-    {
-      "aliya": 1,
-      "start": [
-        16,
-        13
-      ],
-      "end": [
-        16,
-        33
-      ],
-      "verseCount": 21
-    },
-    {
-      "aliya": 2,
-      "start": [
-        17,
-        0
-      ],
-      "end": [
-        17,
-        4
-      ],
-      "verseCount": 5
-    },
-    {
-      "aliya": 3,
-      "start": [
-        17,
-        5
-      ],
-      "end": [
-        17,
-        12
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 4,
-      "start": [
-        17,
-        13
-      ],
-      "end": [
-        18,
-        12
-      ],
-      "verseCount": 44
-    },
-    {
-      "aliya": 5,
-      "start": [
-        18,
-        13
-      ],
-      "end": [
-        19,
-        8
-      ],
-      "verseCount": 33
-    },
-    {
-      "aliya": 6,
-      "start": [
-        19,
-        9
-      ],
-      "end": [
-        20,
-        5
-      ],
-      "verseCount": 42
-    },
-    {
-      "aliya": 7,
-      "start": [
-        20,
-        6
-      ],
-      "end": [
-        20,
-        8
-      ],
-      "verseCount": 3
-    }
-  ],
-  "ki-teitzei": [
-    {
-      "aliya": 1,
-      "start": [
-        20,
-        21
-      ],
-      "end": [
-        21,
-        6
-      ],
-      "verseCount": 36
-    },
-    {
-      "aliya": 2,
-      "start": [
-        21,
-        7
-      ],
-      "end": [
-        22,
-        6
-      ],
-      "verseCount": 42
-    },
-    {
-      "aliya": 3,
-      "start": [
-        22,
-        7
-      ],
-      "end": [
-        22,
-        23
-      ],
-      "verseCount": 17
-    },
-    {
-      "aliya": 4,
-      "start": [
-        22,
-        24
-      ],
-      "end": [
-        23,
-        3
-      ],
-      "verseCount": 21
-    },
-    {
-      "aliya": 5,
-      "start": [
-        23,
-        4
-      ],
-      "end": [
-        23,
-        12
-      ],
-      "verseCount": 9
-    },
-    {
-      "aliya": 6,
-      "start": [
-        23,
-        13
-      ],
-      "end": [
-        24,
-        15
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 7,
-      "start": [
-        24,
-        16
-      ],
-      "end": [
-        24,
-        18
-      ],
-      "verseCount": 3
-    }
-  ],
-  "ki-tavo": [
-    {
-      "aliya": 1,
-      "start": [
-        25,
-        11
-      ],
-      "end": [
-        25,
-        14
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 2,
-      "start": [
-        25,
-        15
-      ],
-      "end": [
-        25,
-        32
-      ],
-      "verseCount": 18
-    },
-    {
-      "aliya": 3,
-      "start": [
-        26,
-        0
-      ],
-      "end": [
-        26,
-        9
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 4,
-      "start": [
-        26,
-        10
-      ],
-      "end": [
-        27,
-        5
-      ],
-      "verseCount": 19
-    },
-    {
-      "aliya": 5,
-      "start": [
-        27,
-        6
-      ],
-      "end": [
-        27,
-        25
-      ],
-      "verseCount": 20
-    },
-    {
-      "aliya": 6,
-      "start": [
-        28,
-        0
-      ],
-      "end": [
-        28,
-        4
-      ],
-      "verseCount": 5
-    },
-    {
-      "aliya": 7,
-      "start": [
-        28,
-        5
-      ],
-      "end": [
-        28,
-        7
-      ],
-      "verseCount": 3
-    }
-  ],
-  "nitzavim": [
-    {
-      "aliya": 1,
-      "start": [
-        28,
-        11
-      ],
-      "end": [
-        28,
-        13
-      ],
-      "verseCount": 3
-    },
-    {
-      "aliya": 2,
-      "start": [
-        28,
-        14
-      ],
-      "end": [
-        28,
-        39
-      ],
-      "verseCount": 26
-    },
-    {
-      "aliya": 3,
-      "start": [
-        29,
-        0
-      ],
-      "end": [
-        29,
-        5
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 4,
-      "start": [
-        29,
-        6
-      ],
-      "end": [
-        29,
-        9
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 5,
-      "start": [
-        29,
-        10
-      ],
-      "end": [
-        29,
-        13
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 6,
-      "start": [
-        29,
-        14
-      ],
-      "end": [
-        29,
-        19
-      ],
-      "verseCount": 6
-    }
-  ],
-  "vayeilech": [
-    {
-      "aliya": 1,
-      "start": [
-        30,
-        3
-      ],
-      "end": [
-        30,
-        5
-      ],
-      "verseCount": 3
-    },
-    {
-      "aliya": 2,
-      "start": [
-        30,
-        6
-      ],
-      "end": [
-        30,
-        8
-      ],
-      "verseCount": 3
-    },
-    {
-      "aliya": 3,
-      "start": [
-        30,
-        9
-      ],
-      "end": [
-        30,
-        12
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 4,
-      "start": [
-        30,
-        13
-      ],
-      "end": [
-        30,
-        18
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 5,
-      "start": [
-        30,
-        19
-      ],
-      "end": [
-        30,
-        23
-      ],
-      "verseCount": 5
-    },
-    {
-      "aliya": 6,
-      "start": [
-        30,
-        24
-      ],
-      "end": [
-        30,
-        26
-      ],
-      "verseCount": 3
-    },
-    {
-      "aliya": 7,
-      "start": [
-        30,
-        27
-      ],
-      "end": [
-        30,
-        29
-      ],
-      "verseCount": 3
-    }
-  ],
-  "nitzavim-vayeilech": [
-    {
-      "aliya": 1,
-      "start": [
-        29,
-        0
-      ],
-      "end": [
-        29,
-        5
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 2,
-      "start": [
-        29,
-        6
-      ],
-      "end": [
-        29,
-        13
-      ],
-      "verseCount": 8
-    },
-    {
-      "aliya": 3,
-      "start": [
-        29,
-        14
-      ],
-      "end": [
-        30,
-        5
-      ],
-      "verseCount": 32
-    },
-    {
-      "aliya": 4,
-      "start": [
-        30,
-        6
-      ],
-      "end": [
-        30,
-        12
-      ],
-      "verseCount": 7
-    },
-    {
-      "aliya": 5,
-      "start": [
-        30,
-        13
-      ],
-      "end": [
-        30,
-        18
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 6,
-      "start": [
-        30,
-        19
-      ],
-      "end": [
-        30,
-        29
-      ],
-      "verseCount": 11
-    }
-  ],
-  "haazinu": [
-    {
-      "aliya": 1,
-      "start": [
-        31,
-        6
-      ],
-      "end": [
-        31,
-        11
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 2,
-      "start": [
-        31,
-        12
-      ],
-      "end": [
-        31,
-        17
-      ],
-      "verseCount": 6
-    },
-    {
-      "aliya": 3,
-      "start": [
-        31,
-        18
-      ],
-      "end": [
-        31,
-        27
-      ],
-      "verseCount": 10
-    },
-    {
-      "aliya": 4,
-      "start": [
-        31,
-        28
-      ],
-      "end": [
-        31,
-        38
-      ],
-      "verseCount": 11
-    },
-    {
-      "aliya": 5,
-      "start": [
-        31,
-        39
-      ],
-      "end": [
-        31,
-        42
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 6,
-      "start": [
-        31,
-        43
-      ],
-      "end": [
-        31,
-        46
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 7,
-      "start": [
-        31,
-        47
-      ],
-      "end": [
-        31,
-        51
-      ],
-      "verseCount": 5
-    }
-  ],
-  "vzot-haberachah": [
-    {
-      "aliya": 1,
-      "start": [
-        32,
-        7
-      ],
-      "end": [
-        32,
-        11
-      ],
-      "verseCount": 5
-    },
-    {
-      "aliya": 2,
-      "start": [
-        32,
-        12
-      ],
-      "end": [
-        32,
-        16
-      ],
-      "verseCount": 5
-    },
-    {
-      "aliya": 3,
-      "start": [
-        32,
-        17
-      ],
-      "end": [
-        32,
-        20
-      ],
-      "verseCount": 4
-    },
-    {
-      "aliya": 4,
-      "start": [
-        32,
-        21
-      ],
-      "end": [
-        32,
-        25
-      ],
-      "verseCount": 5
-    },
-    {
-      "aliya": 5,
-      "start": [
-        32,
-        26
-      ],
-      "end": [
-        33,
-        11
-      ],
-      "verseCount": 20
-    }
-  ]
+  "bereshit": {
+    "book": "bereishit",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          0,
+          0
+        ],
+        "end": [
+          1,
+          2
+        ],
+        "verseCount": 34
+      },
+      {
+        "n": 2,
+        "start": [
+          1,
+          3
+        ],
+        "end": [
+          1,
+          18
+        ],
+        "verseCount": 16
+      },
+      {
+        "n": 3,
+        "start": [
+          1,
+          19
+        ],
+        "end": [
+          2,
+          20
+        ],
+        "verseCount": 27
+      },
+      {
+        "n": 4,
+        "start": [
+          2,
+          21
+        ],
+        "end": [
+          3,
+          17
+        ],
+        "verseCount": 21
+      },
+      {
+        "n": 5,
+        "start": [
+          3,
+          18
+        ],
+        "end": [
+          3,
+          21
+        ],
+        "verseCount": 4
+      },
+      {
+        "n": 6,
+        "start": [
+          3,
+          22
+        ],
+        "end": [
+          4,
+          23
+        ],
+        "verseCount": 28
+      },
+      {
+        "n": 7,
+        "start": [
+          4,
+          24
+        ],
+        "end": [
+          5,
+          7
+        ],
+        "verseCount": 16
+      }
+    ],
+    "total": 146
+  },
+  "noach": {
+    "book": "bereishit",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          5,
+          8
+        ],
+        "end": [
+          5,
+          21
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 2,
+        "start": [
+          6,
+          0
+        ],
+        "end": [
+          6,
+          15
+        ],
+        "verseCount": 16
+      },
+      {
+        "n": 3,
+        "start": [
+          6,
+          16
+        ],
+        "end": [
+          7,
+          13
+        ],
+        "verseCount": 22
+      },
+      {
+        "n": 4,
+        "start": [
+          7,
+          14
+        ],
+        "end": [
+          8,
+          6
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 5,
+        "start": [
+          8,
+          7
+        ],
+        "end": [
+          8,
+          16
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 6,
+        "start": [
+          8,
+          17
+        ],
+        "end": [
+          9,
+          31
+        ],
+        "verseCount": 44
+      },
+      {
+        "n": 7,
+        "start": [
+          10,
+          0
+        ],
+        "end": [
+          10,
+          31
+        ],
+        "verseCount": 32
+      }
+    ],
+    "total": 153
+  },
+  "lech-lecha": {
+    "book": "bereishit",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          11,
+          0
+        ],
+        "end": [
+          11,
+          12
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 2,
+        "start": [
+          11,
+          13
+        ],
+        "end": [
+          12,
+          3
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 3,
+        "start": [
+          12,
+          4
+        ],
+        "end": [
+          12,
+          17
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 4,
+        "start": [
+          13,
+          0
+        ],
+        "end": [
+          13,
+          19
+        ],
+        "verseCount": 20
+      },
+      {
+        "n": 5,
+        "start": [
+          13,
+          20
+        ],
+        "end": [
+          14,
+          5
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 6,
+        "start": [
+          14,
+          6
+        ],
+        "end": [
+          16,
+          5
+        ],
+        "verseCount": 37
+      },
+      {
+        "n": 7,
+        "start": [
+          16,
+          6
+        ],
+        "end": [
+          16,
+          26
+        ],
+        "verseCount": 21
+      }
+    ],
+    "total": 126
+  },
+  "vayera": {
+    "book": "bereishit",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          17,
+          0
+        ],
+        "end": [
+          17,
+          13
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 2,
+        "start": [
+          17,
+          14
+        ],
+        "end": [
+          17,
+          32
+        ],
+        "verseCount": 19
+      },
+      {
+        "n": 3,
+        "start": [
+          18,
+          0
+        ],
+        "end": [
+          18,
+          19
+        ],
+        "verseCount": 20
+      },
+      {
+        "n": 4,
+        "start": [
+          18,
+          20
+        ],
+        "end": [
+          20,
+          3
+        ],
+        "verseCount": 40
+      },
+      {
+        "n": 5,
+        "start": [
+          20,
+          4
+        ],
+        "end": [
+          20,
+          20
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 6,
+        "start": [
+          20,
+          21
+        ],
+        "end": [
+          20,
+          33
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 7,
+        "start": [
+          21,
+          0
+        ],
+        "end": [
+          21,
+          23
+        ],
+        "verseCount": 24
+      }
+    ],
+    "total": 147
+  },
+  "chayei-sara": {
+    "book": "bereishit",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          22,
+          0
+        ],
+        "end": [
+          22,
+          15
+        ],
+        "verseCount": 16
+      },
+      {
+        "n": 2,
+        "start": [
+          22,
+          16
+        ],
+        "end": [
+          23,
+          8
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 3,
+        "start": [
+          23,
+          9
+        ],
+        "end": [
+          23,
+          25
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 4,
+        "start": [
+          23,
+          26
+        ],
+        "end": [
+          23,
+          51
+        ],
+        "verseCount": 26
+      },
+      {
+        "n": 5,
+        "start": [
+          23,
+          52
+        ],
+        "end": [
+          23,
+          66
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 6,
+        "start": [
+          24,
+          0
+        ],
+        "end": [
+          24,
+          10
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 7,
+        "start": [
+          24,
+          11
+        ],
+        "end": [
+          24,
+          17
+        ],
+        "verseCount": 7
+      }
+    ],
+    "total": 105
+  },
+  "toldot": {
+    "book": "bereishit",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          24,
+          18
+        ],
+        "end": [
+          25,
+          4
+        ],
+        "verseCount": 21
+      },
+      {
+        "n": 2,
+        "start": [
+          25,
+          5
+        ],
+        "end": [
+          25,
+          11
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 3,
+        "start": [
+          25,
+          12
+        ],
+        "end": [
+          25,
+          21
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 4,
+        "start": [
+          25,
+          22
+        ],
+        "end": [
+          25,
+          28
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 5,
+        "start": [
+          25,
+          29
+        ],
+        "end": [
+          26,
+          26
+        ],
+        "verseCount": 33
+      },
+      {
+        "n": 6,
+        "start": [
+          26,
+          27
+        ],
+        "end": [
+          27,
+          3
+        ],
+        "verseCount": 23
+      },
+      {
+        "n": 7,
+        "start": [
+          27,
+          4
+        ],
+        "end": [
+          27,
+          8
+        ],
+        "verseCount": 5
+      }
+    ],
+    "total": 106
+  },
+  "vayetzei": {
+    "book": "bereishit",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          27,
+          9
+        ],
+        "end": [
+          27,
+          21
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 2,
+        "start": [
+          28,
+          0
+        ],
+        "end": [
+          28,
+          16
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 3,
+        "start": [
+          28,
+          17
+        ],
+        "end": [
+          29,
+          12
+        ],
+        "verseCount": 31
+      },
+      {
+        "n": 4,
+        "start": [
+          29,
+          13
+        ],
+        "end": [
+          29,
+          26
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 5,
+        "start": [
+          29,
+          27
+        ],
+        "end": [
+          30,
+          15
+        ],
+        "verseCount": 32
+      },
+      {
+        "n": 6,
+        "start": [
+          30,
+          16
+        ],
+        "end": [
+          30,
+          41
+        ],
+        "verseCount": 26
+      },
+      {
+        "n": 7,
+        "start": [
+          30,
+          42
+        ],
+        "end": [
+          31,
+          2
+        ],
+        "verseCount": 15
+      }
+    ],
+    "total": 148
+  },
+  "vayishlach": {
+    "book": "bereishit",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          31,
+          3
+        ],
+        "end": [
+          31,
+          12
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 2,
+        "start": [
+          31,
+          13
+        ],
+        "end": [
+          31,
+          29
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 3,
+        "start": [
+          31,
+          30
+        ],
+        "end": [
+          32,
+          4
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 4,
+        "start": [
+          32,
+          5
+        ],
+        "end": [
+          32,
+          19
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 5,
+        "start": [
+          33,
+          0
+        ],
+        "end": [
+          34,
+          10
+        ],
+        "verseCount": 42
+      },
+      {
+        "n": 6,
+        "start": [
+          34,
+          11
+        ],
+        "end": [
+          35,
+          18
+        ],
+        "verseCount": 37
+      },
+      {
+        "n": 7,
+        "start": [
+          35,
+          19
+        ],
+        "end": [
+          35,
+          42
+        ],
+        "verseCount": 24
+      }
+    ],
+    "total": 153
+  },
+  "vayeshev": {
+    "book": "bereishit",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          36,
+          0
+        ],
+        "end": [
+          36,
+          10
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 2,
+        "start": [
+          36,
+          11
+        ],
+        "end": [
+          36,
+          21
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 3,
+        "start": [
+          36,
+          22
+        ],
+        "end": [
+          36,
+          35
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 4,
+        "start": [
+          37,
+          0
+        ],
+        "end": [
+          37,
+          29
+        ],
+        "verseCount": 30
+      },
+      {
+        "n": 5,
+        "start": [
+          38,
+          0
+        ],
+        "end": [
+          38,
+          5
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 6,
+        "start": [
+          38,
+          6
+        ],
+        "end": [
+          38,
+          22
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 7,
+        "start": [
+          39,
+          0
+        ],
+        "end": [
+          39,
+          22
+        ],
+        "verseCount": 23
+      }
+    ],
+    "total": 112
+  },
+  "miketz": {
+    "book": "bereishit",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          40,
+          0
+        ],
+        "end": [
+          40,
+          13
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 2,
+        "start": [
+          40,
+          14
+        ],
+        "end": [
+          40,
+          37
+        ],
+        "verseCount": 24
+      },
+      {
+        "n": 3,
+        "start": [
+          40,
+          38
+        ],
+        "end": [
+          40,
+          51
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 4,
+        "start": [
+          40,
+          52
+        ],
+        "end": [
+          41,
+          17
+        ],
+        "verseCount": 23
+      },
+      {
+        "n": 5,
+        "start": [
+          41,
+          18
+        ],
+        "end": [
+          42,
+          14
+        ],
+        "verseCount": 35
+      },
+      {
+        "n": 6,
+        "start": [
+          42,
+          15
+        ],
+        "end": [
+          42,
+          28
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 7,
+        "start": [
+          42,
+          29
+        ],
+        "end": [
+          43,
+          16
+        ],
+        "verseCount": 22
+      }
+    ],
+    "total": 146
+  },
+  "vayigash": {
+    "book": "bereishit",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          43,
+          17
+        ],
+        "end": [
+          43,
+          29
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 2,
+        "start": [
+          43,
+          30
+        ],
+        "end": [
+          44,
+          6
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 3,
+        "start": [
+          44,
+          7
+        ],
+        "end": [
+          44,
+          17
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 4,
+        "start": [
+          44,
+          18
+        ],
+        "end": [
+          44,
+          26
+        ],
+        "verseCount": 9
+      },
+      {
+        "n": 5,
+        "start": [
+          44,
+          27
+        ],
+        "end": [
+          45,
+          26
+        ],
+        "verseCount": 28
+      },
+      {
+        "n": 6,
+        "start": [
+          45,
+          27
+        ],
+        "end": [
+          46,
+          9
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 7,
+        "start": [
+          46,
+          10
+        ],
+        "end": [
+          46,
+          26
+        ],
+        "verseCount": 17
+      }
+    ],
+    "total": 106
+  },
+  "vayechi": {
+    "book": "bereishit",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          46,
+          27
+        ],
+        "end": [
+          47,
+          8
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 2,
+        "start": [
+          47,
+          9
+        ],
+        "end": [
+          47,
+          15
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 3,
+        "start": [
+          47,
+          16
+        ],
+        "end": [
+          47,
+          21
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 4,
+        "start": [
+          48,
+          0
+        ],
+        "end": [
+          48,
+          17
+        ],
+        "verseCount": 18
+      },
+      {
+        "n": 5,
+        "start": [
+          48,
+          18
+        ],
+        "end": [
+          48,
+          25
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 6,
+        "start": [
+          48,
+          26
+        ],
+        "end": [
+          49,
+          19
+        ],
+        "verseCount": 27
+      },
+      {
+        "n": 7,
+        "start": [
+          49,
+          20
+        ],
+        "end": [
+          49,
+          25
+        ],
+        "verseCount": 6
+      }
+    ],
+    "total": 85
+  },
+  "shemot": {
+    "book": "shmot",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          0,
+          0
+        ],
+        "end": [
+          0,
+          16
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 2,
+        "start": [
+          0,
+          17
+        ],
+        "end": [
+          1,
+          9
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 3,
+        "start": [
+          1,
+          10
+        ],
+        "end": [
+          1,
+          24
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 4,
+        "start": [
+          2,
+          0
+        ],
+        "end": [
+          2,
+          14
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 5,
+        "start": [
+          2,
+          15
+        ],
+        "end": [
+          3,
+          16
+        ],
+        "verseCount": 24
+      },
+      {
+        "n": 6,
+        "start": [
+          3,
+          17
+        ],
+        "end": [
+          3,
+          30
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 7,
+        "start": [
+          4,
+          0
+        ],
+        "end": [
+          5,
+          0
+        ],
+        "verseCount": 24
+      }
+    ],
+    "total": 124
+  },
+  "vaera": {
+    "book": "shmot",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          5,
+          1
+        ],
+        "end": [
+          5,
+          12
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 2,
+        "start": [
+          5,
+          13
+        ],
+        "end": [
+          5,
+          27
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 3,
+        "start": [
+          5,
+          28
+        ],
+        "end": [
+          6,
+          6
+        ],
+        "verseCount": 9
+      },
+      {
+        "n": 4,
+        "start": [
+          6,
+          7
+        ],
+        "end": [
+          7,
+          5
+        ],
+        "verseCount": 28
+      },
+      {
+        "n": 5,
+        "start": [
+          7,
+          6
+        ],
+        "end": [
+          7,
+          17
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 6,
+        "start": [
+          7,
+          18
+        ],
+        "end": [
+          8,
+          15
+        ],
+        "verseCount": 26
+      },
+      {
+        "n": 7,
+        "start": [
+          8,
+          16
+        ],
+        "end": [
+          8,
+          34
+        ],
+        "verseCount": 19
+      }
+    ],
+    "total": 121
+  },
+  "bo": {
+    "book": "shmot",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          9,
+          0
+        ],
+        "end": [
+          9,
+          10
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 2,
+        "start": [
+          9,
+          11
+        ],
+        "end": [
+          9,
+          22
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 3,
+        "start": [
+          9,
+          23
+        ],
+        "end": [
+          10,
+          2
+        ],
+        "verseCount": 9
+      },
+      {
+        "n": 4,
+        "start": [
+          10,
+          3
+        ],
+        "end": [
+          11,
+          19
+        ],
+        "verseCount": 27
+      },
+      {
+        "n": 5,
+        "start": [
+          11,
+          20
+        ],
+        "end": [
+          11,
+          27
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 6,
+        "start": [
+          11,
+          28
+        ],
+        "end": [
+          11,
+          50
+        ],
+        "verseCount": 23
+      },
+      {
+        "n": 7,
+        "start": [
+          12,
+          0
+        ],
+        "end": [
+          12,
+          15
+        ],
+        "verseCount": 16
+      }
+    ],
+    "total": 106
+  },
+  "beshalach": {
+    "book": "shmot",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          12,
+          16
+        ],
+        "end": [
+          13,
+          7
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 2,
+        "start": [
+          13,
+          8
+        ],
+        "end": [
+          13,
+          13
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 3,
+        "start": [
+          13,
+          14
+        ],
+        "end": [
+          13,
+          24
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 4,
+        "start": [
+          13,
+          25
+        ],
+        "end": [
+          14,
+          25
+        ],
+        "verseCount": 32
+      },
+      {
+        "n": 5,
+        "start": [
+          14,
+          26
+        ],
+        "end": [
+          15,
+          9
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 6,
+        "start": [
+          15,
+          10
+        ],
+        "end": [
+          15,
+          35
+        ],
+        "verseCount": 26
+      },
+      {
+        "n": 7,
+        "start": [
+          16,
+          0
+        ],
+        "end": [
+          16,
+          15
+        ],
+        "verseCount": 16
+      }
+    ],
+    "total": 116
+  },
+  "yitro": {
+    "book": "shmot",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          17,
+          0
+        ],
+        "end": [
+          17,
+          11
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 2,
+        "start": [
+          17,
+          12
+        ],
+        "end": [
+          17,
+          22
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 3,
+        "start": [
+          17,
+          23
+        ],
+        "end": [
+          17,
+          26
+        ],
+        "verseCount": 4
+      },
+      {
+        "n": 4,
+        "start": [
+          18,
+          0
+        ],
+        "end": [
+          18,
+          5
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 5,
+        "start": [
+          18,
+          6
+        ],
+        "end": [
+          18,
+          18
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 6,
+        "start": [
+          18,
+          19
+        ],
+        "end": [
+          19,
+          13
+        ],
+        "verseCount": 20
+      },
+      {
+        "n": 7,
+        "start": [
+          19,
+          14
+        ],
+        "end": [
+          19,
+          22
+        ],
+        "verseCount": 9
+      }
+    ],
+    "total": 75
+  },
+  "mishpatim": {
+    "book": "shmot",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          20,
+          0
+        ],
+        "end": [
+          20,
+          18
+        ],
+        "verseCount": 19
+      },
+      {
+        "n": 2,
+        "start": [
+          20,
+          19
+        ],
+        "end": [
+          21,
+          2
+        ],
+        "verseCount": 21
+      },
+      {
+        "n": 3,
+        "start": [
+          21,
+          3
+        ],
+        "end": [
+          21,
+          25
+        ],
+        "verseCount": 23
+      },
+      {
+        "n": 4,
+        "start": [
+          21,
+          26
+        ],
+        "end": [
+          22,
+          4
+        ],
+        "verseCount": 9
+      },
+      {
+        "n": 5,
+        "start": [
+          22,
+          5
+        ],
+        "end": [
+          22,
+          18
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 6,
+        "start": [
+          22,
+          19
+        ],
+        "end": [
+          22,
+          24
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 7,
+        "start": [
+          22,
+          25
+        ],
+        "end": [
+          23,
+          17
+        ],
+        "verseCount": 26
+      }
+    ],
+    "total": 118
+  },
+  "terumah": {
+    "book": "shmot",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          24,
+          0
+        ],
+        "end": [
+          24,
+          15
+        ],
+        "verseCount": 16
+      },
+      {
+        "n": 2,
+        "start": [
+          24,
+          16
+        ],
+        "end": [
+          24,
+          29
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 3,
+        "start": [
+          24,
+          30
+        ],
+        "end": [
+          25,
+          13
+        ],
+        "verseCount": 24
+      },
+      {
+        "n": 4,
+        "start": [
+          25,
+          14
+        ],
+        "end": [
+          25,
+          29
+        ],
+        "verseCount": 16
+      },
+      {
+        "n": 5,
+        "start": [
+          25,
+          30
+        ],
+        "end": [
+          25,
+          36
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 6,
+        "start": [
+          26,
+          0
+        ],
+        "end": [
+          26,
+          7
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 7,
+        "start": [
+          26,
+          8
+        ],
+        "end": [
+          26,
+          18
+        ],
+        "verseCount": 11
+      }
+    ],
+    "total": 96
+  },
+  "tetzaveh": {
+    "book": "shmot",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          26,
+          19
+        ],
+        "end": [
+          27,
+          11
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 2,
+        "start": [
+          27,
+          12
+        ],
+        "end": [
+          27,
+          29
+        ],
+        "verseCount": 18
+      },
+      {
+        "n": 3,
+        "start": [
+          27,
+          30
+        ],
+        "end": [
+          27,
+          42
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 4,
+        "start": [
+          28,
+          0
+        ],
+        "end": [
+          28,
+          17
+        ],
+        "verseCount": 18
+      },
+      {
+        "n": 5,
+        "start": [
+          28,
+          18
+        ],
+        "end": [
+          28,
+          36
+        ],
+        "verseCount": 19
+      },
+      {
+        "n": 6,
+        "start": [
+          28,
+          37
+        ],
+        "end": [
+          28,
+          45
+        ],
+        "verseCount": 9
+      },
+      {
+        "n": 7,
+        "start": [
+          29,
+          0
+        ],
+        "end": [
+          29,
+          9
+        ],
+        "verseCount": 10
+      }
+    ],
+    "total": 101
+  },
+  "ki-tisa": {
+    "book": "shmot",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          29,
+          10
+        ],
+        "end": [
+          30,
+          16
+        ],
+        "verseCount": 45
+      },
+      {
+        "n": 2,
+        "start": [
+          30,
+          17
+        ],
+        "end": [
+          32,
+          10
+        ],
+        "verseCount": 47
+      },
+      {
+        "n": 3,
+        "start": [
+          32,
+          11
+        ],
+        "end": [
+          32,
+          15
+        ],
+        "verseCount": 5
+      },
+      {
+        "n": 4,
+        "start": [
+          32,
+          16
+        ],
+        "end": [
+          32,
+          22
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 5,
+        "start": [
+          33,
+          0
+        ],
+        "end": [
+          33,
+          8
+        ],
+        "verseCount": 9
+      },
+      {
+        "n": 6,
+        "start": [
+          33,
+          9
+        ],
+        "end": [
+          33,
+          25
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 7,
+        "start": [
+          33,
+          26
+        ],
+        "end": [
+          33,
+          34
+        ],
+        "verseCount": 9
+      }
+    ],
+    "total": 139
+  },
+  "vayakhel": {
+    "book": "shmot",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          34,
+          0
+        ],
+        "end": [
+          34,
+          19
+        ],
+        "verseCount": 20
+      },
+      {
+        "n": 2,
+        "start": [
+          34,
+          20
+        ],
+        "end": [
+          34,
+          28
+        ],
+        "verseCount": 9
+      },
+      {
+        "n": 3,
+        "start": [
+          34,
+          29
+        ],
+        "end": [
+          35,
+          6
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 4,
+        "start": [
+          35,
+          7
+        ],
+        "end": [
+          35,
+          18
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 5,
+        "start": [
+          35,
+          19
+        ],
+        "end": [
+          36,
+          15
+        ],
+        "verseCount": 35
+      },
+      {
+        "n": 6,
+        "start": [
+          36,
+          16
+        ],
+        "end": [
+          36,
+          28
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 7,
+        "start": [
+          37,
+          0
+        ],
+        "end": [
+          37,
+          19
+        ],
+        "verseCount": 20
+      }
+    ],
+    "total": 122
+  },
+  "pekudei": {
+    "book": "shmot",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          37,
+          20
+        ],
+        "end": [
+          38,
+          0
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 2,
+        "start": [
+          38,
+          1
+        ],
+        "end": [
+          38,
+          20
+        ],
+        "verseCount": 20
+      },
+      {
+        "n": 3,
+        "start": [
+          38,
+          21
+        ],
+        "end": [
+          38,
+          31
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 4,
+        "start": [
+          38,
+          32
+        ],
+        "end": [
+          38,
+          42
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 5,
+        "start": [
+          39,
+          0
+        ],
+        "end": [
+          39,
+          15
+        ],
+        "verseCount": 16
+      },
+      {
+        "n": 6,
+        "start": [
+          39,
+          16
+        ],
+        "end": [
+          39,
+          26
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 7,
+        "start": [
+          39,
+          27
+        ],
+        "end": [
+          39,
+          37
+        ],
+        "verseCount": 11
+      }
+    ],
+    "total": 92
+  },
+  "vayakhel-pekudei": {
+    "book": "shmot",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          34,
+          0
+        ],
+        "end": [
+          34,
+          28
+        ],
+        "verseCount": 29
+      },
+      {
+        "n": 2,
+        "start": [
+          34,
+          29
+        ],
+        "end": [
+          36,
+          15
+        ],
+        "verseCount": 60
+      },
+      {
+        "n": 3,
+        "start": [
+          36,
+          16
+        ],
+        "end": [
+          36,
+          28
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 4,
+        "start": [
+          37,
+          0
+        ],
+        "end": [
+          38,
+          0
+        ],
+        "verseCount": 32
+      },
+      {
+        "n": 5,
+        "start": [
+          38,
+          1
+        ],
+        "end": [
+          38,
+          20
+        ],
+        "verseCount": 20
+      },
+      {
+        "n": 6,
+        "start": [
+          38,
+          21
+        ],
+        "end": [
+          38,
+          42
+        ],
+        "verseCount": 22
+      },
+      {
+        "n": 7,
+        "start": [
+          39,
+          0
+        ],
+        "end": [
+          39,
+          37
+        ],
+        "verseCount": 38
+      }
+    ],
+    "total": 214
+  },
+  "vayikra": {
+    "book": "vayikra",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          0,
+          0
+        ],
+        "end": [
+          0,
+          12
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 2,
+        "start": [
+          0,
+          13
+        ],
+        "end": [
+          1,
+          5
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 3,
+        "start": [
+          1,
+          6
+        ],
+        "end": [
+          1,
+          15
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 4,
+        "start": [
+          2,
+          0
+        ],
+        "end": [
+          2,
+          16
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 5,
+        "start": [
+          3,
+          0
+        ],
+        "end": [
+          3,
+          25
+        ],
+        "verseCount": 26
+      },
+      {
+        "n": 6,
+        "start": [
+          3,
+          26
+        ],
+        "end": [
+          4,
+          9
+        ],
+        "verseCount": 19
+      },
+      {
+        "n": 7,
+        "start": [
+          4,
+          10
+        ],
+        "end": [
+          4,
+          25
+        ],
+        "verseCount": 16
+      }
+    ],
+    "total": 111
+  },
+  "tzav": {
+    "book": "vayikra",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          5,
+          0
+        ],
+        "end": [
+          5,
+          10
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 2,
+        "start": [
+          5,
+          11
+        ],
+        "end": [
+          6,
+          9
+        ],
+        "verseCount": 22
+      },
+      {
+        "n": 3,
+        "start": [
+          6,
+          10
+        ],
+        "end": [
+          6,
+          37
+        ],
+        "verseCount": 28
+      },
+      {
+        "n": 4,
+        "start": [
+          7,
+          0
+        ],
+        "end": [
+          7,
+          12
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 5,
+        "start": [
+          7,
+          13
+        ],
+        "end": [
+          7,
+          20
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 6,
+        "start": [
+          7,
+          21
+        ],
+        "end": [
+          7,
+          28
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 7,
+        "start": [
+          7,
+          29
+        ],
+        "end": [
+          7,
+          35
+        ],
+        "verseCount": 7
+      }
+    ],
+    "total": 97
+  },
+  "shmini": {
+    "book": "vayikra",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          8,
+          0
+        ],
+        "end": [
+          8,
+          15
+        ],
+        "verseCount": 16
+      },
+      {
+        "n": 2,
+        "start": [
+          8,
+          16
+        ],
+        "end": [
+          8,
+          22
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 3,
+        "start": [
+          8,
+          23
+        ],
+        "end": [
+          9,
+          10
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 4,
+        "start": [
+          9,
+          11
+        ],
+        "end": [
+          9,
+          14
+        ],
+        "verseCount": 4
+      },
+      {
+        "n": 5,
+        "start": [
+          9,
+          15
+        ],
+        "end": [
+          9,
+          19
+        ],
+        "verseCount": 5
+      },
+      {
+        "n": 6,
+        "start": [
+          10,
+          0
+        ],
+        "end": [
+          10,
+          31
+        ],
+        "verseCount": 32
+      },
+      {
+        "n": 7,
+        "start": [
+          10,
+          32
+        ],
+        "end": [
+          10,
+          46
+        ],
+        "verseCount": 15
+      }
+    ],
+    "total": 91
+  },
+  "tazria": {
+    "book": "vayikra",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          11,
+          0
+        ],
+        "end": [
+          12,
+          4
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 2,
+        "start": [
+          12,
+          5
+        ],
+        "end": [
+          12,
+          16
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 3,
+        "start": [
+          12,
+          17
+        ],
+        "end": [
+          12,
+          22
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 4,
+        "start": [
+          12,
+          23
+        ],
+        "end": [
+          12,
+          27
+        ],
+        "verseCount": 5
+      },
+      {
+        "n": 5,
+        "start": [
+          12,
+          28
+        ],
+        "end": [
+          12,
+          38
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 6,
+        "start": [
+          12,
+          39
+        ],
+        "end": [
+          12,
+          53
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 7,
+        "start": [
+          12,
+          54
+        ],
+        "end": [
+          12,
+          58
+        ],
+        "verseCount": 5
+      }
+    ],
+    "total": 67
+  },
+  "metzora": {
+    "book": "vayikra",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          13,
+          0
+        ],
+        "end": [
+          13,
+          11
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 2,
+        "start": [
+          13,
+          12
+        ],
+        "end": [
+          13,
+          19
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 3,
+        "start": [
+          13,
+          20
+        ],
+        "end": [
+          13,
+          31
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 4,
+        "start": [
+          13,
+          32
+        ],
+        "end": [
+          13,
+          52
+        ],
+        "verseCount": 21
+      },
+      {
+        "n": 5,
+        "start": [
+          13,
+          53
+        ],
+        "end": [
+          14,
+          14
+        ],
+        "verseCount": 19
+      },
+      {
+        "n": 6,
+        "start": [
+          14,
+          15
+        ],
+        "end": [
+          14,
+          27
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 7,
+        "start": [
+          14,
+          28
+        ],
+        "end": [
+          14,
+          32
+        ],
+        "verseCount": 5
+      }
+    ],
+    "total": 90
+  },
+  "tazria-metzora": {
+    "book": "vayikra",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          11,
+          0
+        ],
+        "end": [
+          12,
+          22
+        ],
+        "verseCount": 31
+      },
+      {
+        "n": 2,
+        "start": [
+          12,
+          23
+        ],
+        "end": [
+          12,
+          38
+        ],
+        "verseCount": 16
+      },
+      {
+        "n": 3,
+        "start": [
+          12,
+          39
+        ],
+        "end": [
+          12,
+          53
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 4,
+        "start": [
+          12,
+          54
+        ],
+        "end": [
+          13,
+          19
+        ],
+        "verseCount": 25
+      },
+      {
+        "n": 5,
+        "start": [
+          13,
+          20
+        ],
+        "end": [
+          13,
+          31
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 6,
+        "start": [
+          13,
+          32
+        ],
+        "end": [
+          14,
+          14
+        ],
+        "verseCount": 40
+      },
+      {
+        "n": 7,
+        "start": [
+          14,
+          15
+        ],
+        "end": [
+          14,
+          32
+        ],
+        "verseCount": 18
+      }
+    ],
+    "total": 157
+  },
+  "achrei-mot": {
+    "book": "vayikra",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          15,
+          0
+        ],
+        "end": [
+          15,
+          16
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 2,
+        "start": [
+          15,
+          17
+        ],
+        "end": [
+          15,
+          23
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 3,
+        "start": [
+          15,
+          24
+        ],
+        "end": [
+          15,
+          33
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 4,
+        "start": [
+          16,
+          0
+        ],
+        "end": [
+          16,
+          6
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 5,
+        "start": [
+          16,
+          7
+        ],
+        "end": [
+          17,
+          4
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 6,
+        "start": [
+          17,
+          5
+        ],
+        "end": [
+          17,
+          20
+        ],
+        "verseCount": 16
+      },
+      {
+        "n": 7,
+        "start": [
+          17,
+          21
+        ],
+        "end": [
+          17,
+          29
+        ],
+        "verseCount": 9
+      }
+    ],
+    "total": 80
+  },
+  "kedoshim": {
+    "book": "vayikra",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          18,
+          0
+        ],
+        "end": [
+          18,
+          13
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 2,
+        "start": [
+          18,
+          14
+        ],
+        "end": [
+          18,
+          21
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 3,
+        "start": [
+          18,
+          22
+        ],
+        "end": [
+          18,
+          31
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 4,
+        "start": [
+          18,
+          32
+        ],
+        "end": [
+          18,
+          36
+        ],
+        "verseCount": 5
+      },
+      {
+        "n": 5,
+        "start": [
+          19,
+          0
+        ],
+        "end": [
+          19,
+          6
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 6,
+        "start": [
+          19,
+          7
+        ],
+        "end": [
+          19,
+          21
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 7,
+        "start": [
+          19,
+          22
+        ],
+        "end": [
+          19,
+          26
+        ],
+        "verseCount": 5
+      }
+    ],
+    "total": 64
+  },
+  "achrei-mot-kedoshim": {
+    "book": "vayikra",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          15,
+          0
+        ],
+        "end": [
+          15,
+          23
+        ],
+        "verseCount": 24
+      },
+      {
+        "n": 2,
+        "start": [
+          15,
+          24
+        ],
+        "end": [
+          16,
+          6
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 3,
+        "start": [
+          16,
+          7
+        ],
+        "end": [
+          17,
+          20
+        ],
+        "verseCount": 30
+      },
+      {
+        "n": 4,
+        "start": [
+          17,
+          21
+        ],
+        "end": [
+          18,
+          13
+        ],
+        "verseCount": 23
+      },
+      {
+        "n": 5,
+        "start": [
+          18,
+          14
+        ],
+        "end": [
+          18,
+          31
+        ],
+        "verseCount": 18
+      },
+      {
+        "n": 6,
+        "start": [
+          18,
+          32
+        ],
+        "end": [
+          19,
+          6
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 7,
+        "start": [
+          19,
+          7
+        ],
+        "end": [
+          19,
+          26
+        ],
+        "verseCount": 20
+      }
+    ],
+    "total": 144
+  },
+  "emor": {
+    "book": "vayikra",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          20,
+          0
+        ],
+        "end": [
+          20,
+          14
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 2,
+        "start": [
+          20,
+          15
+        ],
+        "end": [
+          21,
+          15
+        ],
+        "verseCount": 25
+      },
+      {
+        "n": 3,
+        "start": [
+          21,
+          16
+        ],
+        "end": [
+          21,
+          32
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 4,
+        "start": [
+          22,
+          0
+        ],
+        "end": [
+          22,
+          21
+        ],
+        "verseCount": 22
+      },
+      {
+        "n": 5,
+        "start": [
+          22,
+          22
+        ],
+        "end": [
+          22,
+          31
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 6,
+        "start": [
+          22,
+          32
+        ],
+        "end": [
+          22,
+          43
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 7,
+        "start": [
+          23,
+          0
+        ],
+        "end": [
+          23,
+          22
+        ],
+        "verseCount": 23
+      }
+    ],
+    "total": 124
+  },
+  "behar": {
+    "book": "vayikra",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          24,
+          0
+        ],
+        "end": [
+          24,
+          12
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 2,
+        "start": [
+          24,
+          13
+        ],
+        "end": [
+          24,
+          17
+        ],
+        "verseCount": 5
+      },
+      {
+        "n": 3,
+        "start": [
+          24,
+          18
+        ],
+        "end": [
+          24,
+          23
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 4,
+        "start": [
+          24,
+          24
+        ],
+        "end": [
+          24,
+          27
+        ],
+        "verseCount": 4
+      },
+      {
+        "n": 5,
+        "start": [
+          24,
+          28
+        ],
+        "end": [
+          24,
+          37
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 6,
+        "start": [
+          24,
+          38
+        ],
+        "end": [
+          24,
+          45
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 7,
+        "start": [
+          24,
+          46
+        ],
+        "end": [
+          25,
+          1
+        ],
+        "verseCount": 11
+      }
+    ],
+    "total": 57
+  },
+  "bechukotai": {
+    "book": "vayikra",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          25,
+          2
+        ],
+        "end": [
+          25,
+          4
+        ],
+        "verseCount": 3
+      },
+      {
+        "n": 2,
+        "start": [
+          25,
+          5
+        ],
+        "end": [
+          25,
+          8
+        ],
+        "verseCount": 4
+      },
+      {
+        "n": 3,
+        "start": [
+          25,
+          9
+        ],
+        "end": [
+          25,
+          45
+        ],
+        "verseCount": 37
+      },
+      {
+        "n": 4,
+        "start": [
+          26,
+          0
+        ],
+        "end": [
+          26,
+          14
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 5,
+        "start": [
+          26,
+          15
+        ],
+        "end": [
+          26,
+          20
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 6,
+        "start": [
+          26,
+          21
+        ],
+        "end": [
+          26,
+          27
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 7,
+        "start": [
+          26,
+          28
+        ],
+        "end": [
+          26,
+          33
+        ],
+        "verseCount": 6
+      }
+    ],
+    "total": 78
+  },
+  "behar-bechukotai": {
+    "book": "vayikra",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          24,
+          0
+        ],
+        "end": [
+          24,
+          17
+        ],
+        "verseCount": 18
+      },
+      {
+        "n": 2,
+        "start": [
+          24,
+          18
+        ],
+        "end": [
+          24,
+          27
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 3,
+        "start": [
+          24,
+          28
+        ],
+        "end": [
+          24,
+          37
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 4,
+        "start": [
+          24,
+          38
+        ],
+        "end": [
+          25,
+          8
+        ],
+        "verseCount": 26
+      },
+      {
+        "n": 5,
+        "start": [
+          25,
+          9
+        ],
+        "end": [
+          25,
+          45
+        ],
+        "verseCount": 37
+      },
+      {
+        "n": 6,
+        "start": [
+          26,
+          0
+        ],
+        "end": [
+          26,
+          14
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 7,
+        "start": [
+          26,
+          15
+        ],
+        "end": [
+          26,
+          33
+        ],
+        "verseCount": 19
+      }
+    ],
+    "total": 135
+  },
+  "bamidbar": {
+    "book": "bamidbar",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          0,
+          0
+        ],
+        "end": [
+          0,
+          18
+        ],
+        "verseCount": 19
+      },
+      {
+        "n": 2,
+        "start": [
+          0,
+          19
+        ],
+        "end": [
+          0,
+          53
+        ],
+        "verseCount": 35
+      },
+      {
+        "n": 3,
+        "start": [
+          1,
+          0
+        ],
+        "end": [
+          1,
+          33
+        ],
+        "verseCount": 34
+      },
+      {
+        "n": 4,
+        "start": [
+          2,
+          0
+        ],
+        "end": [
+          2,
+          12
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 5,
+        "start": [
+          2,
+          13
+        ],
+        "end": [
+          2,
+          38
+        ],
+        "verseCount": 26
+      },
+      {
+        "n": 6,
+        "start": [
+          2,
+          39
+        ],
+        "end": [
+          2,
+          50
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 7,
+        "start": [
+          3,
+          0
+        ],
+        "end": [
+          3,
+          19
+        ],
+        "verseCount": 20
+      }
+    ],
+    "total": 159
+  },
+  "nasso": {
+    "book": "bamidbar",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          3,
+          20
+        ],
+        "end": [
+          3,
+          36
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 2,
+        "start": [
+          3,
+          37
+        ],
+        "end": [
+          3,
+          48
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 3,
+        "start": [
+          4,
+          0
+        ],
+        "end": [
+          4,
+          9
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 4,
+        "start": [
+          4,
+          10
+        ],
+        "end": [
+          5,
+          26
+        ],
+        "verseCount": 48
+      },
+      {
+        "n": 5,
+        "start": [
+          6,
+          0
+        ],
+        "end": [
+          6,
+          40
+        ],
+        "verseCount": 41
+      },
+      {
+        "n": 6,
+        "start": [
+          6,
+          41
+        ],
+        "end": [
+          6,
+          70
+        ],
+        "verseCount": 30
+      },
+      {
+        "n": 7,
+        "start": [
+          6,
+          71
+        ],
+        "end": [
+          6,
+          88
+        ],
+        "verseCount": 18
+      }
+    ],
+    "total": 176
+  },
+  "behaalotcha": {
+    "book": "bamidbar",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          7,
+          0
+        ],
+        "end": [
+          7,
+          13
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 2,
+        "start": [
+          7,
+          14
+        ],
+        "end": [
+          7,
+          25
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 3,
+        "start": [
+          8,
+          0
+        ],
+        "end": [
+          8,
+          13
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 4,
+        "start": [
+          8,
+          14
+        ],
+        "end": [
+          9,
+          9
+        ],
+        "verseCount": 19
+      },
+      {
+        "n": 5,
+        "start": [
+          9,
+          10
+        ],
+        "end": [
+          9,
+          33
+        ],
+        "verseCount": 24
+      },
+      {
+        "n": 6,
+        "start": [
+          9,
+          34
+        ],
+        "end": [
+          10,
+          28
+        ],
+        "verseCount": 31
+      },
+      {
+        "n": 7,
+        "start": [
+          10,
+          29
+        ],
+        "end": [
+          11,
+          15
+        ],
+        "verseCount": 22
+      }
+    ],
+    "total": 136
+  },
+  "shlach": {
+    "book": "bamidbar",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          12,
+          0
+        ],
+        "end": [
+          12,
+          19
+        ],
+        "verseCount": 20
+      },
+      {
+        "n": 2,
+        "start": [
+          12,
+          20
+        ],
+        "end": [
+          13,
+          6
+        ],
+        "verseCount": 20
+      },
+      {
+        "n": 3,
+        "start": [
+          13,
+          7
+        ],
+        "end": [
+          13,
+          24
+        ],
+        "verseCount": 18
+      },
+      {
+        "n": 4,
+        "start": [
+          13,
+          25
+        ],
+        "end": [
+          14,
+          6
+        ],
+        "verseCount": 27
+      },
+      {
+        "n": 5,
+        "start": [
+          14,
+          7
+        ],
+        "end": [
+          14,
+          15
+        ],
+        "verseCount": 9
+      },
+      {
+        "n": 6,
+        "start": [
+          14,
+          16
+        ],
+        "end": [
+          14,
+          25
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 7,
+        "start": [
+          14,
+          26
+        ],
+        "end": [
+          14,
+          40
+        ],
+        "verseCount": 15
+      }
+    ],
+    "total": 119
+  },
+  "korach": {
+    "book": "bamidbar",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          15,
+          0
+        ],
+        "end": [
+          15,
+          12
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 2,
+        "start": [
+          15,
+          13
+        ],
+        "end": [
+          15,
+          18
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 3,
+        "start": [
+          15,
+          19
+        ],
+        "end": [
+          16,
+          7
+        ],
+        "verseCount": 24
+      },
+      {
+        "n": 4,
+        "start": [
+          16,
+          8
+        ],
+        "end": [
+          16,
+          14
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 5,
+        "start": [
+          16,
+          15
+        ],
+        "end": [
+          16,
+          23
+        ],
+        "verseCount": 9
+      },
+      {
+        "n": 6,
+        "start": [
+          16,
+          24
+        ],
+        "end": [
+          17,
+          19
+        ],
+        "verseCount": 24
+      },
+      {
+        "n": 7,
+        "start": [
+          17,
+          20
+        ],
+        "end": [
+          17,
+          31
+        ],
+        "verseCount": 12
+      }
+    ],
+    "total": 95
+  },
+  "chukat": {
+    "book": "bamidbar",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          18,
+          0
+        ],
+        "end": [
+          18,
+          16
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 2,
+        "start": [
+          18,
+          17
+        ],
+        "end": [
+          19,
+          5
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 3,
+        "start": [
+          19,
+          6
+        ],
+        "end": [
+          19,
+          12
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 4,
+        "start": [
+          19,
+          13
+        ],
+        "end": [
+          19,
+          20
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 5,
+        "start": [
+          19,
+          21
+        ],
+        "end": [
+          20,
+          8
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 6,
+        "start": [
+          20,
+          9
+        ],
+        "end": [
+          20,
+          19
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 7,
+        "start": [
+          20,
+          20
+        ],
+        "end": [
+          21,
+          0
+        ],
+        "verseCount": 16
+      }
+    ],
+    "total": 87
+  },
+  "balak": {
+    "book": "bamidbar",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          21,
+          1
+        ],
+        "end": [
+          21,
+          11
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 2,
+        "start": [
+          21,
+          12
+        ],
+        "end": [
+          21,
+          19
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 3,
+        "start": [
+          21,
+          20
+        ],
+        "end": [
+          21,
+          37
+        ],
+        "verseCount": 18
+      },
+      {
+        "n": 4,
+        "start": [
+          21,
+          38
+        ],
+        "end": [
+          22,
+          11
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 5,
+        "start": [
+          22,
+          12
+        ],
+        "end": [
+          22,
+          25
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 6,
+        "start": [
+          22,
+          26
+        ],
+        "end": [
+          23,
+          12
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 7,
+        "start": [
+          23,
+          13
+        ],
+        "end": [
+          24,
+          8
+        ],
+        "verseCount": 21
+      }
+    ],
+    "total": 104
+  },
+  "chukat-balak": {
+    "book": "bamidbar",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          18,
+          0
+        ],
+        "end": [
+          19,
+          5
+        ],
+        "verseCount": 28
+      },
+      {
+        "n": 2,
+        "start": [
+          19,
+          6
+        ],
+        "end": [
+          19,
+          20
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 3,
+        "start": [
+          19,
+          21
+        ],
+        "end": [
+          20,
+          19
+        ],
+        "verseCount": 28
+      },
+      {
+        "n": 4,
+        "start": [
+          20,
+          20
+        ],
+        "end": [
+          21,
+          11
+        ],
+        "verseCount": 27
+      },
+      {
+        "n": 5,
+        "start": [
+          21,
+          12
+        ],
+        "end": [
+          21,
+          37
+        ],
+        "verseCount": 26
+      },
+      {
+        "n": 6,
+        "start": [
+          21,
+          38
+        ],
+        "end": [
+          22,
+          25
+        ],
+        "verseCount": 29
+      },
+      {
+        "n": 7,
+        "start": [
+          22,
+          26
+        ],
+        "end": [
+          24,
+          8
+        ],
+        "verseCount": 38
+      }
+    ],
+    "total": 191
+  },
+  "pinchas": {
+    "book": "bamidbar",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          24,
+          9
+        ],
+        "end": [
+          25,
+          3
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 2,
+        "start": [
+          25,
+          4
+        ],
+        "end": [
+          25,
+          50
+        ],
+        "verseCount": 47
+      },
+      {
+        "n": 3,
+        "start": [
+          25,
+          51
+        ],
+        "end": [
+          26,
+          4
+        ],
+        "verseCount": 19
+      },
+      {
+        "n": 4,
+        "start": [
+          26,
+          5
+        ],
+        "end": [
+          26,
+          22
+        ],
+        "verseCount": 18
+      },
+      {
+        "n": 5,
+        "start": [
+          27,
+          0
+        ],
+        "end": [
+          27,
+          14
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 6,
+        "start": [
+          27,
+          15
+        ],
+        "end": [
+          28,
+          10
+        ],
+        "verseCount": 27
+      },
+      {
+        "n": 7,
+        "start": [
+          28,
+          11
+        ],
+        "end": [
+          29,
+          0
+        ],
+        "verseCount": 29
+      }
+    ],
+    "total": 168
+  },
+  "matot": {
+    "book": "bamidbar",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          29,
+          1
+        ],
+        "end": [
+          29,
+          16
+        ],
+        "verseCount": 16
+      },
+      {
+        "n": 2,
+        "start": [
+          30,
+          0
+        ],
+        "end": [
+          30,
+          11
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 3,
+        "start": [
+          30,
+          12
+        ],
+        "end": [
+          30,
+          23
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 4,
+        "start": [
+          30,
+          24
+        ],
+        "end": [
+          30,
+          40
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 5,
+        "start": [
+          30,
+          41
+        ],
+        "end": [
+          30,
+          53
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 6,
+        "start": [
+          31,
+          0
+        ],
+        "end": [
+          31,
+          18
+        ],
+        "verseCount": 19
+      },
+      {
+        "n": 7,
+        "start": [
+          31,
+          19
+        ],
+        "end": [
+          31,
+          41
+        ],
+        "verseCount": 23
+      }
+    ],
+    "total": 112
+  },
+  "masei": {
+    "book": "bamidbar",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          32,
+          0
+        ],
+        "end": [
+          32,
+          9
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 2,
+        "start": [
+          32,
+          10
+        ],
+        "end": [
+          32,
+          48
+        ],
+        "verseCount": 39
+      },
+      {
+        "n": 3,
+        "start": [
+          32,
+          49
+        ],
+        "end": [
+          33,
+          14
+        ],
+        "verseCount": 22
+      },
+      {
+        "n": 4,
+        "start": [
+          33,
+          15
+        ],
+        "end": [
+          33,
+          28
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 5,
+        "start": [
+          34,
+          0
+        ],
+        "end": [
+          34,
+          7
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 6,
+        "start": [
+          34,
+          8
+        ],
+        "end": [
+          34,
+          33
+        ],
+        "verseCount": 26
+      },
+      {
+        "n": 7,
+        "start": [
+          35,
+          0
+        ],
+        "end": [
+          35,
+          12
+        ],
+        "verseCount": 13
+      }
+    ],
+    "total": 132
+  },
+  "matot-masei": {
+    "book": "bamidbar",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          29,
+          1
+        ],
+        "end": [
+          30,
+          11
+        ],
+        "verseCount": 28
+      },
+      {
+        "n": 2,
+        "start": [
+          30,
+          12
+        ],
+        "end": [
+          30,
+          53
+        ],
+        "verseCount": 42
+      },
+      {
+        "n": 3,
+        "start": [
+          31,
+          0
+        ],
+        "end": [
+          31,
+          18
+        ],
+        "verseCount": 19
+      },
+      {
+        "n": 4,
+        "start": [
+          31,
+          19
+        ],
+        "end": [
+          32,
+          48
+        ],
+        "verseCount": 72
+      },
+      {
+        "n": 5,
+        "start": [
+          32,
+          49
+        ],
+        "end": [
+          33,
+          14
+        ],
+        "verseCount": 22
+      },
+      {
+        "n": 6,
+        "start": [
+          33,
+          15
+        ],
+        "end": [
+          34,
+          7
+        ],
+        "verseCount": 22
+      },
+      {
+        "n": 7,
+        "start": [
+          34,
+          8
+        ],
+        "end": [
+          35,
+          12
+        ],
+        "verseCount": 39
+      }
+    ],
+    "total": 244
+  },
+  "devarim": {
+    "book": "dvarim",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          0,
+          0
+        ],
+        "end": [
+          0,
+          9
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 2,
+        "start": [
+          0,
+          10
+        ],
+        "end": [
+          0,
+          20
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 3,
+        "start": [
+          0,
+          21
+        ],
+        "end": [
+          0,
+          37
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 4,
+        "start": [
+          0,
+          38
+        ],
+        "end": [
+          1,
+          0
+        ],
+        "verseCount": 9
+      },
+      {
+        "n": 5,
+        "start": [
+          1,
+          1
+        ],
+        "end": [
+          1,
+          29
+        ],
+        "verseCount": 29
+      },
+      {
+        "n": 6,
+        "start": [
+          1,
+          30
+        ],
+        "end": [
+          2,
+          13
+        ],
+        "verseCount": 21
+      },
+      {
+        "n": 7,
+        "start": [
+          2,
+          14
+        ],
+        "end": [
+          2,
+          21
+        ],
+        "verseCount": 8
+      }
+    ],
+    "total": 105
+  },
+  "vaetchanan": {
+    "book": "dvarim",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          2,
+          22
+        ],
+        "end": [
+          3,
+          3
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 2,
+        "start": [
+          3,
+          4
+        ],
+        "end": [
+          3,
+          39
+        ],
+        "verseCount": 36
+      },
+      {
+        "n": 3,
+        "start": [
+          3,
+          40
+        ],
+        "end": [
+          3,
+          48
+        ],
+        "verseCount": 9
+      },
+      {
+        "n": 4,
+        "start": [
+          4,
+          0
+        ],
+        "end": [
+          4,
+          17
+        ],
+        "verseCount": 18
+      },
+      {
+        "n": 5,
+        "start": [
+          4,
+          18
+        ],
+        "end": [
+          5,
+          2
+        ],
+        "verseCount": 15
+      },
+      {
+        "n": 6,
+        "start": [
+          5,
+          3
+        ],
+        "end": [
+          5,
+          24
+        ],
+        "verseCount": 22
+      },
+      {
+        "n": 7,
+        "start": [
+          6,
+          0
+        ],
+        "end": [
+          6,
+          10
+        ],
+        "verseCount": 11
+      }
+    ],
+    "total": 122
+  },
+  "eikev": {
+    "book": "dvarim",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          6,
+          11
+        ],
+        "end": [
+          7,
+          9
+        ],
+        "verseCount": 25
+      },
+      {
+        "n": 2,
+        "start": [
+          7,
+          10
+        ],
+        "end": [
+          8,
+          2
+        ],
+        "verseCount": 13
+      },
+      {
+        "n": 3,
+        "start": [
+          8,
+          3
+        ],
+        "end": [
+          8,
+          28
+        ],
+        "verseCount": 26
+      },
+      {
+        "n": 4,
+        "start": [
+          9,
+          0
+        ],
+        "end": [
+          9,
+          10
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 5,
+        "start": [
+          9,
+          11
+        ],
+        "end": [
+          10,
+          8
+        ],
+        "verseCount": 20
+      },
+      {
+        "n": 6,
+        "start": [
+          10,
+          9
+        ],
+        "end": [
+          10,
+          20
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 7,
+        "start": [
+          10,
+          21
+        ],
+        "end": [
+          10,
+          24
+        ],
+        "verseCount": 4
+      }
+    ],
+    "total": 111
+  },
+  "reeh": {
+    "book": "dvarim",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          10,
+          25
+        ],
+        "end": [
+          11,
+          9
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 2,
+        "start": [
+          11,
+          10
+        ],
+        "end": [
+          11,
+          27
+        ],
+        "verseCount": 18
+      },
+      {
+        "n": 3,
+        "start": [
+          11,
+          28
+        ],
+        "end": [
+          12,
+          18
+        ],
+        "verseCount": 22
+      },
+      {
+        "n": 4,
+        "start": [
+          13,
+          0
+        ],
+        "end": [
+          13,
+          20
+        ],
+        "verseCount": 21
+      },
+      {
+        "n": 5,
+        "start": [
+          13,
+          21
+        ],
+        "end": [
+          13,
+          28
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 6,
+        "start": [
+          14,
+          0
+        ],
+        "end": [
+          14,
+          17
+        ],
+        "verseCount": 18
+      },
+      {
+        "n": 7,
+        "start": [
+          14,
+          18
+        ],
+        "end": [
+          15,
+          16
+        ],
+        "verseCount": 22
+      }
+    ],
+    "total": 126
+  },
+  "shoftim": {
+    "book": "dvarim",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          15,
+          17
+        ],
+        "end": [
+          16,
+          12
+        ],
+        "verseCount": 18
+      },
+      {
+        "n": 2,
+        "start": [
+          16,
+          13
+        ],
+        "end": [
+          16,
+          19
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 3,
+        "start": [
+          17,
+          0
+        ],
+        "end": [
+          17,
+          4
+        ],
+        "verseCount": 5
+      },
+      {
+        "n": 4,
+        "start": [
+          17,
+          5
+        ],
+        "end": [
+          17,
+          12
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 5,
+        "start": [
+          17,
+          13
+        ],
+        "end": [
+          18,
+          12
+        ],
+        "verseCount": 22
+      },
+      {
+        "n": 6,
+        "start": [
+          18,
+          13
+        ],
+        "end": [
+          19,
+          8
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 7,
+        "start": [
+          19,
+          9
+        ],
+        "end": [
+          20,
+          8
+        ],
+        "verseCount": 20
+      }
+    ],
+    "total": 97
+  },
+  "ki-teitzei": {
+    "book": "dvarim",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          20,
+          9
+        ],
+        "end": [
+          20,
+          20
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 2,
+        "start": [
+          20,
+          21
+        ],
+        "end": [
+          21,
+          6
+        ],
+        "verseCount": 9
+      },
+      {
+        "n": 3,
+        "start": [
+          21,
+          7
+        ],
+        "end": [
+          22,
+          6
+        ],
+        "verseCount": 29
+      },
+      {
+        "n": 4,
+        "start": [
+          22,
+          7
+        ],
+        "end": [
+          22,
+          23
+        ],
+        "verseCount": 17
+      },
+      {
+        "n": 5,
+        "start": [
+          22,
+          24
+        ],
+        "end": [
+          23,
+          3
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 6,
+        "start": [
+          23,
+          4
+        ],
+        "end": [
+          23,
+          12
+        ],
+        "verseCount": 9
+      },
+      {
+        "n": 7,
+        "start": [
+          23,
+          13
+        ],
+        "end": [
+          24,
+          18
+        ],
+        "verseCount": 28
+      }
+    ],
+    "total": 110
+  },
+  "ki-tavo": {
+    "book": "dvarim",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          25,
+          0
+        ],
+        "end": [
+          25,
+          10
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 2,
+        "start": [
+          25,
+          11
+        ],
+        "end": [
+          25,
+          14
+        ],
+        "verseCount": 4
+      },
+      {
+        "n": 3,
+        "start": [
+          25,
+          15
+        ],
+        "end": [
+          25,
+          18
+        ],
+        "verseCount": 4
+      },
+      {
+        "n": 4,
+        "start": [
+          26,
+          0
+        ],
+        "end": [
+          26,
+          9
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 5,
+        "start": [
+          26,
+          10
+        ],
+        "end": [
+          27,
+          5
+        ],
+        "verseCount": 22
+      },
+      {
+        "n": 6,
+        "start": [
+          27,
+          6
+        ],
+        "end": [
+          27,
+          68
+        ],
+        "verseCount": 63
+      },
+      {
+        "n": 7,
+        "start": [
+          28,
+          0
+        ],
+        "end": [
+          28,
+          7
+        ],
+        "verseCount": 8
+      }
+    ],
+    "total": 122
+  },
+  "nitzavim": {
+    "book": "dvarim",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          28,
+          8
+        ],
+        "end": [
+          28,
+          10
+        ],
+        "verseCount": 3
+      },
+      {
+        "n": 2,
+        "start": [
+          28,
+          11
+        ],
+        "end": [
+          28,
+          13
+        ],
+        "verseCount": 3
+      },
+      {
+        "n": 3,
+        "start": [
+          28,
+          14
+        ],
+        "end": [
+          28,
+          27
+        ],
+        "verseCount": 14
+      },
+      {
+        "n": 4,
+        "start": [
+          29,
+          0
+        ],
+        "end": [
+          29,
+          5
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 5,
+        "start": [
+          29,
+          6
+        ],
+        "end": [
+          29,
+          9
+        ],
+        "verseCount": 4
+      },
+      {
+        "n": 6,
+        "start": [
+          29,
+          10
+        ],
+        "end": [
+          29,
+          13
+        ],
+        "verseCount": 4
+      },
+      {
+        "n": 7,
+        "start": [
+          29,
+          14
+        ],
+        "end": [
+          29,
+          19
+        ],
+        "verseCount": 6
+      }
+    ],
+    "total": 40
+  },
+  "vayeilech": {
+    "book": "dvarim",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          30,
+          0
+        ],
+        "end": [
+          30,
+          2
+        ],
+        "verseCount": 3
+      },
+      {
+        "n": 2,
+        "start": [
+          30,
+          3
+        ],
+        "end": [
+          30,
+          5
+        ],
+        "verseCount": 3
+      },
+      {
+        "n": 3,
+        "start": [
+          30,
+          6
+        ],
+        "end": [
+          30,
+          8
+        ],
+        "verseCount": 3
+      },
+      {
+        "n": 4,
+        "start": [
+          30,
+          9
+        ],
+        "end": [
+          30,
+          12
+        ],
+        "verseCount": 4
+      },
+      {
+        "n": 5,
+        "start": [
+          30,
+          13
+        ],
+        "end": [
+          30,
+          18
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 6,
+        "start": [
+          30,
+          19
+        ],
+        "end": [
+          30,
+          23
+        ],
+        "verseCount": 5
+      },
+      {
+        "n": 7,
+        "start": [
+          30,
+          24
+        ],
+        "end": [
+          30,
+          29
+        ],
+        "verseCount": 6
+      }
+    ],
+    "total": 30
+  },
+  "nitzavim-vayeilech": {
+    "book": "dvarim",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          28,
+          8
+        ],
+        "end": [
+          28,
+          27
+        ],
+        "verseCount": 20
+      },
+      {
+        "n": 2,
+        "start": [
+          29,
+          0
+        ],
+        "end": [
+          29,
+          5
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 3,
+        "start": [
+          29,
+          6
+        ],
+        "end": [
+          29,
+          13
+        ],
+        "verseCount": 8
+      },
+      {
+        "n": 4,
+        "start": [
+          29,
+          14
+        ],
+        "end": [
+          30,
+          5
+        ],
+        "verseCount": 12
+      },
+      {
+        "n": 5,
+        "start": [
+          30,
+          6
+        ],
+        "end": [
+          30,
+          12
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 6,
+        "start": [
+          30,
+          13
+        ],
+        "end": [
+          30,
+          18
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 7,
+        "start": [
+          30,
+          19
+        ],
+        "end": [
+          30,
+          29
+        ],
+        "verseCount": 11
+      }
+    ],
+    "total": 70
+  },
+  "haazinu": {
+    "book": "dvarim",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          31,
+          0
+        ],
+        "end": [
+          31,
+          5
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 2,
+        "start": [
+          31,
+          6
+        ],
+        "end": [
+          31,
+          11
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 3,
+        "start": [
+          31,
+          12
+        ],
+        "end": [
+          31,
+          17
+        ],
+        "verseCount": 6
+      },
+      {
+        "n": 4,
+        "start": [
+          31,
+          18
+        ],
+        "end": [
+          31,
+          27
+        ],
+        "verseCount": 10
+      },
+      {
+        "n": 5,
+        "start": [
+          31,
+          28
+        ],
+        "end": [
+          31,
+          38
+        ],
+        "verseCount": 11
+      },
+      {
+        "n": 6,
+        "start": [
+          31,
+          39
+        ],
+        "end": [
+          31,
+          42
+        ],
+        "verseCount": 4
+      },
+      {
+        "n": 7,
+        "start": [
+          31,
+          43
+        ],
+        "end": [
+          31,
+          51
+        ],
+        "verseCount": 9
+      }
+    ],
+    "total": 52
+  },
+  "vzot-haberachah": {
+    "book": "dvarim",
+    "aliyot": [
+      {
+        "n": 1,
+        "start": [
+          32,
+          0
+        ],
+        "end": [
+          32,
+          6
+        ],
+        "verseCount": 7
+      },
+      {
+        "n": 2,
+        "start": [
+          32,
+          7
+        ],
+        "end": [
+          32,
+          11
+        ],
+        "verseCount": 5
+      },
+      {
+        "n": 3,
+        "start": [
+          32,
+          12
+        ],
+        "end": [
+          32,
+          16
+        ],
+        "verseCount": 5
+      },
+      {
+        "n": 4,
+        "start": [
+          32,
+          17
+        ],
+        "end": [
+          32,
+          20
+        ],
+        "verseCount": 4
+      },
+      {
+        "n": 5,
+        "start": [
+          32,
+          21
+        ],
+        "end": [
+          32,
+          25
+        ],
+        "verseCount": 5
+      },
+      {
+        "n": 6,
+        "start": [
+          32,
+          26
+        ],
+        "end": [
+          32,
+          28
+        ],
+        "verseCount": 3
+      },
+      {
+        "n": 7,
+        "start": [
+          33,
+          0
+        ],
+        "end": [
+          33,
+          11
+        ],
+        "verseCount": 12
+      }
+    ],
+    "total": 41
+  }
 }

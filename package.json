@@ -5,10 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/generate-aliyot.js && npm run validate",
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "validate": "node scripts/validate-data.mjs",
+    "validate": "node scripts/validate-data.mjs && node scripts/check-styles.mjs",
     "generate:aliyot": "node scripts/generate-aliyot.js"
   },
   "dependencies": {
@@ -16,6 +17,7 @@
     "vue": "^3.5.22"
   },
   "devDependencies": {
+    "@hebcal/leyning": "^8.2.9",
     "@vitejs/plugin-vue": "^6.0.1",
     "vite": "^7.1.7",
     "vite-plugin-pwa": "^1.2.0",
