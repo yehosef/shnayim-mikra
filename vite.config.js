@@ -9,21 +9,29 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       workbox: {
-        // Precache app shell: HTML, JS, CSS, and fonts
+        // Precache app shell (HTML, JS, CSS, fonts) plus the core corpus:
+        // Torah + Targum + aliyot.json (~2.9MB) so a fresh install works
+        // offline for the obligation itself. Rashi/English are optional and
+        // runtime-cached on demand (or via the Settings download button).
         globPatterns: [
           '**/*.{js,css,html}',
-          '*.{ttf,svg,png,ico}'
+          '*.{ttf,svg,png,ico}',
+          'data/aliyot.json',
+          'data/torah/*.json',
+          'data/targum/*.json'
         ],
-        // Runtime caching for JSON data files
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        cleanupOutdatedCaches: true,
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/data\//],
         runtimeCaching: [
           {
-            // Cache Torah, Targum, Rashi, English, and meforshim JSON data
-            urlPattern: /\/data\/.*\.json$/,
+            urlPattern: /\/data\/(english|rashi)\/.*\.json$/,
             handler: 'CacheFirst',
             options: {
               cacheName: 'torah-data',
               expiration: {
-                maxEntries: 200,
+                maxEntries: 20,
                 maxAgeSeconds: 30 * 24 * 60 * 60 // 30 days
               },
               cacheableResponse: {
