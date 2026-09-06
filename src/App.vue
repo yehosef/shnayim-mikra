@@ -1,6 +1,6 @@
 <template>
   <div dir="rtl" :style="{ fontSize: settings.fontSize + 'px' }">
-    <ParshaDisplay :parasha="currentParsha" />
+    <ParshaDisplay v-if="currentParsha" :parasha="currentParsha" />
   </div>
 </template>
 
@@ -13,7 +13,9 @@ import ParshaDisplay from './components/ParshaDisplay.vue'
 const { getWeeklyParsha } = useParsha()
 const { settings } = useSettings()
 
-const currentParsha = ref('bereshit')
+// Empty until the hash / weekly parsha is resolved, so we never fetch a
+// chumash we are not about to show.
+const currentParsha = ref('')
 
 // Handle routing
 const updateParsha = () => {

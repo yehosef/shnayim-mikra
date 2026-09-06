@@ -20,8 +20,11 @@ export function useData() {
   const error = ref(null)
   const data = ref([])
   const chapterLengths = ref([]) // verse count per chapter of the loaded chumash
+  const loadedChumash = ref(null) // which chumash `data`/`chapterLengths` belong to
+  let loadToken = 0
 
   const loadParsha = async (parshaName, showRashi = false) => {
+    const token = ++loadToken
     loading.value = true
     error.value = null
 
@@ -49,6 +52,9 @@ export function useData() {
       if (showRashi && !cached.rashiData) {
         cached.rashiData = await fetchJson(`/data/rashi/${chumash}.json`)
       }
+
+      // A newer loadParsha() call superseded this one: drop the result
+      if (token !== loadToken) return []
 
       const { torahData, targumData, englishData } = cached
       const rashiData = showRashi ? cached.rashiData : { text: [] }
@@ -93,14 +99,16 @@ export function useData() {
       }
 
       chapterLengths.value = torahData.text.map(ch => ch.length)
+      loadedChumash.value = chumash
       data.value = verses
       return verses
     } catch (e) {
+      if (token !== loadToken) return []
       error.value = e.message
       console.error('Error loading parsha:', e)
       return []
     } finally {
-      loading.value = false
+      if (token === loadToken) loading.value = false
     }
   }
 
@@ -109,6 +117,7 @@ export function useData() {
     error,
     data,
     chapterLengths,
+    loadedChumash,
     loadParsha
   }
 }

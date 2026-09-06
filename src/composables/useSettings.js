@@ -7,12 +7,12 @@ const defaults = {
   // Display settings
   displayMode: 'pasuk', // 'pasuk' (verse-by-verse) | 'parasha' (by paragraph) | 'aliyah' (one aliyah at a time)
   currentAliyah: 1, // Which aliyah to show when in aliyah mode (1-7)
+  readingStyle: 'verse', // 'verse' (each pasuk twice + targum) | 'aliyah' (whole aliyah twice, then targum)
   showRashi: false,
   showTrop: false,
   location: 'israel',
   fontSize: 20,
   fontRashi: true,
-  disableMeforshim: false,
   targumType: 'onkelos', // onkelos | rashi | english
   showEnglish: false,
 }

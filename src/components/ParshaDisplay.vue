@@ -5,6 +5,16 @@
       <div class="container">
         <div class="title-section">
           <h1>פרשת {{ parashaHe }}</h1>
+          <DailyGuide v-if="aliyotEntry" :guide="guide" :status="status" :isHebrew="isHebrew" />
+          <AliyahBar
+            v-if="aliyotEntry"
+            :stats="aliyahStatsList"
+            :currentN="currentAliyahN"
+            :selectedN="settings.displayMode === 'aliyah' ? settings.currentAliyah : null"
+            :guideAliyot="guide.aliyot"
+            :isHebrew="isHebrew"
+            @select="selectAliyah"
+          />
           <!-- Aliyah Selector (shown in aliyah mode) -->
           <div v-if="settings.displayMode === 'aliyah'" class="aliyah-selector">
             <span class="aliyah-label">{{ isHebrew ? 'עליה:' : 'Aliyah:' }}</span>
@@ -47,6 +57,8 @@
       :startIndex="focusIndex"
       :parasha="parasha"
       :settings="settings"
+      :pointerFn="() => pointer"
+      :aliyahOf="aliyahLabelFor"
       @exit="exitFocusMode"
     />
 
@@ -61,6 +73,8 @@
         :settings="settings"
         :isSelected="selectedIndex === i"
         :selectedPhase="selectedIndex === i ? selectedPhase : 0"
+        :isPointer="isPointer(verse.perekNum, verse.pasukNum)"
+        :inCurrentAliyah="inCurrentAliyah(verse.perekNum, verse.pasukNum)"
         :data-verse-index="i"
         @focus="enterFocusMode"
         @click="selectedIndex = i"
@@ -76,10 +90,15 @@ import { useData } from '../composables/useData'
 import { useSettings } from '../composables/useSettings'
 import { useParsha } from '../composables/useParsha'
 import { useProgress } from '../composables/useProgress'
-import parshiyotData from '../data/parshiyot'
+import { useAliyot } from '../composables/useAliyot'
+import { useReadingState } from '../composables/useReadingState'
+import { useDailyGuide } from '../composables/useDailyGuide'
+import { parseKey } from '../lib/progressMath'
 import VerseView from './VerseView.vue'
 import FocusMode from './FocusMode.vue'
 import SettingsModal from './SettingsModal.vue'
+import AliyahBar from './AliyahBar.vue'
+import DailyGuide from './DailyGuide.vue'
 
 const props = defineProps({
   parasha: {
@@ -88,10 +107,11 @@ const props = defineProps({
   }
 })
 
-const { loadParsha, loading, error, data } = useData()
+const { loadParsha, loading, error, data, chapterLengths, loadedChumash } = useData()
 const { settings } = useSettings()
-const { parshiyotList } = useParsha()
-const { setVerseProgress, getVerseProgress } = useProgress()
+const { parshiyotList, resolveWeek } = useParsha()
+const { progress, setVerseProgress, getVerseProgress } = useProgress()
+const { getAliyot, aliyotData, verseInAliyah, aliyahFor } = useAliyot()
 
 const showSettings = ref(false)
 const selectedParsha = ref(props.parasha)
@@ -118,61 +138,63 @@ const parashaHe = computed(() => {
 
 const isHebrew = computed(() => settings.value.interfaceLanguage === 'he')
 
-// Number of aliyot for the current parsha (varies: most have 7, some have 5 or 6)
-const aliyahCount = computed(() => {
-  const parshaDef = parshiyotData[props.parasha]
-  return parshaDef ? parshaDef.aliyot.length : 7
+// Aliyah boundaries come from the generated aliyot.json (never from parshiyot.js)
+const aliyotEntry = computed(() => (aliyotData.value ? getAliyot(props.parasha) : null))
+
+// Number of aliyot for the current parsha (read from the data; 7 until loaded)
+const aliyahCount = computed(() => aliyotEntry.value?.aliyot.length || 7)
+
+// Derived reading state: per-aliyah rollups, pointer, containing aliyah
+const {
+  aliyahStatsList,
+  pointer,
+  currentAliyahN,
+  isPointer,
+  inCurrentAliyah
+} = useReadingState({
+  aliyotEntry: () => aliyotEntry.value,
+  chapterLengths: () => chapterLengths.value,
+  loadedChumash: () => loadedChumash.value,
+  progress: () => progress.value[props.parasha] || {},
+  style: () => settings.value.readingStyle
 })
 
-// Get aliyah boundaries for filtering
-const aliyahBoundaries = computed(() => {
-  const parshaDef = parshiyotData[props.parasha]
-  if (!parshaDef) return []
-
-  const boundaries = []
-  const aliyot = parshaDef.aliyot
-
-  for (let i = 0; i < aliyot.length; i++) {
-    const start = aliyot[i]
-    // End is the verse before the next aliyah starts, or the parsha end
-    const end = i < aliyot.length - 1 ? aliyot[i + 1] : parshaDef.end
-    boundaries.push({ start, end, isLast: i === aliyot.length - 1 })
-  }
-
-  return boundaries
+// Advisory daily guide (never gates anything)
+const week = computed(() => resolveWeek(new Date(), settings.value.location === 'israel'))
+const { guide, status } = useDailyGuide({
+  aliyahCount: () => aliyahCount.value,
+  // urgency only applies when viewing this week's parsha
+  shabbat: () => (week.value.route === props.parasha ? week.value.shabbat : null),
+  route: () => props.parasha,
+  location: () => settings.value.location
 })
 
-// Filter verses based on display mode
+// Hebrew label of the aliyah containing a verse (for markers and focus header)
+const aliyahLabelFor = (perek, pasuk) => {
+  const a = aliyahFor(aliyotEntry.value, perek, pasuk)
+  return a ? aliyahNames[a.n - 1] : null
+}
+
+const selectAliyah = (n) => {
+  settings.value.displayMode = 'aliyah'
+  settings.value.currentAliyah = n
+}
+
+// Filter verses based on display mode, and label the first verse of each aliyah
 const displayVerses = computed(() => {
-  if (settings.value.displayMode !== 'aliyah') {
-    return data.value
+  const entry = aliyotEntry.value
+  let verses = data.value
+
+  if (settings.value.displayMode === 'aliyah' && entry) {
+    const aliyah = entry.aliyot[settings.value.currentAliyah - 1]
+    if (aliyah) verses = verses.filter(v => verseInAliyah(aliyah, v.perekNum, v.pasukNum))
   }
 
-  // Filter to current aliyah
-  const aliyahIndex = settings.value.currentAliyah - 1
-  const boundary = aliyahBoundaries.value[aliyahIndex]
-  if (!boundary) return data.value
-
-  const [startPerek, startPasuk] = boundary.start
-  const [endPerek, endPasuk] = boundary.end
-
-  return data.value.filter(verse => {
-    const vPerek = verse.perekNum
-    const vPasuk = verse.pasukNum
-
-    // Check if verse is within aliyah range
-    if (vPerek < startPerek) return false
-    if (vPerek > endPerek) return false
-    if (vPerek === startPerek && vPasuk < startPasuk) return false
-
-    // For the last aliyah, include the end verse; otherwise exclude it (it's the start of next aliyah)
-    if (boundary.isLast) {
-      if (vPerek === endPerek && vPasuk > endPasuk) return false
-    } else {
-      if (vPerek === endPerek && vPasuk >= endPasuk) return false
-    }
-
-    return true
+  if (!entry) return verses
+  const starts = new Map(entry.aliyot.map(a => [`${a.start[0]}:${a.start[1]}`, aliyahNames[a.n - 1]]))
+  return verses.map(v => {
+    const aliya = starts.get(`${v.perekNum}:${v.pasukNum}`) || null
+    return aliya === (v.aliya || null) ? v : { ...v, aliya }
   })
 })
 
@@ -233,15 +255,32 @@ const handlePhaseClick = (verseIndex, { phase, field, wasRead }) => {
   setVerseProgress(props.parasha, verseKey, field, !wasRead)
 
   // Only auto-advance if we just marked it as read (was unread before)
-  if (!wasRead) {
-    const maxIndex = displayVerses.value.length - 1
-    if (selectedPhase.value < 3) {
-      selectedPhase.value++
-    } else if (selectedIndex.value < maxIndex) {
-      selectedIndex.value++
-      selectedPhase.value = 1
-      scrollToSelected()
+  if (!wasRead) advanceSelection()
+}
+
+// Move the keyboard selection to the pointer (next unread step in the active
+// reading style) when it lies at or after the current verse; otherwise fall
+// back to the next phase / next verse.
+const advanceSelection = () => {
+  const ptr = pointer.value
+  if (ptr) {
+    const [p, v] = parseKey(ptr.key)
+    const i = displayVerses.value.findIndex(x => x.perekNum === p && x.pasukNum === v)
+    if (i >= selectedIndex.value) {
+      const moved = i !== selectedIndex.value
+      selectedIndex.value = i
+      selectedPhase.value = ptr.phase === 'hebrew1' ? 1 : ptr.phase === 'hebrew2' ? 2 : 3
+      if (moved) scrollToSelected()
+      return
     }
+  }
+  const maxIndex = displayVerses.value.length - 1
+  if (selectedPhase.value < 3) {
+    selectedPhase.value++
+  } else if (selectedIndex.value < maxIndex) {
+    selectedIndex.value++
+    selectedPhase.value = 1
+    scrollToSelected()
   }
 }
 
@@ -261,16 +300,7 @@ const toggleCurrentPhase = () => {
   setVerseProgress(props.parasha, verseKey, phaseField, !wasRead)
 
   // Only auto-advance if we just marked it as read (was unread before)
-  if (!wasRead) {
-    const maxIndex = displayVerses.value.length - 1
-    if (selectedPhase.value < 3) {
-      selectedPhase.value++
-    } else if (selectedIndex.value < maxIndex) {
-      selectedIndex.value++
-      selectedPhase.value = 1
-      scrollToSelected()
-    }
-  }
+  if (!wasRead) advanceSelection()
 }
 
 // Keyboard navigation for list view - navigates by phase (section) within verses
@@ -342,11 +372,28 @@ const scrollToSelected = () => {
   })
 }
 
-// Reset selected index when display mode or aliyah changes
-watch([() => settings.value.displayMode, () => settings.value.currentAliyah], () => {
+// Seed the keyboard selection at the reading pointer (the next unread step)
+// so Space always marks "the next thing to read". Falls back to the top.
+const seedSelectionFromPointer = () => {
+  const ptr = pointer.value
+  if (ptr) {
+    const [p, v] = parseKey(ptr.key)
+    const i = displayVerses.value.findIndex(x => x.perekNum === p && x.pasukNum === v)
+    if (i >= 0) {
+      selectedIndex.value = i
+      selectedPhase.value = ptr.phase === 'hebrew1' ? 1 : ptr.phase === 'hebrew2' ? 2 : 3
+      return
+    }
+  }
   selectedIndex.value = 0
   selectedPhase.value = 1
-})
+}
+
+// Re-seed when display mode / aliyah changes, or when the verse list is (re)loaded
+watch([() => settings.value.displayMode, () => settings.value.currentAliyah], seedSelectionFromPointer)
+watch(() => displayVerses.value.length, seedSelectionFromPointer)
+watch(aliyotEntry, seedSelectionFromPointer)
+watch(loading, (isLoading) => { if (!isLoading) seedSelectionFromPointer() })
 
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown)

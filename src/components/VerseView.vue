@@ -3,17 +3,16 @@
     class="verse"
     :class="{
       'completed': isCompleted,
-      'current-verse': isCurrent,
-      'in-current-aliyah': isInCurrentAliyah,
-      'showing-completion': showingCompletion,
+      'current-verse': isPointer,
+      'in-current-aliyah': inCurrentAliyah,
       'selected': isSelected
     }"
     :data-perek="verse.perekNum"
     :data-pasuk="verse.pasukNum"
     :data-verse-index="index"
   >
-    <!-- Verse Pointer (Current verse indicator) -->
-    <div v-if="isCurrent" class="verse-pointer">
+    <!-- Verse Pointer (next unread step lives in this verse) -->
+    <div v-if="isPointer" class="verse-pointer" :title="pointerTitle">
       <span class="pointer-icon">▶</span>
     </div>
 
@@ -21,11 +20,6 @@
     <div class="completion-indicator" :class="{ 'complete': isCompleted }">
       <span v-if="isCompleted" class="completion-checkmark">✓</span>
       <span v-else class="completion-dot"></span>
-    </div>
-
-    <!-- Completion Feedback (brief visual feedback) -->
-    <div v-if="showingCompletion" class="completion-feedback">
-      <span class="feedback-checkmark">✓</span>
     </div>
 
     <!-- Focus Button -->
@@ -69,7 +63,7 @@
 
     <!-- Rashi - Clickable (shown if selected as targum type) -->
     <div
-      v-if="settings.targumType === 'rashi' && verse.rashi"
+      v-if="settings.targumType === 'rashi' && verse.rashi?.length"
       class="rashi clickable-text"
       :class="{ 'reading-done': progress.targum, 'font-rashi': settings.fontRashi, 'phase-selected': selectedPhase === 3 }"
       @click="handlePhaseClick(3, 'targum')"
@@ -94,7 +88,7 @@
 
     <!-- Rashi (shown if enabled in settings AND not selected as targum type) -->
     <div
-      v-if="verse.rashi && settings.showRashi && settings.targumType !== 'rashi'"
+      v-if="verse.rashi?.length && settings.showRashi && settings.targumType !== 'rashi'"
       class="rashi"
       :class="{ 'font-rashi': settings.fontRashi }"
       v-html="verse.rashi.join('  ')"
@@ -103,9 +97,8 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import { useProgress } from '../composables/useProgress'
-import { useAliyahNavigation } from '../composables/useAliyahNavigation'
 import { formatHebrewText } from '../utils/hebrewUtils'
 
 const props = defineProps({
@@ -132,72 +125,35 @@ const props = defineProps({
   selectedPhase: {
     type: Number,
     default: 0 // 0 = none, 1 = hebrew1, 2 = hebrew2, 3 = targum
+  },
+  // Derived by the parent from per-verse progress (see useReadingState)
+  isPointer: {
+    type: Boolean,
+    default: false
+  },
+  inCurrentAliyah: {
+    type: Boolean,
+    default: false
   }
 })
 
 const emit = defineEmits(['focus', 'phase-click'])
 
-const { getVerseProgress, setVerseProgress } = useProgress()
-const { currentPosition, completionFeedback, initializeParsha: initNavigation, isVerseInCurrentAliyah, isFirstVerseOfCurrentAliyah } = useAliyahNavigation()
+const { getVerseProgress } = useProgress()
 
 const verseKey = computed(() => `${props.verse.perekNum}:${props.verse.pasukNum}`)
 const progress = computed(() => getVerseProgress(props.parasha, verseKey.value))
-const celebrating = ref(false)
-const showingCompletion = ref(false)
-
-// Initialize navigation on mount if parasha changes
-watch(() => props.parasha, async (parasha) => {
-  await initNavigation(parasha)
-}, { immediate: true })
-
-// Check if this verse is in the current aliyah being studied
-const isInCurrentAliyah = computed(() => {
-  if (!currentPosition.value || props.verse.perekNum === undefined) return false
-  return isVerseInCurrentAliyah(props.verse.perekNum, props.verse.pasukNum)
-})
-
-// Check if this verse is the first verse of the current aliyah (for positioning pointer)
-const isCurrent = computed(() => {
-  if (!isInCurrentAliyah.value || props.verse.perekNum === undefined) return false
-  return isFirstVerseOfCurrentAliyah(props.verse.perekNum, props.verse.pasukNum)
-})
-
-// Show completion feedback when this aliyah phase completes
-watch(completionFeedback, (feedback) => {
-  if (feedback.isVisible && feedback.position && isInCurrentAliyah.value) {
-    showingCompletion.value = true
-    setTimeout(() => {
-      showingCompletion.value = false
-    }, 400)
-  }
-})
 
 const isCompleted = computed(() => {
   return progress.value.hebrew1 && progress.value.hebrew2 && progress.value.targum
 })
 
-const targumLabelShort = computed(() => {
-  const labels = {
-    onkelos: 'תרגום',
-    rashi: 'רש"י',
-    english: 'English'
-  }
-  return labels[props.settings.targumType] || 'תרגום'
+const pointerTitle = computed(() => {
+  const p = progress.value
+  if (!p.hebrew1) return 'קריאה ראשונה'
+  if (!p.hebrew2) return 'קריאה שנייה'
+  return 'תרגום'
 })
-
-const toggleReading = (field) => {
-  const wasCompleted = isCompleted.value
-  const currentValue = progress.value[field]
-  setVerseProgress(props.parasha, verseKey.value, field, !currentValue)
-
-  // Trigger celebration if just completed
-  if (!wasCompleted && !currentValue && isCompleted.value) {
-    celebrating.value = true
-    setTimeout(() => {
-      celebrating.value = false
-    }, 800)
-  }
-}
 
 // Handle click on a phase - emit to parent which handles toggle + advance logic
 const handlePhaseClick = (phase, field) => {
@@ -352,8 +308,8 @@ const formattedTorahText = computed(() => {
 
 /* Phase selected (keyboard navigation) */
 .clickable-text.phase-selected {
-  border-color: #8b5cf6 !important;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%) !important;
+  border-color: #8b5cf6;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
   box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 2px 8px rgba(139, 92, 246, 0.2);
 }
 
@@ -362,7 +318,7 @@ const formattedTorahText = computed(() => {
 }
 
 .clickable-text.phase-selected.reading-done {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, #dcfce7 100%) !important;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, #dcfce7 100%);
 }
 
 .torah {
@@ -421,17 +377,6 @@ const formattedTorahText = computed(() => {
   50% { opacity: 0.6; transform: translateX(-4px); }
 }
 
-/* Current Verse State */
-.verse.current-verse {
-  border-right-color: #d4a574;
-  background: linear-gradient(to left, rgba(212, 165, 116, 0.05) 0%, #ffffff 100%);
-  box-shadow: 0 2px 8px rgba(212, 165, 116, 0.1);
-}
-
-.verse.current-verse:hover {
-  box-shadow: 0 4px 12px rgba(212, 165, 116, 0.15);
-}
-
 /* Completion Feedback Animation */
 .completion-feedback {
   position: absolute;
@@ -457,6 +402,7 @@ const formattedTorahText = computed(() => {
 
 @keyframes completionFadeOut {
   0% {
+    /* allow-opacity: fade-out of the checkmark badge, not text */
     opacity: 1;
     transform: scale(1);
   }
@@ -464,6 +410,7 @@ const formattedTorahText = computed(() => {
     background: #10b981;
   }
   100% {
+    /* allow-opacity: fade-out of the checkmark badge, not text */
     opacity: 0;
     transform: scale(0.5);
   }
@@ -484,20 +431,26 @@ const formattedTorahText = computed(() => {
   background: linear-gradient(to left, rgba(59, 130, 246, 0.08) 0%, #ffffff 100%);
 }
 
-/* Current verse (first verse of current aliyah) - stronger emphasis */
+/* Current verse (holds the reading pointer) - stronger emphasis.
+   Declared after .in-current-aliyah so it wins by source order. */
 .verse.current-verse {
-  border-right-color: #d4a574 !important;
-  background: linear-gradient(to left, rgba(212, 165, 116, 0.1) 0%, #ffffff 100%) !important;
+  border-right-color: #d4a574;
+  background: linear-gradient(to left, rgba(212, 165, 116, 0.1) 0%, #ffffff 100%);
+  box-shadow: 0 2px 8px rgba(212, 165, 116, 0.1);
+}
+
+.verse.current-verse:hover {
+  box-shadow: 0 4px 12px rgba(212, 165, 116, 0.15);
 }
 
 /* Selected verse (keyboard navigation) */
 .verse.selected {
-  border-right-color: #8b5cf6 !important;
-  background: linear-gradient(to left, rgba(139, 92, 246, 0.08) 0%, #ffffff 100%) !important;
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3), 0 4px 12px rgba(139, 92, 246, 0.15) !important;
+  border-right-color: #8b5cf6;
+  background: linear-gradient(to left, rgba(139, 92, 246, 0.08) 0%, #ffffff 100%);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3), 0 4px 12px rgba(139, 92, 246, 0.15);
 }
 
 .verse.selected:hover {
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 6px 16px rgba(139, 92, 246, 0.2) !important;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 6px 16px rgba(139, 92, 246, 0.2);
 }
 </style>

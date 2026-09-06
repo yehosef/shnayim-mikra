@@ -1,10 +1,13 @@
 import { createApp } from 'vue'
 import './style.css'
 import App from './App.vue'
+import { registerOffline } from './composables/useOffline'
 
-// Register service worker for offline support
-import { registerSW } from 'virtual:pwa-register'
+// One-time cleanup: the stored aliyah pointer from the deleted
+// useAliyahNavigation composable. Position is now derived from per-verse
+// progress and is never stored.
+localStorage.removeItem('shnayim-aliyah-progress')
 
-registerSW({ immediate: true })
+registerOffline()
 
 createApp(App).mount('#app')

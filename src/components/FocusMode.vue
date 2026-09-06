@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="focus-header">
       <div class="verse-info">
-        <span v-if="currentVerse.aliya" class="aliya-label">{{ currentVerse.aliya }}</span>
+        <span v-if="aliyaLabel" class="aliya-label">{{ aliyaLabel }}</span>
         <span class="perek-pasuk">
           <span v-if="currentVerse.perek" class="perek">פרק {{ currentVerse.perek }}</span>
           <span class="separator">:</span>
@@ -166,6 +166,18 @@ const props = defineProps({
   settings: {
     type: Object,
     required: true
+  },
+  // () => { key, phase } | null — the next unread step in the active reading
+  // style, derived from progress by the parent (useReadingState). Called after
+  // each mark so Space always advances to "the next thing to read".
+  pointerFn: {
+    type: Function,
+    default: null
+  },
+  // (perek, pasuk) => Hebrew aliyah name | null
+  aliyahOf: {
+    type: Function,
+    default: null
   }
 })
 
@@ -190,6 +202,23 @@ const verseKey = computed(() => {
 
 const progress = computed(() => getVerseProgress(props.parasha, verseKey.value))
 
+const aliyaLabel = computed(() => {
+  const v = currentVerse.value
+  if (props.aliyahOf && v.perekNum !== undefined) return props.aliyahOf(v.perekNum, v.pasukNum)
+  return v.aliya || null
+})
+
+const PHASE_STEP = { hebrew1: 1, hebrew2: 2, targum: 3 }
+
+// Where the pointer sits inside the displayed verses, or null
+const pointerPosition = () => {
+  const ptr = props.pointerFn ? props.pointerFn() : null
+  if (!ptr) return null
+  const index = props.verses.findIndex(v => `${v.perekNum}:${v.pasukNum}` === ptr.key)
+  if (index < 0) return null
+  return { index, step: PHASE_STEP[ptr.phase] || 1 }
+}
+
 const formattedTorahText = computed(() => {
   return formatHebrewText(currentVerse.value.torah, props.settings.showTrop)
 })
@@ -205,8 +234,11 @@ const stepLabel = computed(() => {
   return labels[props.settings.targumType] || 'תרגום'
 })
 
-// Determine starting step based on existing progress
+// Determine starting step: the pointer's phase when the pointer is on this
+// verse (respects the active reading style), else this verse's first unread.
 const determineStartingStep = () => {
+  const pos = pointerPosition()
+  if (pos && pos.index === currentIndex.value) return pos.step
   const p = progress.value
   if (!p.hebrew1) return 1
   if (!p.hebrew2) return 2
@@ -228,20 +260,36 @@ onMounted(() => {
   currentStep.value = determineStartingStep()
 })
 
+// After a mark, jump to the pointer (next unread in the active style) when it
+// is among the displayed verses. Returns false when there is no such step.
+const followPointer = () => {
+  const pos = pointerPosition()
+  // Never yank the reader backwards to an earlier skipped verse
+  if (!pos || pos.index < currentIndex.value) return false
+  if (pos.index !== currentIndex.value) {
+    skipStepReset.value = true
+    currentIndex.value = pos.index
+  }
+  currentStep.value = pos.step
+  return true
+}
+
 const advanceStep = () => {
   if (showSettings.value || showHelp.value) return // Don't advance when overlays are open
 
   if (currentStep.value === 1) {
     lastAction.value = { type: 'progress', parasha: props.parasha, key: verseKey.value, field: 'hebrew1', prevValue: progress.value.hebrew1 }
     setVerseProgress(props.parasha, verseKey.value, 'hebrew1', true)
-    currentStep.value = 2
+    if (!followPointer()) currentStep.value = 2
   } else if (currentStep.value === 2) {
     lastAction.value = { type: 'progress', parasha: props.parasha, key: verseKey.value, field: 'hebrew2', prevValue: progress.value.hebrew2 }
     setVerseProgress(props.parasha, verseKey.value, 'hebrew2', true)
-    currentStep.value = 3
+    if (!followPointer()) currentStep.value = 3
   } else {
     lastAction.value = { type: 'progress', parasha: props.parasha, key: verseKey.value, field: 'targum', prevValue: progress.value.targum }
     setVerseProgress(props.parasha, verseKey.value, 'targum', true)
+
+    if (followPointer()) return
 
     // Move to next verse or exit
     if (currentIndex.value < totalVerses.value - 1) {
@@ -716,6 +764,7 @@ onUnmounted(() => {
 }
 
 .nav-btn:disabled {
+  /* allow-opacity: disabled side button at the first/last verse, not text */
   opacity: 0.3;
   cursor: not-allowed;
   background: #d1d5db;

@@ -25,6 +25,15 @@
           </select>
         </label>
 
+        <!-- Reading Style (traversal order: only changes what "next" means) -->
+        <label>
+          {{ isHebrew ? 'סדר קריאה:' : 'Reading Order:' }}
+          <select v-model="settings.readingStyle">
+            <option value="verse">{{ isHebrew ? 'כל פסוק: פעמיים מקרא ואז תרגום' : 'Each verse: twice, then targum' }}</option>
+            <option value="aliyah">{{ isHebrew ? 'כל עליה: פעמיים מקרא ואז תרגום' : 'Each aliyah: twice through, then targum' }}</option>
+          </select>
+        </label>
+
         <!-- Targum Type -->
         <label>
           {{ isHebrew ? 'סוג תרגום למעקב:' : 'Targum Type for Tracking:' }}
@@ -77,8 +86,15 @@
         <!-- Offline Download -->
         <div class="offline-section">
           <div class="offline-label">{{ isHebrew ? 'שימוש ללא רשת:' : 'Offline Use:' }}</div>
+          <div class="offline-core">
+            <template v-if="offlineReady">{{ isHebrew ? 'מקרא ותרגום זמינים ללא רשת' : 'Torah + Targum available offline' }}</template>
+            <template v-else>{{ isHebrew ? 'מקרא ותרגום נשמרים ברקע...' : 'Torah + Targum caching in background...' }}</template>
+            <button v-if="needRefresh" class="offline-btn" @click="updateApp">
+              {{ isHebrew ? 'עדכון זמין — טען מחדש' : 'Update available — reload' }}
+            </button>
+          </div>
           <div v-if="offlineStatus === 'ready'" class="offline-ready">
-            {{ isHebrew ? 'מוכן לשימוש ללא רשת' : 'Ready for offline use' }}
+            {{ isHebrew ? 'רש"י ואנגלית הורדו לשימוש ללא רשת' : 'Rashi + English downloaded for offline use' }}
           </div>
           <div v-else-if="offlineStatus === 'downloading'" class="offline-progress">
             <div class="offline-progress-text">
@@ -95,8 +111,15 @@
             </button>
           </div>
           <button v-else class="offline-btn" @click="downloadForOffline">
-            {{ isHebrew ? 'הורד לשימוש ללא רשת' : 'Download for Offline' }}
+            {{ isHebrew ? 'הורד רש"י ואנגלית לשימוש ללא רשת' : 'Download Rashi + English for offline' }}
           </button>
+        </div>
+
+        <!-- Attribution -->
+        <div class="credits">
+          <span v-if="isHebrew">טקסטים באדיבות ספריא. ראו</span>
+          <span v-else>Texts courtesy of Sefaria. See</span>
+          <a href="/data/CREDITS.md" target="_blank" rel="noopener">CREDITS</a>
         </div>
       </div>
     </div>
@@ -106,6 +129,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useSettings } from '../composables/useSettings'
+import { useOffline } from '../composables/useOffline'
 
 const props = defineProps({
   focusMode: {
@@ -117,6 +141,7 @@ const props = defineProps({
 defineEmits(['close'])
 
 const { settings } = useSettings()
+const { offlineReady, needRefresh, updateApp } = useOffline()
 
 const isHebrew = computed(() => settings.value.interfaceLanguage === 'he')
 
@@ -130,19 +155,16 @@ const offlinePercent = computed(() => {
   return Math.round((offlineDownloaded.value / offlineTotal.value) * 100)
 })
 
+// Torah, Targum and aliyot.json are precached by the service worker at
+// install. This button warms the runtime cache with the optional layers.
 const downloadForOffline = async () => {
   const chumashim = ['bereishit', 'shmot', 'vayikra', 'bamidbar', 'dvarim']
-  const baseDirs = ['torah', 'targum', 'rashi', 'english', 'meforshim-index']
-  const meforshim = ['chizkuni', 'daat-zekenim', 'iben-ezra', 'or-hachaim', 'ramban', 'rashbam', 'sforno']
+  const layers = ['english', 'rashi']
 
-  const urls = ['/data/aliyot.json']
-
+  const urls = []
   for (const chumash of chumashim) {
-    for (const dir of baseDirs) {
-      urls.push(`/data/${dir}/${chumash}.json`)
-    }
-    for (const m of meforshim) {
-      urls.push(`/data/meforshim/${m}/${chumash}.json`)
+    for (const layer of layers) {
+      urls.push(`/data/${layer}/${chumash}.json`)
     }
   }
 
@@ -154,11 +176,11 @@ const downloadForOffline = async () => {
     // Fetch in batches of 5 to avoid overwhelming the browser
     for (let i = 0; i < urls.length; i += 5) {
       const batch = urls.slice(i, i + 5)
-      await Promise.all(batch.map(url =>
-        fetch(url).then(() => {
-          offlineDownloaded.value++
-        })
-      ))
+      await Promise.all(batch.map(async (url) => {
+        const res = await fetch(url)
+        if (!res.ok) throw new Error(`${url}: ${res.status}`)
+        offlineDownloaded.value++
+      }))
     }
     offlineStatus.value = 'ready'
   } catch (e) {
@@ -321,5 +343,27 @@ const downloadForOffline = async () => {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+.offline-core {
+  font-size: 0.9rem;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.credits {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.credits a {
+  color: #2563eb;
+  margin-inline-start: 0.25rem;
 }
 </style>
