@@ -133,7 +133,7 @@ const props = defineProps({
 const { loadParsha, loading, error, data, chapterLengths, loadedChumash } = useData()
 const { settings } = useSettings()
 const { parshiyotList, getDefaultWeek } = useParsha()
-const { progress, setVerseProgress, getVerseProgress } = useProgress()
+const { progress, externalRevision, setVerseProgress, getVerseProgress } = useProgress()
 const { getAliyot, aliyotData, aliyotError, retryAliyot, verseInAliyah, aliyahFor } = useAliyot()
 const now = useNow()
 
@@ -571,6 +571,10 @@ watch([() => settings.value.displayMode, () => settings.value.currentAliyah], se
 watch(() => displayVerses.value.length, seedSelectionFromPointer)
 watch(aliyotEntry, seedSelectionFromPointer)
 watch(loading, (isLoading) => { if (!isLoading) seedSelectionFromPointer() })
+// Another tab (or a resume from the bfcache) changed progress under us: the
+// selection was seeded from the old pointer and Space would toggle a phase the
+// other tab just marked. Follow the new pointer instead.
+watch(externalRevision, seedSelectionFromPointer)
 
 // A transient offline start leaves aliyot.json unloaded for the session
 const onOnline = () => { retryAliyot() }

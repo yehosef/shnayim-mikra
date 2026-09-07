@@ -96,10 +96,15 @@ watch(progress, () => persister.schedule(), { deep: true })
  * (mergeProgress re-applies them), and the watcher below re-schedules the write
  * that persists them.
  */
+// Bumped every time a map from outside this tab is adopted, so views can
+// re-seed a selection that was derived from the pre-adoption pointer.
+const externalRevision = ref(0)
+
 function adoptExternal(raw) {
   const merged = mergeProgress(parseProgress(raw), progress.value)
   if (JSON.stringify(merged) === JSON.stringify(progress.value)) return
   progress.value = merged
+  externalRevision.value++
 }
 
 // Another tab wrote while this one was open.
@@ -155,6 +160,7 @@ export function useProgress() {
 
   return {
     progress,
+    externalRevision,
     getVerseProgress,
     setVerseProgress,
     getParshaStats,
