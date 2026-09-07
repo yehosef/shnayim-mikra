@@ -89,6 +89,109 @@ describe('resolveDefaultWeek: the Sunday–Tuesday grace window', () => {
   })
 })
 
+describe('resolveDefaultWeek: the window only ever looks back one week', () => {
+  // A chag Shabbat can put two weeks between parsha Shabbatot. The grace window
+  // must not then reach back to a parsha whose week is long gone: that made the
+  // default roll BACKWARDS on the Sunday and forwards again on the Wednesday.
+  const backwards = [
+    // Chol HaMoed Pesach 5786 (il): Tzav 10 Nisan, Pesach Shabbat 17, Shmini 24.
+    ['Pesach 5786', 5786, months.NISAN, [18, 19, 20], 'shmini', 'tzav'],
+    // Chol HaMoed Sukkot 5789 (il): Ha'azinu 3 Tishrei, then Vezot Haberachah.
+    ['Sukkot 5789', 5789, months.TISHREI, [11, 12, 13, 18, 19, 20], 'vzot-haberachah', 'haazinu'],
+    // Rosh Hashana on Shabbat 5787: Nitzavim-Vayeilech 23 Elul, Ha'azinu 8 Tishrei.
+    ['Rosh Hashana 5787', 5787, months.TISHREI, [2, 3, 4], 'haazinu', 'nitzavim-vayeilech']
+  ]
+
+  for (const [name, year, month, days, expected, stale] of backwards) {
+    it(`${name}: Sun–Tue in the two-Shabbat gap still shows the coming parsha`, () => {
+      for (const il of [true, false]) {
+        for (const day of days) {
+          const d = new HDate(day, month, year)
+          expect(d.getDay(), `${day}`).toBeLessThanOrEqual(2)
+          const r = resolveDefaultWeek(d, il, NONE)
+          expect(r.previous.route, `${il} ${d.toString()}`).toBe(stale)
+          expect(r.route, `${il} ${d.toString()}`).toBe(expected)
+          expect(r.late, `${il} ${d.toString()}`).toBe(false)
+        }
+      }
+    })
+  }
+
+  it('never opens on a week whose reading is more than three days behind', () => {
+    for (const il of [true, false]) {
+      for (const year of YEARS) {
+        let d = new HDate(1, months.TISHREI, year)
+        const end = new HDate(1, months.TISHREI, year + 1)
+        while (d.abs() < end.abs()) {
+          const r = resolveDefaultWeek(d, il, NONE)
+          const behind = d.abs() - r.shabbat.abs()
+          expect(behind, `${il} ${d.toString()} ${r.route}`).toBeLessThanOrEqual(3)
+          if (r.late) expect(behind, `${il} ${d.toString()}`).toBeGreaterThanOrEqual(0)
+          d = d.add(1)
+        }
+      }
+    }
+  })
+
+  // The one place the default legitimately steps back to an earlier date is the
+  // Vezot Haberachah grace window (its "Shabbat" is Simchat Torah, and Bereshit
+  // is already the coming week by then); everywhere else `previous` is the
+  // Shabbat immediately behind us, so the shown week only ever moves forward.
+  it('outside the Simchat Torah window the shown week never moves backwards', () => {
+    for (const il of [true, false]) {
+      for (const year of YEARS) {
+        let d = new HDate(1, months.TISHREI, year)
+        const end = new HDate(1, months.TISHREI, year + 1)
+        let seen = resolveDefaultWeek(d, il, NONE).shabbat.abs()
+        while (d.abs() < end.abs()) {
+          const r = resolveDefaultWeek(d, il, NONE)
+          if (r.route !== 'vzot-haberachah') {
+            expect(r.shabbat.abs(), `${il} ${d.toString()} ${r.route}`).toBeGreaterThanOrEqual(seen)
+            seen = r.shabbat.abs()
+          }
+          d = d.add(1)
+        }
+      }
+    }
+  })
+})
+
+describe('resolveDefaultWeek: the jewishDay argument (sunset rollover)', () => {
+  // 3 Jan 2026 = Vayechi's Shabbat, 10 Jan = Shemot's.
+  const tuesday = new Date(2026, 0, 6)
+  const shabbat = new Date(2026, 0, 10)
+
+  it('Tuesday after sunset is Wednesday: the week rolls forward', () => {
+    expect(resolveDefaultWeek(tuesday, true, NONE).route).toBe('vayechi')
+    const after = resolveDefaultWeek(tuesday, true, NONE, 3)
+    expect(after.route).toBe('shemot')
+    expect(after.late).toBe(false)
+  })
+
+  it('Shabbat after sunset is Sunday: the coming Shabbat moves on too', () => {
+    const before = resolveDefaultWeek(shabbat, true, NONE)
+    expect(before.next.route).toBe('shemot')
+    expect(before.late).toBe(false)
+
+    const after = resolveDefaultWeek(shabbat, true, NONE, 0)
+    expect(after.next.route).toBe('vaera')
+    expect(after.previous.route).toBe('shemot')
+    expect(after.route).toBe('shemot')
+    expect(after.late).toBe(true)
+  })
+
+  it('the civil day itself changes nothing', () => {
+    for (const d of [tuesday, shabbat]) {
+      const civil = new HDate(d).getDay()
+      const plain = resolveDefaultWeek(d, true, NONE)
+      const same = resolveDefaultWeek(d, true, NONE, civil)
+      expect(same.route).toBe(plain.route)
+      expect(same.late).toBe(plain.late)
+      expect(same.shabbat.abs()).toBe(plain.shabbat.abs())
+    }
+  })
+})
+
 describe('resolveDefaultWeek: the Bereshit / Vezot Haberachah boundary', () => {
   it('il 5787: Tuesday 25 Tishrei still offers the unfinished Vezot Haberachah', () => {
     const d = new HDate(25, months.TISHREI, 5787)

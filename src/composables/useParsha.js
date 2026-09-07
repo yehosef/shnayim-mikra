@@ -1,5 +1,6 @@
 import { HebrewCalendar, HDate, months } from '@hebcal/core'
 import parshiyot, { parshiyotList } from '../data/parshiyot'
+import { jewishDayOfWeek } from './useDailyGuide'
 
 /**
  * Weekly parsha resolution.
@@ -108,14 +109,29 @@ const LATE_LAST_DAY = 2
  * Sunday through the end of Tuesday, an unfinished `previous` stays the default
  * (`late: true`); otherwise the default is `next`.
  *
+ * Two guards keep that window honest:
+ *  - `previous` must be the reading of the week that JUST ended, i.e. its
+ *    Shabbat is at most `LATE_LAST_DAY + 1` days back. When a chag Shabbat puts
+ *    two weeks between parsha Shabbatot (every Chol HaMoed Pesach and Sukkot,
+ *    and Rosh Hashana on Shabbat), `previous` is 8–17 days old and its own
+ *    urgency is already 'past'; without this the default rolled BACKWARDS on
+ *    the Sunday and forwards again on the Wednesday.
+ *  - `jewishDay` (optional, 0=Sunday..6=Shabbat) lets the caller hand in the
+ *    sunset-adjusted day the daily guide uses, so both agree on "Tuesday". It
+ *    may only be the civil day or the civil day + 1; when it is + 1 the whole
+ *    resolution moves to the next date, so the coming Shabbat rolls with it.
+ *
  * @param {HDate|Date} date
  * @param {boolean} il
  * @param {(route: string) => boolean} [isComplete] missing => treated as done
+ * @param {number} [jewishDay] 0..6; defaults to the civil day of `date`
  * @returns {{ route: string, shabbat: HDate, late: boolean, previous: object, next: object }}
  */
-export function resolveDefaultWeek(date, il, isComplete) {
+export function resolveDefaultWeek(date, il, isComplete, jewishDay) {
   const done = typeof isComplete === 'function' ? isComplete : () => true
-  const hd = date instanceof HDate ? date : new HDate(date)
+  let hd = date instanceof HDate ? date : new HDate(date)
+  // After sunset the Jewish day has already rolled over while `date` has not.
+  if (jewishDay === (hd.getDay() + 1) % 7) hd = hd.add(1)
   const next = resolveWeek(hd, il)
 
   let previous = next
@@ -124,8 +140,11 @@ export function resolveDefaultWeek(date, il, isComplete) {
     if (previous.route !== next.route) break
   }
 
+  const sincePrevious = hd.abs() - previous.shabbat.abs()
   const late =
     hd.getDay() <= LATE_LAST_DAY &&
+    sincePrevious >= 0 &&
+    sincePrevious <= LATE_LAST_DAY + 1 &&
     previous.route !== next.route &&
     !done(previous.route)
   const chosen = late ? previous : next
@@ -135,7 +154,10 @@ export function resolveDefaultWeek(date, il, isComplete) {
 export function useParsha() {
   const getDefaultWeek = (location = 'israel', isComplete) => {
     try {
-      return resolveDefaultWeek(new HDate(), location === 'israel', isComplete)
+      // Same sunset-adjusted day the daily guide runs on, so the header cannot
+      // show "today: Wednesday" while the week is still pinned to Tuesday.
+      const now = new Date()
+      return resolveDefaultWeek(now, location === 'israel', isComplete, jewishDayOfWeek(now, location))
     } catch (e) {
       console.error('Error getting weekly parsha:', e)
       return { route: 'bereshit', shabbat: null, late: false, previous: null, next: null }
