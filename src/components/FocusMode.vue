@@ -105,6 +105,7 @@
       <div class="instruction">
         <span v-if="currentStep < 3">לחץ או [Space] להמשיך</span>
         <span v-else-if="currentIndex < totalVerses - 1">לחץ או [Space] לפסוק הבא</span>
+        <span v-else-if="pointerElsewhere">לחץ או [Space] להשלמת מה שנותר</span>
         <span v-else>לחץ או [Space] לסיים</span>
       </div>
 
@@ -151,6 +152,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useProgress } from '../composables/useProgress'
 import { formatHebrewText, toHebrew } from '../utils/hebrewUtils'
+import { nextFocusPosition } from '../lib/focusStep'
 import SettingsModal from './SettingsModal.vue'
 
 const props = defineProps({
@@ -235,6 +237,25 @@ const pointerPosition = () => {
   return { index, step: PHASE_STEP[ptr.phase] || 1 }
 }
 
+// Whether a displayed verse sits in the same aliyah block as the current one.
+// Two unknown labels are NOT "the same aliyah" — without aliyot data we must
+// not treat the whole parsha as one block.
+const sameAliyahAsCurrent = (index) => {
+  if (!props.aliyahOf) return false
+  const a = props.verses[index]
+  const b = props.verses[currentIndex.value]
+  if (!a || !b) return false
+  const la = props.aliyahOf(a.perekNum, a.pasukNum)
+  return !!la && la === props.aliyahOf(b.perekNum, b.pasukNum)
+}
+
+// On the last verse, Space goes back to a pointer left behind instead of
+// exiting, so the instruction line must not promise "finish".
+const pointerElsewhere = computed(() => {
+  const pos = pointerPosition()
+  return !!pos && pos.index !== currentIndex.value
+})
+
 const formattedTorahText = computed(() => {
   return formatHebrewText(currentVerse.value.torah, props.settings.showTrop)
 })
@@ -301,25 +322,14 @@ onMounted(() => {
   currentStep.value = determineStartingStep()
 })
 
-// After a mark, jump to the pointer (next unread in the active style) when it
-// is among the displayed verses. Returns false when there is no such step.
-const followPointer = () => {
-  const pos = pointerPosition()
-  if (!pos) return false
-  // In 'verse' style the pointer only ever moves forward, so a backward pointer
-  // is behind us (a skipped verse) and we step on by hand. In 'aliyah' style it
-  // legitimately jumps back to the top of the block at every pass boundary (all
-  // of hebrew1, then all of hebrew2, then all of targum); refusing that
-  // abandoned the pointer after the first pass and silently discarded the
-  // chosen reading style. The pointer handed down is already scoped to the
-  // displayed verses, so following it is always inside this view.
-  if (props.settings.readingStyle !== 'aliyah' && pos.index < currentIndex.value) return false
-  if (pos.index !== currentIndex.value) {
+// Move to a position inside the displayed verses. The step is set by hand, so
+// the index watcher must not re-derive it.
+const goTo = ({ index, step }) => {
+  if (index !== currentIndex.value) {
     skipStepReset.value = true
-    currentIndex.value = pos.index
+    currentIndex.value = index
   }
-  currentStep.value = pos.step
-  return true
+  currentStep.value = step
 }
 
 // Single write path: refuses to touch storage when the index is stale.
@@ -335,27 +345,27 @@ const advanceStep = () => {
   if (showSettings.value || showHelp.value) return // Don't advance when overlays are open
   if (!verseKey.value) return
 
-  if (currentStep.value === 1) {
-    markPhase('hebrew1', true)
-    if (!followPointer()) currentStep.value = 2
-  } else if (currentStep.value === 2) {
-    markPhase('hebrew2', true)
-    if (!followPointer()) currentStep.value = 3
-  } else {
-    markPhase('targum', true)
+  const field = currentStep.value === 1 ? 'hebrew1' : currentStep.value === 2 ? 'hebrew2' : 'targum'
+  markPhase(field, true)
 
-    if (followPointer()) return
+  // The pointer is recomputed by the parent from progress, so it must be read
+  // AFTER the mark above.
+  const pointer = pointerPosition()
+  const next = nextFocusPosition({
+    step: currentStep.value,
+    currentIndex: currentIndex.value,
+    lastIndex: totalVerses.value - 1,
+    pointer,
+    readingStyle: props.settings.readingStyle,
+    sameAliyah: pointer ? sameAliyahAsCurrent(pointer.index) : false
+  })
 
-    if (currentIndex.value < totalVerses.value - 1) {
-      currentIndex.value++
-      currentStep.value = 1
-    } else if (!(props.pointerFn && props.pointerFn())) {
-      // Only leave when there is genuinely nothing left to read. A live pointer
-      // we declined to follow (verse style, behind us) means the reading is not
-      // finished, so exiting here would drop the reader out mid-parsha.
-      emit('exit')
-    }
+  // null = nothing left to read anywhere in this view.
+  if (!next) {
+    emit('exit')
+    return
   }
+  goTo(next)
 }
 
 const jumpToStep = (step) => {
