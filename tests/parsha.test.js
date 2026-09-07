@@ -117,3 +117,68 @@ describe('resolveWeek sweep 5786–5795', () => {
     expect(resolveWeek(d, true).shabbat.abs()).toBe(d.abs())
   })
 })
+
+/**
+ * When Rosh Hashana falls on Thursday both 10 and 17 Tishrei are chag
+ * Shabbatot, so the walk-forward loop used to jump 4–10 Tishrei three weeks
+ * ahead to Bereshit and then back to Vezot Haberachah on 11 Tishrei. The
+ * resolved week must only ever move forward, one parsha at a time.
+ */
+describe('resolveWeek never moves backwards through Tishrei–Cheshvan', () => {
+  // The order the cycle actually runs in over these two months (the export
+  // order of parshiyotList wraps Vezot Haberachah -> Bereshit).
+  const CYCLE = [
+    'nitzavim', 'vayeilech', 'nitzavim-vayeilech', 'haazinu', 'vzot-haberachah',
+    'bereshit', 'noach', 'lech-lecha', 'vayera', 'chayei-sara', 'toldot', 'vayetzei'
+  ]
+
+  // Rosh Hashana on Thursday: Yom Kippur and Chol ha-Moed Sukkot are both Shabbat.
+  for (const year of [5789, 5792, 5795]) {
+    it(`${year} (Rosh Hashana on Thursday) is monotonic in il and diaspora`, () => {
+      expect(new HDate(1, months.TISHREI, year).getDay()).toBe(4)
+      for (const il of [true, false]) {
+        let d = new HDate(1, months.TISHREI, year)
+        const end = new HDate(1, months.KISLEV, year)
+        let prevIdx = -1
+        let prevLabel = 'start'
+        let days = 0
+        while (d.abs() < end.abs()) {
+          const { route } = resolveWeek(d, il)
+          const idx = CYCLE.indexOf(route)
+          expect(idx, `il=${il} ${d.toString()} -> unexpected ${route}`).toBeGreaterThanOrEqual(0)
+          expect(
+            idx,
+            `il=${il} ${d.toString()}: ${prevLabel} -> ${route} moves backwards`
+          ).toBeGreaterThanOrEqual(prevIdx)
+          if (prevIdx >= 0) {
+            // and never skips a parsha of the cycle
+            expect(idx - prevIdx, `il=${il} ${d.toString()}: ${prevLabel} -> ${route} skips a week`).toBeLessThanOrEqual(1)
+          }
+          prevIdx = idx
+          prevLabel = route
+          days++
+          d = d.add(1)
+        }
+        expect(days).toBeGreaterThan(55)
+        // The whole span must actually be traversed, Ha'azinu through Bereshit.
+        expect(prevIdx).toBeGreaterThan(CYCLE.indexOf('bereshit'))
+      }
+    })
+  }
+
+  it('Vezot Haberachah opens as soon as no parsha Shabbat is left before Sukkot', () => {
+    for (const year of [5789, 5792, 5795]) {
+      for (const il of [true, false]) {
+        // 3 Tishrei is Shabbat Ha'azinu; from 4 Tishrei only chag Shabbatot
+        // remain before Simchat Torah.
+        expect(resolveWeek(new HDate(3, months.TISHREI, year), il).route).toBe('haazinu')
+        for (let day = 4; day <= (il ? 21 : 22); day++) {
+          expect(
+            resolveWeek(new HDate(day, months.TISHREI, year), il).route,
+            `${year} il=${il} ${day} Tishrei`
+          ).toBe('vzot-haberachah')
+        }
+      }
+    }
+  })
+})
