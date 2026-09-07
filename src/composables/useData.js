@@ -33,7 +33,16 @@ export function useData() {
   const loadedChumash = ref(null) // which chumash `data`/`chapterLengths` belong to
   let loadToken = 0
 
-  const loadParsha = async (parshaName, showRashi = false) => {
+  /**
+   * @param {string} parshaName
+   * @param {boolean|{showRashi?: boolean, targumType?: string}} options
+   *   Legacy boolean = showRashi. Prefer the object form: Rashi is fetched when
+   *   `showRashi` is on OR `targumType === 'rashi'` (the obligation layer must be
+   *   present even when the display toggle is off). English is always fetched.
+   */
+  const loadParsha = async (parshaName, options = {}) => {
+    const opts = (typeof options === 'boolean') ? { showRashi: options } : (options || {})
+    const needRashi = !!opts.showRashi || opts.targumType === 'rashi'
     const token = ++loadToken
     loading.value = true
     error.value = null
@@ -65,7 +74,7 @@ export function useData() {
       }
 
       // Fetch rashi data only if needed and not already cached for this chumash
-      if (showRashi && !cached.rashiData) {
+      if (needRashi && !cached.rashiData) {
         cached.rashiData = await fetchOptional(`/data/rashi/${chumash}.json`)
       }
 
@@ -74,7 +83,7 @@ export function useData() {
 
       const { torahData, targumData } = cached
       const englishData = cached.englishData || { text: [] }
-      const rashiData = (showRashi && cached.rashiData) || { text: [] }
+      const rashiData = (needRashi && cached.rashiData) || { text: [] }
 
       // Extract verses for this parsha
       const verses = []
@@ -106,8 +115,8 @@ export function useData() {
             verse.perek = toHebrew(perek + 1)
           }
 
-          // Add rashi if requested
-          if (showRashi && rashiData.text[perek]?.[pasuk]) {
+          // Add rashi if requested (display toggle or targumType === 'rashi')
+          if (needRashi && rashiData.text[perek]?.[pasuk]) {
             verse.rashi = rashiData.text[perek][pasuk]
           }
 

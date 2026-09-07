@@ -116,3 +116,43 @@ describe('public/data/aliyot.json', () => {
     expect(entry.aliyot[entry.aliyot.length - 1].end).toEqual([33, 11])
   })
 })
+
+/**
+ * loadAliyot()/retryAliyot() must be idempotent AND retryable: a transient
+ * failure used to leave aliyotData null for the whole session because the
+ * fetch only ran once at component setup.
+ */
+describe('useAliyot loader retry', () => {
+  const jsonRes = (body) => ({
+    ok: true,
+    status: 200,
+    headers: { get: () => 'application/json' },
+    json: async () => body
+  })
+
+  it('retries after a failure, then caches without refetching', async () => {
+    const originalFetch = globalThis.fetch
+
+    try {
+      globalThis.fetch = async () => { throw new Error('offline') }
+      const { useAliyot } = await import('../src/composables/useAliyot.js')
+      const { retryAliyot, aliyotData, aliyotError } = useAliyot()
+      await retryAliyot()
+      expect(aliyotData.value).toBe(null)
+      expect(aliyotError.value).toBeTruthy()
+
+      let calls = 0
+      globalThis.fetch = async () => { calls++; return jsonRes({ bereshit: { book: 'bereishit', aliyot: [], total: 0 } }) }
+      await retryAliyot()
+      expect(calls).toBe(1)
+      expect(aliyotData.value).toEqual({ bereshit: { book: 'bereishit', aliyot: [], total: 0 } })
+      expect(aliyotError.value).toBe(null)
+
+      // already loaded: no second fetch
+      await retryAliyot()
+      expect(calls).toBe(1)
+    } finally {
+      globalThis.fetch = originalFetch
+    }
+  })
+})

@@ -11,11 +11,18 @@ import { ref } from 'vue'
 // Module-level singleton so every component shares one fetch.
 const aliyotData = ref(null)
 const aliyotError = ref(null)
+const aliyotLoading = ref(false)
 let inflight = null
 
+/**
+ * Idempotent and retryable: resolves immediately once loaded, joins the fetch
+ * already in flight, and starts a fresh attempt after a previous failure (a
+ * transient offline load used to leave aliyotData null for the whole session).
+ */
 export async function loadAliyot() {
   if (aliyotData.value) return aliyotData.value
   if (!inflight) {
+    aliyotLoading.value = true
     inflight = fetch('/data/aliyot.json')
       .then(r => {
         const ct = r.headers.get('content-type') || ''
@@ -24,15 +31,32 @@ export async function loadAliyot() {
       })
       .then(json => {
         aliyotData.value = json
+        aliyotError.value = null
         return json
       })
       .catch(e => {
         aliyotError.value = e.message
-        inflight = null
         throw e
+      })
+      .finally(() => {
+        inflight = null
+        aliyotLoading.value = false
       })
   }
   return inflight
+}
+
+/**
+ * Safe to call from a watcher, an 'online' handler or a retry button: no-op
+ * while loaded or in flight, never rejects.
+ */
+export function retryAliyot() {
+  if (aliyotData.value) return Promise.resolve(aliyotData.value)
+  // loadAliyot() joins the fetch already in flight, or starts a fresh one.
+  return loadAliyot().catch(e => {
+    console.error('aliyot.json:', e)
+    return null
+  })
 }
 
 /** -1 / 0 / 1 comparison of two [perek, pasuk] positions. */
@@ -56,16 +80,17 @@ export function aliyahFor(entry, perek, pasuk) {
 }
 
 export function useAliyot() {
-  if (!aliyotData.value && !inflight) {
-    loadAliyot().catch(e => console.error('aliyot.json:', e))
-  }
+  retryAliyot()
 
   const getAliyot = (route) => aliyotData.value?.[route] || null
 
   return {
     aliyotData,
     aliyotError,
+    aliyotLoading,
     getAliyot,
+    loadAliyot,
+    retryAliyot,
     verseInAliyah,
     aliyahFor
   }

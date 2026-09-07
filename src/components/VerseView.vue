@@ -10,6 +10,8 @@
     :data-perek="verse.perekNum"
     :data-pasuk="verse.pasukNum"
     :data-verse-index="index"
+    @pointerdown="handlePointerDown"
+    @click="handleRootClick"
   >
     <!-- Verse Pointer (next unread step lives in this verse) -->
     <div v-if="isPointer" class="verse-pointer" :title="pointerTitle">
@@ -38,7 +40,7 @@
     <div
       class="torah font-sbl clickable-text"
       :class="{ 'reading-done': progress.hebrew1, 'phase-selected': selectedPhase === 1 }"
-      @click="handlePhaseClick(1, 'hebrew1')"
+      @click="handlePhaseClick(1, 'hebrew1', $event)"
     >
       {{ formattedTorahText }}
     </div>
@@ -47,7 +49,7 @@
     <div
       class="torah font-sbl clickable-text"
       :class="{ 'reading-done': progress.hebrew2, 'phase-selected': selectedPhase === 2 }"
-      @click="handlePhaseClick(2, 'hebrew2')"
+      @click="handlePhaseClick(2, 'hebrew2', $event)"
     >
       {{ formattedTorahText }}
     </div>
@@ -57,7 +59,7 @@
       v-if="targumLayer === 'onkelos'"
       class="targum font-sbl clickable-text"
       :class="{ 'reading-done': progress.targum, 'phase-selected': selectedPhase === 3 }"
-      @click="handlePhaseClick(3, 'targum')"
+      @click="handlePhaseClick(3, 'targum', $event)"
       v-html="verse.targum"
     ></div>
 
@@ -66,7 +68,7 @@
       v-if="targumLayer === 'rashi'"
       class="rashi clickable-text"
       :class="{ 'reading-done': progress.targum, 'font-rashi': settings.fontRashi, 'phase-selected': selectedPhase === 3 }"
-      @click="handlePhaseClick(3, 'targum')"
+      @click="handlePhaseClick(3, 'targum', $event)"
       v-html="verse.rashi.join('  ')"
     ></div>
 
@@ -75,7 +77,7 @@
       v-if="targumLayer === 'english'"
       class="english clickable-text"
       :class="{ 'reading-done': progress.targum, 'phase-selected': selectedPhase === 3 }"
-      @click="handlePhaseClick(3, 'targum')"
+      @click="handlePhaseClick(3, 'targum', $event)"
       v-html="verse.english"
     ></div>
 
@@ -137,7 +139,10 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['focus', 'phase-click'])
+// 'click' is declared so the parent's @click on <VerseView> is a component
+// event, not a fallthrough native listener on the root div (a native root
+// listener fired after the phase click and reverted the advanced selection).
+const emit = defineEmits(['focus', 'phase-click', 'click'])
 
 const { getVerseProgress } = useProgress()
 
@@ -165,11 +170,51 @@ const pointerTitle = computed(() => {
   return 'תרגום'
 })
 
+// A pointer that moved more than this between down and up is a drag
+// (text selection / scroll), not a tap on a reading target.
+const DRAG_THRESHOLD_PX = 8
+
+let pointerStart = null
+
+const handlePointerDown = (e) => {
+  pointerStart = { x: e.clientX, y: e.clientY }
+}
+
+/** True when a live (non-collapsed) selection is anchored inside `el`. */
+const hasSelectionInside = (el) => {
+  if (!el || typeof window === 'undefined' || !window.getSelection) return false
+  const sel = window.getSelection()
+  if (!sel || sel.isCollapsed || sel.rangeCount === 0) return false
+  const anchor = sel.anchorNode
+  if (!anchor) return false
+  const node = anchor.nodeType === 1 ? anchor : anchor.parentNode
+  return !!(node && el.contains(node))
+}
+
 // Handle click on a phase - emit to parent which handles toggle + advance logic
-const handlePhaseClick = (phase, field) => {
+const handlePhaseClick = (phase, field, event) => {
+  const start = pointerStart
+  pointerStart = null
+
+  const target = event?.currentTarget || null
+  // Drag-to-select (to copy/quote) must not mark the phase read.
+  if (hasSelectionInside(target)) return
+  if (start && event && typeof event.clientX === 'number') {
+    const dx = event.clientX - start.x
+    const dy = event.clientY - start.y
+    if (Math.hypot(dx, dy) > DRAG_THRESHOLD_PX) return
+  }
+
   // Check if currently read before emitting
   const wasRead = progress.value[field]
   emit('phase-click', { phase, field, wasRead })
+}
+
+// Only the non-text chrome of the card selects the verse; clicks on a reading
+// target or the focus button are handled by their own handlers.
+const handleRootClick = (e) => {
+  if (e.target?.closest?.('.clickable-text, .focus-btn')) return
+  emit('click', e)
 }
 
 const formattedTorahText = computed(() => {
@@ -383,8 +428,8 @@ const formattedTorahText = computed(() => {
 }
 
 @keyframes pointerPulse {
-  0%, 100% { opacity: 1; transform: translateX(0); }
-  50% { opacity: 0.6; transform: translateX(-4px); }
+  0%, 100% { opacity: 1; transform: translateX(0); } /* allow-opacity: decorative non-text pointer icon pulse */
+  50% { opacity: 0.6; transform: translateX(-4px); } /* allow-opacity: decorative non-text pointer icon pulse */
 }
 
 /* Completion Feedback Animation */
