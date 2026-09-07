@@ -36,19 +36,28 @@ const hebrewNumerals = {
 
 /**
  * Hebrew numeral for a 1-based chapter/verse number (no gershayim).
- * Keeps the historical output of this app (15 -> יה, 16 -> יו) unchanged.
+ * 15 and 16 (and any number whose value mod 100 is 15 or 16) are rendered
+ * as טו/טז instead of יה/יו, to avoid spelling the Divine Name.
  */
 export function toHebrew(num) {
   if (num === 0) return ''
 
   const hundreds = Math.floor(num / 100) * 100
-  const tens = Math.floor((num % 100) / 10) * 10
-  const ones = num % 10
+  const remainder = num % 100
 
   let result = ''
   if (hundreds > 0) result += hebrewNumerals[hundreds]
-  if (tens > 0) result += hebrewNumerals[tens]
-  if (ones > 0) result += hebrewNumerals[ones]
+
+  if (remainder === 15) {
+    result += 'טו'
+  } else if (remainder === 16) {
+    result += 'טז'
+  } else {
+    const tens = Math.floor(remainder / 10) * 10
+    const ones = remainder % 10
+    if (tens > 0) result += hebrewNumerals[tens]
+    if (ones > 0) result += hebrewNumerals[ones]
+  }
 
   return result
 }
