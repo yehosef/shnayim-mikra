@@ -5,8 +5,8 @@
       <div class="verse-info">
         <span v-if="aliyaLabel" class="aliya-label">{{ aliyaLabel }}</span>
         <span class="perek-pasuk">
-          <span v-if="currentVerse.perek" class="perek">פרק {{ currentVerse.perek }}</span>
-          <span class="separator">:</span>
+          <span v-if="perekLabel" class="perek">פרק {{ perekLabel }}</span>
+          <span v-if="perekLabel" class="separator">:</span>
           <span class="pasuk">פסוק {{ currentVerse.pasuk }}</span>
         </span>
         <!-- Step Indicators -->
@@ -62,7 +62,7 @@
     <SettingsModal v-if="showSettings" :focusMode="true" @close="showSettings = false" />
 
     <!-- Main Content - Sequential 3-Step Display -->
-    <div class="focus-content" @click="advanceStep">
+    <div ref="contentEl" class="focus-content" @pointerdown="handlePointerDown">
       <!-- Step Label -->
       <div class="step-label">{{ stepLabel }}</div>
 
@@ -71,6 +71,7 @@
         v-if="currentStep === 1 || currentStep === 2"
         class="text-display torah font-sbl"
         :class="{ 'step-complete': currentStep === 1 ? progress.hebrew1 : progress.hebrew2 }"
+        @click="handleTextClick"
       >
         {{ formattedTorahText }}
       </div>
@@ -80,6 +81,7 @@
         v-if="currentStep === 3 && targumLayer === 'onkelos'"
         class="text-display targum font-sbl"
         :class="{ 'step-complete': progress.targum }"
+        @click="handleTextClick"
         v-html="currentVerse.targum"
       ></div>
 
@@ -87,6 +89,7 @@
         v-if="currentStep === 3 && targumLayer === 'rashi'"
         class="text-display targum"
         :class="{ 'step-complete': progress.targum, 'font-rashi': settings.fontRashi }"
+        @click="handleTextClick"
         v-html="currentVerse.rashi.join('  ')"
       ></div>
 
@@ -94,9 +97,9 @@
         v-if="currentStep === 3 && targumLayer === 'english'"
         class="text-display targum english-targum"
         :class="{ 'step-complete': progress.targum }"
-      >
-        {{ currentVerse.english || 'No English translation available' }}
-      </div>
+        @click="handleTextClick"
+        v-html="currentVerse.english || 'No English translation available'"
+      ></div>
 
       <!-- Instruction -->
       <div class="instruction">
@@ -111,7 +114,7 @@
         <div class="english reference-text" v-html="currentVerse.english"></div>
       </div>
 
-      <div v-if="currentVerse.rashi && settings.showRashi && settings.targumType !== 'rashi'" class="reference-section">
+      <div v-if="currentVerse.rashi?.length && settings.showRashi && settings.targumType !== 'rashi'" class="reference-section">
         <div class="reference-label">רש"י</div>
         <div class="rashi reference-text" :class="{ 'font-rashi': settings.fontRashi }" v-html="currentVerse.rashi.join('  ')"></div>
       </div>
@@ -147,7 +150,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useProgress } from '../composables/useProgress'
-import { formatHebrewText } from '../utils/hebrewUtils'
+import { formatHebrewText, toHebrew } from '../utils/hebrewUtils'
 import SettingsModal from './SettingsModal.vue'
 
 const props = defineProps({
@@ -185,6 +188,7 @@ const emit = defineEmits(['exit'])
 
 const { getVerseProgress, setVerseProgress } = useProgress()
 
+const contentEl = ref(null)
 const showSettings = ref(false)
 const showHelp = ref(false)
 const currentIndex = ref(props.startIndex)
@@ -195,9 +199,21 @@ const skipStepReset = ref(false) // Flag to skip step reset during arrow navigat
 const currentVerse = computed(() => props.verses[currentIndex.value] || {})
 const totalVerses = computed(() => props.verses.length)
 
+// null when the current index does not point at a real verse (a stale index
+// after the verse list changed). Progress is never written under such a key —
+// that is what produced 'undefined:undefined' entries in localStorage.
 const verseKey = computed(() => {
   const v = currentVerse.value
+  if (!Number.isInteger(v.perekNum) || !Number.isInteger(v.pasukNum)) return null
   return `${v.perekNum}:${v.pasukNum}`
+})
+
+// useData only sets `perek` on the first verse of a chapter (it drives the
+// list-view chapter marker), so the header must derive the chapter itself or
+// every other verse shows a bare pasuk number.
+const perekLabel = computed(() => {
+  const n = currentVerse.value.perekNum
+  return Number.isInteger(n) ? toHebrew(n + 1) : null
 })
 
 const progress = computed(() => getVerseProgress(props.parasha, verseKey.value))
@@ -256,8 +272,23 @@ const determineStartingStep = () => {
   return 1 // All done, start over
 }
 
+// The verse list can be replaced under us (a layer reload keeps focus mode
+// mounted on purpose, so we cannot rely on a remount to re-seed the index).
+watch(() => props.verses, (list) => {
+  const max = (Array.isArray(list) ? list.length : 0) - 1
+  if (max < 0) {
+    currentIndex.value = 0
+    return
+  }
+  if (currentIndex.value > max) currentIndex.value = max
+  if (currentIndex.value < 0) currentIndex.value = 0
+})
+
 // Reset step when changing verses (unless skipped by arrow navigation)
 watch(currentIndex, () => {
+  // A long verse can leave the reader scrolled down; the next verse must start
+  // at the top or the card scrolls in off-screen.
+  if (contentEl.value) contentEl.value.scrollTop = 0
   if (skipStepReset.value) {
     skipStepReset.value = false
     return
@@ -274,8 +305,15 @@ onMounted(() => {
 // is among the displayed verses. Returns false when there is no such step.
 const followPointer = () => {
   const pos = pointerPosition()
-  // Never yank the reader backwards to an earlier skipped verse
-  if (!pos || pos.index < currentIndex.value) return false
+  if (!pos) return false
+  // In 'verse' style the pointer only ever moves forward, so a backward pointer
+  // is behind us (a skipped verse) and we step on by hand. In 'aliyah' style it
+  // legitimately jumps back to the top of the block at every pass boundary (all
+  // of hebrew1, then all of hebrew2, then all of targum); refusing that
+  // abandoned the pointer after the first pass and silently discarded the
+  // chosen reading style. The pointer handed down is already scoped to the
+  // displayed verses, so following it is always inside this view.
+  if (props.settings.readingStyle !== 'aliyah' && pos.index < currentIndex.value) return false
   if (pos.index !== currentIndex.value) {
     skipStepReset.value = true
     currentIndex.value = pos.index
@@ -284,28 +322,37 @@ const followPointer = () => {
   return true
 }
 
+// Single write path: refuses to touch storage when the index is stale.
+const markPhase = (field, value) => {
+  const key = verseKey.value
+  if (!key) return false
+  lastAction.value = { type: 'progress', parasha: props.parasha, key, field, prevValue: progress.value[field] }
+  setVerseProgress(props.parasha, key, field, value)
+  return true
+}
+
 const advanceStep = () => {
   if (showSettings.value || showHelp.value) return // Don't advance when overlays are open
+  if (!verseKey.value) return
 
   if (currentStep.value === 1) {
-    lastAction.value = { type: 'progress', parasha: props.parasha, key: verseKey.value, field: 'hebrew1', prevValue: progress.value.hebrew1 }
-    setVerseProgress(props.parasha, verseKey.value, 'hebrew1', true)
+    markPhase('hebrew1', true)
     if (!followPointer()) currentStep.value = 2
   } else if (currentStep.value === 2) {
-    lastAction.value = { type: 'progress', parasha: props.parasha, key: verseKey.value, field: 'hebrew2', prevValue: progress.value.hebrew2 }
-    setVerseProgress(props.parasha, verseKey.value, 'hebrew2', true)
+    markPhase('hebrew2', true)
     if (!followPointer()) currentStep.value = 3
   } else {
-    lastAction.value = { type: 'progress', parasha: props.parasha, key: verseKey.value, field: 'targum', prevValue: progress.value.targum }
-    setVerseProgress(props.parasha, verseKey.value, 'targum', true)
+    markPhase('targum', true)
 
     if (followPointer()) return
 
-    // Move to next verse or exit
     if (currentIndex.value < totalVerses.value - 1) {
       currentIndex.value++
       currentStep.value = 1
-    } else {
+    } else if (!(props.pointerFn && props.pointerFn())) {
+      // Only leave when there is genuinely nothing left to read. A live pointer
+      // we declined to follow (verse style, behind us) means the reading is not
+      // finished, so exiting here would drop the reader out mid-parsha.
       emit('exit')
     }
   }
@@ -317,8 +364,35 @@ const jumpToStep = (step) => {
 
 const markCurrentComplete = () => {
   const field = currentStep.value === 1 ? 'hebrew1' : currentStep.value === 2 ? 'hebrew2' : 'targum'
-  lastAction.value = { type: 'progress', parasha: props.parasha, key: verseKey.value, field, prevValue: progress.value[field] }
-  setVerseProgress(props.parasha, verseKey.value, field, true)
+  markPhase(field, true)
+}
+
+// A pointer that moved more than this between down and up is a drag
+// (text selection / scroll), not a tap on the reading card.
+const DRAG_THRESHOLD_PX = 8
+let pointerStart = null
+
+const handlePointerDown = (e) => {
+  pointerStart = { x: e.clientX, y: e.clientY }
+}
+
+// Only the pasuk / targum card advances the reading — the step label, the
+// instruction line, the padding and the English/Rashi reference blocks are not
+// click targets — and a drag that selects text must not mark the phase read.
+const handleTextClick = (event) => {
+  const start = pointerStart
+  pointerStart = null
+
+  const sel = typeof window !== 'undefined' && window.getSelection ? window.getSelection() : null
+  if (sel && sel.toString()) return
+
+  if (start && event && typeof event.clientX === 'number') {
+    const dx = event.clientX - start.x
+    const dy = event.clientY - start.y
+    if (Math.hypot(dx, dy) > DRAG_THRESHOLD_PX) return
+  }
+
+  advanceStep()
 }
 
 const undoLastAction = () => {
@@ -346,6 +420,10 @@ const handleKeydown = (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
     return
   }
+
+  // Never swallow browser/OS shortcuts (Alt/Cmd+Arrow = Back, Ctrl+Space, ...)
+  if (e.ctrlKey || e.metaKey || e.altKey) return
+  if (e.shiftKey && e.key === ' ') return
 
   // When overlays are open, only allow Escape to close them
   if (showSettings.value || showHelp.value) {
@@ -680,13 +758,13 @@ onUnmounted(() => {
 }
 
 .torah {
-  font-size: 2rem;
+  font-size: 1.6em;
   line-height: 2;
   color: #1f2937;
 }
 
 .targum {
-  font-size: 1.6rem;
+  font-size: 1.28em;
   color: #374151;
   line-height: 1.9;
 }
@@ -816,11 +894,11 @@ onUnmounted(() => {
   }
 
   .torah {
-    font-size: 1.5rem;
+    font-size: 1.2em;
   }
 
   .targum {
-    font-size: 1.3rem;
+    font-size: 1.04em;
   }
 
   .text-display {
