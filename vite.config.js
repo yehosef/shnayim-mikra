@@ -7,7 +7,9 @@ export default defineConfig({
   plugins: [
     vue(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt': the SW waits and useOffline's needRefresh/updateApp drive the
+      // Settings "Update available" button, instead of reloading mid-session.
+      registerType: 'prompt',
       workbox: {
         // Precache app shell (HTML, JS, CSS, fonts) plus the core corpus:
         // Torah + Targum + aliyot.json (~2.9MB) so a fresh install works
@@ -15,7 +17,7 @@ export default defineConfig({
         // runtime-cached on demand (or via the Settings download button).
         globPatterns: [
           '**/*.{js,css,html}',
-          '*.{ttf,svg,png,ico}',
+          '*.{ttf,ico}',
           'data/aliyot.json',
           'data/torah/*.json',
           'data/targum/*.json'
@@ -52,9 +54,22 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/logo.png',
-            sizes: '300x300',
-            type: 'image/png'
+            src: '/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any'
+          },
+          {
+            src: '/icon-512-maskable.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable'
           }
         ]
       }

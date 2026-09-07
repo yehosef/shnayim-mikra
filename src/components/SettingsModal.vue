@@ -127,7 +127,7 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useSettings } from '../composables/useSettings'
 import { useOffline } from '../composables/useOffline'
 
@@ -138,12 +138,25 @@ const props = defineProps({
   }
 })
 
-defineEmits(['close'])
+const emit = defineEmits(['close'])
 
 const { settings } = useSettings()
 const { offlineReady, needRefresh, updateApp } = useOffline()
 
 const isHebrew = computed(() => settings.value.interfaceLanguage === 'he')
+
+// Escape closes the modal. ParshaDisplay's key handler returns early while the
+// modal is open, so without this the modal is unclosable by keyboard in list
+// view. In focus mode FocusMode's own handler already closes it, so stay out of
+// the way there rather than fire twice.
+const handleKeydown = (e) => {
+  if (e.key !== 'Escape' || props.focusMode) return
+  e.stopPropagation()
+  emit('close')
+}
+
+onMounted(() => document.addEventListener('keydown', handleKeydown))
+onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
 
 // Offline download state
 const offlineStatus = ref('idle') // idle | downloading | ready | error
@@ -178,7 +191,12 @@ const downloadForOffline = async () => {
       const batch = urls.slice(i, i + 5)
       await Promise.all(batch.map(async (url) => {
         const res = await fetch(url)
-        if (!res.ok) throw new Error(`${url}: ${res.status}`)
+        // Vercel rewrites a missing file to index.html with a 200, so a
+        // non-json 200 is a failed download, not a cached layer.
+        const ct = res.headers.get('content-type') || ''
+        if (!res.ok || !ct.includes('json')) {
+          throw new Error(`${url}: ${res.status} ${ct || 'no content-type'}`)
+        }
         offlineDownloaded.value++
       }))
     }
