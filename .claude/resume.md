@@ -39,16 +39,34 @@ The `twoplusone` prototype is archived at `/Volumes/code/geula/archive/twopluson
   `.claude/notes/v1-review-2026-09-07.md`. Nothing has been fixed yet — awaiting the user's
   decision on which batch to fix.
 
+## 2026-09-07 (late): all accepted findings fixed on branch `v1-fixes`
+
+- User decisions: numerals 15/16 -> טו/טז; Sun–Tue default view stays on last week's unfinished
+  parsha (`resolveDefaultWeek` in `useParsha.js`); accessibility findings dropped (only
+  Escape-closes-settings kept); PWA `registerType: 'prompt'`.
+- 33 findings fixed in 8 commits, then a verification workflow (2 lenses per fix + 4 diff
+  reviewers + 3 refuters each) confirmed 25 regressions, repaired in 5 more commits, plus one
+  more found in the browser smoke pass (external write vs. selection). 177 tests, validate, build
+  all green. Design notes: the default week writes NO URL fragment (a fragment always means a
+  user choice, `src/lib/hashRoute.js`); rollover to the new week is held while the tab is visible;
+  cross-tab merge is field-level dirty tracking (`useProgress.js` `mergeProgress`); focus-mode
+  stepping is the pure `src/lib/focusStep.js`.
+- Branch pushed; Vercel preview requires Vercel SSO login (per-deployment URLs 302 to sso-api).
+  Smoke-tested locally via `npx vite preview` in Chrome: click-to-toggle, Space/pointer, focus
+  mode header + aliyah-style traversal, aliyah display mode scoped pointer, targumType rashi,
+  two-tab merge, coming-week link + reload.
+- Known leftovers (not done): `App.vue` rollover key uses the civil day, not the Jewish day
+  (only affects when a hidden tab rolls over); `.focus-content` still has `cursor: pointer`
+  though only the text card advances; `public/logo.png` is unreferenced.
+
 ## In Progress
 
-Nothing. Tree clean on `master` == `v1-restart` (only `.claude/` notes added, uncommitted).
+Nothing. `v1-fixes` is 14 commits ahead of `master`, pushed.
 
 ## Next Steps
 
-1. User decides the fix batch from `.claude/notes/v1-review-2026-09-07.md`. Recommended first
-   batch: the CRITICAL (`useProgress.js:14` cross-tab clobber) plus the HIGHs that corrupt or
-   un-mark progress (`ParshaDisplay.vue:80`, `:131`, `:54`; `FocusMode.vue:278`, `:195`) and the
-   readingStyle/targumType behaviour gaps (`useData.js:68`, `useReadingState.js:24`).
+1. User reviews the Vercel preview for `v1-fixes` (log in to Vercel) or runs it locally, then
+   merges `v1-fixes` into `master` (auto-deploys production).
 2. User acceptance pass in the real app (aliyah groupings vs a chumash, `readingStyle: 'aliyah'`
    in focus mode, the dismissible boundary notice in `src/components/DailyGuide.vue:54`).
 3. Delete `v1-restart` on the remote (master is confirmed live; optional).
