@@ -142,7 +142,10 @@ const selectedParsha = ref(props.parasha)
 const showFocusMode = ref(false)
 const focusIndex = ref(0)
 const selectedIndex = ref(0) // Which verse is selected
-const selectedPhase = ref(1) // Which phase within the verse (1=hebrew1, 2=hebrew2, 3=targum)
+// Which phase within the verse: 1=hebrew1, 2=hebrew2, 3=targum, and 0 = none,
+// used when everything on screen is already read so that Space has nothing to
+// un-mark (VerseView already treats 0 as "no phase highlighted").
+const selectedPhase = ref(1)
 
 // Aliyah names in Hebrew
 const aliyahNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שביעי']
@@ -178,6 +181,7 @@ const aliyahCount = computed(() => aliyotEntry.value?.aliyot.length || 7)
 const {
   aliyahStatsList,
   scopedPointer,
+  scopeComplete,
   currentAliyahN,
   isPointer,
   inCurrentAliyah
@@ -236,13 +240,30 @@ const otherWeekText = computed(() => {
 })
 
 // Advisory daily guide (never gates anything)
-const { guide, status } = useDailyGuide({
+const { guide: weekGuide, status } = useDailyGuide({
   aliyahCount: () => aliyahCount.value,
   // urgency applies to whichever week's parsha is on screen
   shabbat: () => viewedShabbat.value,
   route: () => props.parasha,
   location: () => settings.value.location
 })
+
+// True while the parsha on screen is the one we are still finishing from LAST
+// week (the lenient Sunday-Tuesday window).
+const viewingLateWeek = computed(() => {
+  const w = week.value
+  if (!w?.late) return false
+  return w.previous?.route === props.parasha && w.next?.route !== props.parasha
+})
+
+// The per-day suggestion ("today: rishon and sheni") is a schedule for the
+// COMING Shabbat, so it says nothing about last week's parsha: during the
+// lenient window it would label aliyot 1-2 of a parsha that is already overdue
+// as today's reading, right next to the 'late' status. Show the catch-up
+// variant instead — still advisory, still nothing hidden or gated.
+const guide = computed(() =>
+  viewingLateWeek.value ? { aliyot: [], review: true } : weekGuide.value
+)
 
 // Hebrew label of the aliyah containing a verse (for markers and focus header)
 const aliyahLabelFor = (perek, pasuk) => {
@@ -418,6 +439,9 @@ const selectVerse = (i) => {
 const toggleCurrentPhase = () => {
   const verse = displayVerses.value[selectedIndex.value]
   if (!verse) return
+  // No phase selected (everything in scope is read): nothing to mark, and
+  // marking "the current phase" here would un-mark a completed reading.
+  if (selectedPhase.value < 1 || selectedPhase.value > 3) return
 
   const verseKey = getVerseKey(verse)
   const phaseField = selectedPhase.value === 1 ? 'hebrew1' : selectedPhase.value === 2 ? 'hebrew2' : 'targum'
@@ -457,8 +481,12 @@ const handleKeydown = (e) => {
       break
     case 'ArrowUp':
       e.preventDefault()
-      // Move to previous phase, or previous verse's phase 3 if at phase 1
-      if (selectedPhase.value > 1) {
+      // Move to previous phase, or previous verse's phase 3 if at phase 1.
+      // From "no phase" (a finished scope) step into the last phase of the
+      // verse the selection is parked on.
+      if (selectedPhase.value === 0) {
+        selectedPhase.value = 3
+      } else if (selectedPhase.value > 1) {
         selectedPhase.value--
       } else if (selectedIndex.value > 0) {
         selectedIndex.value--
@@ -508,7 +536,16 @@ const scrollToSelected = () => {
 watch([selectedIndex, selectedPhase], scrollToSelected)
 
 // Seed the keyboard selection at the reading pointer (the next unread step)
-// so Space always marks "the next thing to read". Falls back to the top.
+// so Space always marks "the next thing to read".
+//
+// With no pointer the fallback depends on WHY there is none. When everything
+// in scope is read (finishing the parsha in focus mode, or reopening a
+// finished aliyah in 'aliyah' display mode) the old fallback to verse 0 /
+// phase 1 parked the selection on an already-read phase, and the next Space
+// silently un-marked the first reading of the first verse and persisted it.
+// Park at the end of what is on screen with no phase selected instead. Only
+// when nothing is derived yet (aliyot.json / the chumash still loading) is the
+// top of the list the right place to start.
 const seedSelectionFromPointer = () => {
   const ptr = scopedPointer.value
   if (ptr) {
@@ -519,6 +556,11 @@ const seedSelectionFromPointer = () => {
       selectedPhase.value = ptr.phase === 'hebrew1' ? 1 : ptr.phase === 'hebrew2' ? 2 : 3
       return
     }
+  }
+  if (scopeComplete.value && displayVerses.value.length > 0) {
+    selectedIndex.value = displayVerses.value.length - 1
+    selectedPhase.value = 0
+    return
   }
   selectedIndex.value = 0
   selectedPhase.value = 1

@@ -5,7 +5,9 @@
  * range [0,3] -> [1,10] — split into three aliyah blocks of 7 / 6 / 7.
  */
 import { describe, it, expect } from 'vitest'
+import { ref } from 'vue'
 import * as lib from '../src/lib/progressMath.js'
+import { useReadingState } from '../src/composables/useReadingState.js'
 import {
   PHASES,
   verseKey,
@@ -434,5 +436,87 @@ describe('isRouteComplete', () => {
   it('returns a bare boolean (nothing that could gate content)', () => {
     expect(typeof isRouteComplete(ALL_DONE, ENTRY)).toBe('boolean')
     expect(typeof isRouteComplete({}, ENTRY)).toBe('boolean')
+  })
+})
+
+/**
+ * scopeComplete: WHY the scoped pointer is null.
+ *
+ * A null pointer means either "everything on screen is read" or "nothing is
+ * derived yet". ParshaDisplay's seed has to tell them apart: parking the
+ * selection at verse 0 / phase 1 when the scope is finished lands on an
+ * already-read phase, and the next Space un-marks it and persists that.
+ */
+describe('useReadingState: scopeComplete', () => {
+  const ENTRY = {
+    book: 'test',
+    aliyot: [
+      { n: 1, start: [0, 3], end: [0, 9], verseCount: 7 },
+      { n: 2, start: [0, 10], end: [1, 3], verseCount: 6 },
+      { n: 3, start: [1, 4], end: [1, 10], verseCount: 7 }
+    ],
+    total: 20
+  }
+  const DONE = { hebrew1: true, hebrew2: true, targum: true }
+
+  const setup = ({ progress = {}, scope = null, lengths = CHAPTER_LENGTHS } = {}) => {
+    const prog = ref(progress)
+    const scopeN = ref(scope)
+    const lens = ref(lengths)
+    const state = useReadingState({
+      aliyotEntry: () => ENTRY,
+      chapterLengths: () => lens.value,
+      loadedChumash: () => ENTRY.book,
+      progress: () => prog.value,
+      style: () => 'verse',
+      scope: () => scopeN.value
+    })
+    return { prog, scopeN, lens, state }
+  }
+
+  it('is false while there is still something to read', () => {
+    const { state } = setup()
+    expect(state.scopedPointer.value).toEqual({ key: ALL_KEYS[0], phase: 'hebrew1' })
+    expect(state.scopeComplete.value).toBe(false)
+  })
+
+  it('is true when the whole parsha is read (the focus-mode exit case)', () => {
+    const { state } = setup({ progress: mark(ALL_KEYS, DONE) })
+    expect(state.scopedPointer.value).toBe(null)
+    expect(state.scopeComplete.value).toBe(true)
+  })
+
+  it('is true for a finished displayed aliyah even though the parsha is not done', () => {
+    const { state } = setup({ progress: mark(BLOCKS[1], DONE), scope: 2 })
+    expect(state.scopedPointer.value).toBe(null)
+    expect(state.pointer.value).toEqual({ key: BLOCKS[0][0], phase: 'hebrew1' })
+    expect(state.scopeComplete.value).toBe(true)
+  })
+
+  it('stays false when nothing is derived yet (no chapter lengths)', () => {
+    const { state } = setup({ progress: mark(ALL_KEYS, DONE), lengths: [] })
+    expect(state.scopedPointer.value).toBe(null)
+    expect(state.scopeComplete.value).toBe(false)
+  })
+
+  it('stays false for a scope naming an aliyah this parsha does not have', () => {
+    const { state } = setup({ scope: 9 })
+    expect(state.scopedPointer.value).toBe(null)
+    expect(state.scopeComplete.value).toBe(false)
+  })
+
+  it('follows progress reactively, in both directions', () => {
+    const { prog, state } = setup({ scope: 3 })
+    expect(state.scopeComplete.value).toBe(false)
+    prog.value = mark(BLOCKS[2], DONE)
+    expect(state.scopeComplete.value).toBe(true)
+    prog.value = { ...prog.value, [BLOCKS[2][0]]: rec({ hebrew1: true, hebrew2: true }) }
+    expect(state.scopeComplete.value).toBe(false)
+    expect(state.scopedPointer.value).toEqual({ key: BLOCKS[2][0], phase: 'targum' })
+  })
+
+  it('carries no gating flag', () => {
+    const { state } = setup({ progress: mark(ALL_KEYS, DONE) })
+    expect(typeof state.scopeComplete.value).toBe('boolean')
   })
 })

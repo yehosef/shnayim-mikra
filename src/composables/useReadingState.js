@@ -15,7 +15,8 @@ import { aliyahFor } from './useAliyot'
  *                      pointer marker, the seed and the advance all land inside
  *                      the verses actually on screen. Equals `pointer` when
  *                      `scope` is null, and is null when the scoped aliyah is
- *                      already finished.
+ *                      already finished — `scopeComplete` says which of the
+ *                      two reasons for a null pointer applies.
  *
  * @param {object} src
  * @param {() => object|null} src.aliyotEntry   aliyot.json entry for the route
@@ -81,6 +82,21 @@ export function useReadingState({ aliyotEntry, chapterLengths, loadedChumash, pr
     return nextUnreadIn(scopeN.value)
   })
 
+  /**
+   * Why `scopedPointer` is null, which callers must tell apart:
+   *  - true  — everything in the displayed scope is read (nothing left to mark)
+   *  - false — nothing is derived yet (aliyot.json or the chumash still
+   *            loading, or a scope naming an aliyah this parsha does not have)
+   * Seeding the selection at verse 0 / phase 1 is right in the second case and
+   * wrong in the first, where it parks on an already-read phase that the next
+   * Space would silently un-mark. Advisory only: nothing gates on it.
+   */
+  const scopeComplete = computed(() => {
+    if (blocks.value.length === 0) return false
+    if (scopeN.value != null && blockIndexOf(scopeN.value) < 0) return false
+    return scopedPointer.value === null
+  })
+
   /** Aliyah number the pointer sits in; last aliyah when everything is read. */
   const currentAliyahN = computed(() => {
     const entry = toValue(aliyotEntry)
@@ -118,6 +134,7 @@ export function useReadingState({ aliyotEntry, chapterLengths, loadedChumash, pr
     parshaStats,
     pointer,
     scopedPointer,
+    scopeComplete,
     nextUnreadIn,
     currentAliyahN,
     scopedAliyahN,
