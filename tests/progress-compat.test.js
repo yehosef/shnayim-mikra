@@ -146,7 +146,8 @@ describe('two-tab progress merge', () => {
 
     // Same parsha, different verse, from a tab that never saw a's marks.
     b.setVerseProgress('bereshit', '0:2', 'hebrew1', true)
-    // ...and a verse both tabs hold: the writing tab's record wins whole.
+    // ...and a verse both tabs hold: only the field b changed is written, so
+    // a's hebrew1 on the same verse survives.
     b.setVerseProgress('bereshit', '0:0', 'targum', true)
     await b.tick()
     b.fire('pagehide')
@@ -155,7 +156,112 @@ describe('two-tab progress merge', () => {
     expect(Object.keys(bereshit).sort()).toEqual(['0:0', '0:1', '0:2'])
     expect(bereshit['0:1'].hebrew1).toBe(true)
     expect(bereshit['0:2'].hebrew1).toBe(true)
-    expect(bereshit['0:0']).toEqual({ hebrew1: false, hebrew2: false, targum: true })
+    expect(bereshit['0:0']).toEqual({ hebrew1: true, hebrew2: false, targum: true })
+  })
+
+  it('a stale tab does not revert fields it never touched', async () => {
+    // b hydrates from disk, then goes cold (frozen / bfcache): it gets no
+    // storage events and they are not replayed.
+    const a = await openTab(store)
+    a.setVerseProgress('bereshit', '0:0', 'hebrew1', true)
+    await a.tick()
+    a.fire('pagehide')
+
+    const b = await openTab(store)
+    expect(b.getVerseProgress('bereshit', '0:0').hebrew1).toBe(true)
+
+    a.setVerseProgress('bereshit', '0:0', 'hebrew2', true)
+    a.setVerseProgress('bereshit', '0:0', 'targum', true)
+    await a.tick()
+    a.fire('pagehide')
+
+    // b wakes up holding its stale record and marks an unrelated verse.
+    b.setVerseProgress('bereshit', '0:9', 'hebrew1', true)
+    await b.tick()
+    b.fire('pagehide')
+
+    const bereshit = onDisk().bereshit
+    expect(bereshit['0:0']).toEqual({ hebrew1: true, hebrew2: true, targum: true })
+    expect(bereshit['0:9'].hebrew1).toBe(true)
+  })
+
+  it('re-reads disk when the page comes back from the bfcache', async () => {
+    const a = await openTab(store)
+    const b = await openTab(store)
+
+    b.setVerseProgress('bereshit', '0:0', 'hebrew1', true)
+    await b.tick()
+    b.fire('pagehide')
+
+    // a was frozen and never received the storage event.
+    expect(a.getVerseProgress('bereshit', '0:0').hebrew1).toBe(false)
+    a.fire('pageshow')
+    expect(a.getVerseProgress('bereshit', '0:0').hebrew1).toBe(true)
+  })
+
+  it('un-marking a verse sticks', async () => {
+    const a = await openTab(store)
+    a.setVerseProgress('bereshit', '0:0', 'hebrew1', true)
+    await a.tick()
+    a.fire('pagehide')
+    expect(onDisk().bereshit['0:0'].hebrew1).toBe(true)
+
+    a.setVerseProgress('bereshit', '0:0', 'hebrew1', false)
+    await a.tick()
+    a.fire('pagehide')
+    expect(onDisk().bereshit['0:0'].hebrew1).toBe(false)
+    expect(a.getVerseProgress('bereshit', '0:0').hebrew1).toBe(false)
+  })
+
+  it('keeps marks made inside the debounce window when another tab writes', async () => {
+    const a = await openTab(store)
+    const b = await openTab(store)
+
+    // a's write is still pending (no pagehide, debounce not elapsed).
+    a.setVerseProgress('bereshit', '0:0', 'hebrew1', true)
+    a.setVerseProgress('bereshit', '0:1', 'hebrew1', true)
+    await a.tick()
+
+    b.setVerseProgress('noach', '5:9', 'targum', true)
+    await b.tick()
+    b.fire('pagehide')
+
+    a.fire('storage', { key: 'shnayim-progress', newValue: store.getItem('shnayim-progress') })
+    // a keeps its own unflushed marks and picks up b's.
+    expect(a.getVerseProgress('bereshit', '0:0').hebrew1).toBe(true)
+    expect(a.getVerseProgress('bereshit', '0:1').hebrew1).toBe(true)
+    expect(a.getVerseProgress('noach', '5:9').targum).toBe(true)
+
+    a.fire('pagehide')
+    const disk = onDisk()
+    expect(disk.bereshit['0:0'].hebrew1).toBe(true)
+    expect(disk.bereshit['0:1'].hebrew1).toBe(true)
+    expect(disk.noach['5:9'].targum).toBe(true)
+  })
+
+  it('an unflushed clear is not resurrected by another tab\'s write', async () => {
+    const a = await openTab(store)
+    const b = await openTab(store)
+
+    a.setVerseProgress('lech-lecha', '11:0', 'hebrew1', true)
+    await a.tick()
+    a.fire('pagehide')
+
+    // Cleared here, not written yet.
+    a.clearParshaProgress('lech-lecha')
+    await a.tick()
+
+    b.setVerseProgress('noach', '5:9', 'targum', true)
+    await b.tick()
+    b.fire('pagehide')
+
+    a.fire('storage', { key: 'shnayim-progress', newValue: store.getItem('shnayim-progress') })
+    expect(a.getVerseProgress('lech-lecha', '11:0').hebrew1).toBe(false)
+
+    a.fire('pagehide')
+    const disk = onDisk()
+    expect(disk['lech-lecha']).toBeUndefined()
+    expect(disk.noach['5:9'].targum).toBe(true)
   })
 
   it('clearing a parsha is not resurrected by the merge', async () => {
@@ -240,6 +346,43 @@ describe('two-tab settings sync', () => {
     const disk = JSON.parse(store.getItem('shnayim-settings'))
     expect(disk.fontSize).toBe(28)
     expect(disk.showRashi).toBe(true)
+  })
+
+  it('keeps a setting changed inside the debounce window when another tab writes', async () => {
+    const store = makeStore()
+    const a = await openTab(store, SETTINGS)
+    const b = await openTab(store, SETTINGS)
+
+    // a's write is still pending.
+    a.settings.value.showRashi = true
+    await a.tick()
+
+    b.settings.value.fontSize = 28
+    await b.tick()
+    b.fire('pagehide')
+
+    a.fire('storage', { key: 'shnayim-settings', newValue: store.getItem('shnayim-settings') })
+    expect(a.settings.value.showRashi).toBe(true)
+    expect(a.settings.value.fontSize).toBe(28)
+
+    a.fire('pagehide')
+    const disk = JSON.parse(store.getItem('shnayim-settings'))
+    expect(disk.showRashi).toBe(true)
+    expect(disk.fontSize).toBe(28)
+  })
+
+  it('picks up another tab\'s settings on a bfcache restore', async () => {
+    const store = makeStore()
+    const a = await openTab(store, SETTINGS)
+    const b = await openTab(store, SETTINGS)
+
+    b.settings.value.fontSize = 24
+    await b.tick()
+    b.fire('pagehide')
+
+    expect(a.settings.value.fontSize).toBe(20)
+    a.fire('pageshow')
+    expect(a.settings.value.fontSize).toBe(24)
   })
 
   it('falls back to defaults when localStorage throws', async () => {

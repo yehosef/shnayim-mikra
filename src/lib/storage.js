@@ -87,6 +87,26 @@ export function onHidden(fn) {
 }
 
 /**
+ * Run `fn` on every path by which this page becomes usable again after having
+ * been hidden: a bfcache / frozen-tab restore (pageshow) and a plain return to
+ * the foreground. A page that is frozen or in the back/forward cache does not
+ * receive `storage` events and they are not replayed on restore, so without
+ * this a resumed tab keeps a stale map forever.
+ */
+export function onVisible(fn) {
+  const win = globalThis.window
+  if (win && win.addEventListener) {
+    win.addEventListener('pageshow', fn)
+  }
+  const doc = globalThis.document
+  if (doc && doc.addEventListener) {
+    doc.addEventListener('visibilitychange', () => {
+      if (doc.visibilityState === 'visible') fn()
+    })
+  }
+}
+
+/**
  * Call `fn(newValue)` when another tab writes `key`. `newValue` is the raw
  * string, or null when the key was removed or storage was cleared.
  */
@@ -106,41 +126,34 @@ export function onExternalWrite(key, fn) {
  * `produce(rawOnDisk)` is called at write time — never at schedule time — and
  * returns the string to store (or null to skip). Giving it the current on-disk
  * value is what lets a caller merge in whatever another tab wrote since the
- * last flush. A write that would store the same string as the last one is
- * skipped, which is also what keeps an adopted external value from bouncing
- * straight back out through the caller's watcher.
+ * last flush. A write that would store exactly what is already on disk is
+ * skipped, which is what keeps a value that came in from another tab from
+ * bouncing straight back out through the caller's watcher.
+ *
+ * The debounce is a fixed window from the *first* pending change, not a timer
+ * restarted by every change: a user marking verses steadily must not be able to
+ * hold the write off indefinitely.
  */
 export function createPersister(key, produce, delay = 300) {
   let timer = null
-  let last = null
 
   const flush = () => {
     if (timer !== null) {
       clearTimeout(timer)
       timer = null
     }
-    const next = produce(getItem(key))
-    if (next === null || next === undefined || next === last) return
+    const current = getItem(key)
+    const next = produce(current)
+    if (next === null || next === undefined || next === current) return
     setItem(key, next)
-    last = next
   }
 
   const schedule = () => {
-    if (timer !== null) clearTimeout(timer)
+    if (timer !== null) return
     timer = setTimeout(flush, delay)
-  }
-
-  // Record a value that arrived from elsewhere as already-persisted, and drop
-  // any pending write of the state it replaced.
-  const adopt = (serialized) => {
-    if (timer !== null) {
-      clearTimeout(timer)
-      timer = null
-    }
-    last = serialized
   }
 
   onHidden(flush)
 
-  return { schedule, flush, adopt }
+  return { schedule, flush }
 }

@@ -1,5 +1,5 @@
 import { ref, watch } from 'vue'
-import { getItem, createPersister, onExternalWrite } from '../lib/storage'
+import { getItem, createPersister, onExternalWrite, onVisible } from '../lib/storage'
 
 const KEY = 'shnayim-progress'
 
@@ -15,26 +15,62 @@ function parseProgress(raw) {
   }
 }
 
+const emptyVerse = () => ({ hebrew1: false, hebrew2: false, targum: false })
+
 // Parshiyot cleared in this tab since the last write. Without this the merge
 // below would resurrect them from disk and clearing would never stick.
 const clearedRoutes = new Set()
 
+// Verse fields this tab actually changed since its last write:
+// route -> verseKey -> Set(field). A write lays only these on top of what is on
+// disk, so a tab that is behind — it missed a `storage` event while frozen or
+// in the bfcache — can never overwrite a field it did not touch. Tracking the
+// changed *fields* rather than OR-ing the booleans is what keeps un-marking a
+// verse working: an OR merge could only ever move a verse forwards.
+const dirtyFields = new Map()
+
+function markDirty(route, verseKey, field) {
+  let keys = dirtyFields.get(route)
+  if (!keys) {
+    keys = new Map()
+    dirtyFields.set(route, keys)
+  }
+  let fields = keys.get(verseKey)
+  if (!fields) {
+    fields = new Set()
+    keys.set(verseKey, fields)
+  }
+  fields.add(field)
+}
+
 /**
- * Merge what is on disk into what this tab holds. Another tab may have written
- * verses this tab never saw, and every persist rewrites the whole map, so
- * without this a write silently discards the other tab's marks.
+ * The map this tab should hold and store: whatever is on disk, minus the
+ * parshiyot cleared here, plus the individual fields changed here.
  *
- * Per verse key the in-memory record wins — this is the tab that just changed
- * it — and every key only the other tab has is kept.
+ * Used on both directions of the wire — the write path (disk is another tab's
+ * newer map) and the read-back path (a `storage` event or a return to the
+ * foreground) — so an incoming map never discards an unflushed mark, and an
+ * unflushed mark never discards the rest of an incoming map.
  */
 function mergeProgress(disk, mem) {
   const out = {}
   for (const [route, verses] of Object.entries(disk)) {
     if (clearedRoutes.has(route)) continue
-    if (verses && typeof verses === 'object') out[route] = { ...verses }
+    if (!verses || typeof verses !== 'object') continue
+    out[route] = {}
+    for (const [verseKey, record] of Object.entries(verses)) {
+      out[route][verseKey] = { ...record }
+    }
   }
-  for (const [route, verses] of Object.entries(mem)) {
-    out[route] = { ...(out[route] || {}), ...verses }
+  for (const [route, keys] of dirtyFields) {
+    for (const [verseKey, fields] of keys) {
+      const memRecord = mem[route]?.[verseKey]
+      if (!memRecord) continue
+      if (!out[route]) out[route] = {}
+      const record = out[route][verseKey] || emptyVerse()
+      for (const field of fields) record[field] = memRecord[field] === true
+      out[route][verseKey] = record
+    }
   }
   return out
 }
@@ -47,22 +83,31 @@ const persister = createPersister(KEY, (raw) => {
   // Adopt the merged map so the next change is made on top of the other tab's
   // verses instead of on top of a map that is already behind disk.
   if (serialized !== JSON.stringify(progress.value)) progress.value = merged
+  dirtyFields.clear()
   clearedRoutes.clear()
   return serialized
 })
 
 watch(progress, () => persister.schedule(), { deep: true })
 
-// Another tab wrote: adopt its map wholesale. `adopt` marks it as already
-// persisted so the watcher this assignment wakes does not write it back.
-onExternalWrite(KEY, (raw) => {
-  const incoming = parseProgress(raw)
-  const serialized = JSON.stringify(incoming)
-  if (serialized === JSON.stringify(progress.value)) return
-  clearedRoutes.clear()
-  persister.adopt(serialized)
-  progress.value = incoming
-})
+/**
+ * Fold a map that came from outside this tab into what this tab holds. Marks
+ * made inside the debounce window and a not-yet-written clear both survive
+ * (mergeProgress re-applies them), and the watcher below re-schedules the write
+ * that persists them.
+ */
+function adoptExternal(raw) {
+  const merged = mergeProgress(parseProgress(raw), progress.value)
+  if (JSON.stringify(merged) === JSON.stringify(progress.value)) return
+  progress.value = merged
+}
+
+// Another tab wrote while this one was open.
+onExternalWrite(KEY, adoptExternal)
+// This tab came back from the bfcache / a frozen background, where `storage`
+// events are not delivered and are not replayed. Re-read disk or the next mark
+// would be written on top of a map that is behind.
+onVisible(() => adoptExternal(getItem(KEY)))
 
 export function useProgress() {
   const getVerseProgress = (parasha, verseKey) => {
@@ -78,9 +123,10 @@ export function useProgress() {
       progress.value[parasha] = {}
     }
     if (!progress.value[parasha][verseKey]) {
-      progress.value[parasha][verseKey] = { hebrew1: false, hebrew2: false, targum: false }
+      progress.value[parasha][verseKey] = emptyVerse()
     }
     progress.value[parasha][verseKey][field] = value
+    markDirty(parasha, verseKey, field)
   }
 
   const getParshaStats = (parasha, totalVerses) => {
@@ -101,6 +147,8 @@ export function useProgress() {
   const clearParshaProgress = (parasha) => {
     if (progress.value[parasha]) {
       clearedRoutes.add(parasha)
+      // The clear supersedes every unflushed field change in this parsha.
+      dirtyFields.delete(parasha)
       delete progress.value[parasha]
     }
   }
