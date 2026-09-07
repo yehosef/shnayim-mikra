@@ -29,17 +29,29 @@ The `twoplusone` prototype is archived at `/Volumes/code/geula/archive/twopluson
 - **P6 ship** — `CLAUDE.md` rewritten, `.github/workflows/ci.yml`, `scripts/check-styles.mjs`
   (no `!important`, no `line-through`, no text opacity), stale notes in `.claude/archive/`.
 
+## 2026-09-07 session: deploy confirmed + pre-acceptance review
+
+- Production is live at https://shnayim-mikra.vercel.app (GitHub deployment for `d024fa4`
+  succeeded 09:18Z; `/data/aliyot.json` byte-identical to local; `/data/torah/nosuch.json` is a
+  200 HTML SPA fallback, handled by the `useData.js` content-type guard which is in the bundle).
+- Adversarial multi-agent review of the v1 diff: **38 confirmed findings** (1 CRITICAL, 10 HIGH,
+  17 MEDIUM, 10 LOW), full report with file:line and fixes in
+  `.claude/notes/v1-review-2026-09-07.md`. Nothing has been fixed yet — awaiting the user's
+  decision on which batch to fix.
+
 ## In Progress
 
-Nothing. Tree clean on `master` == `v1-restart`.
+Nothing. Tree clean on `master` == `v1-restart` (only `.claude/` notes added, uncommitted).
 
 ## Next Steps
 
-1. User acceptance pass in the real app (aliyah groupings vs a chumash, `readingStyle: 'aliyah'`
+1. User decides the fix batch from `.claude/notes/v1-review-2026-09-07.md`. Recommended first
+   batch: the CRITICAL (`useProgress.js:14` cross-tab clobber) plus the HIGHs that corrupt or
+   un-mark progress (`ParshaDisplay.vue:80`, `:131`, `:54`; `FocusMode.vue:278`, `:195`) and the
+   readingStyle/targumType behaviour gaps (`useData.js:68`, `useReadingState.js:24`).
+2. User acceptance pass in the real app (aliyah groupings vs a chumash, `readingStyle: 'aliyah'`
    in focus mode, the dismissible boundary notice in `src/components/DailyGuide.vue:54`).
-2. Confirm the Vercel production deploy went out; `curl -I <prod>/data/torah/nosuch.json` should
-   not be a 200 HTML page (the `useData.js:9` content-type guard handles it either way).
-3. Delete `v1-restart` on the remote once master is confirmed live (optional).
+3. Delete `v1-restart` on the remote (master is confirmed live; optional).
 4. v2 candidates (out of scope, untouched): meforshim display from `data-v2/`
    (`meforshim-index` files lack `.text`); `displayMode: 'parasha'`; consolidate the two keyboard
    handlers (`ParshaDisplay.vue:handleKeydown`, `FocusMode.vue:handleKeydown`); `v-html`
