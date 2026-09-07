@@ -11,6 +11,36 @@ import { dailyGuide, urgency } from '../lib/progressMath'
 const JERUSALEM = Location.lookup('Jerusalem')
 
 /**
+ * One shared ticking clock for everything time-derived (the guide, the urgency
+ * label, and the default week — which must roll over in a tab left open across
+ * Shabbat instead of freezing on the `new Date()` of page load).
+ *
+ * Module-level and reference-counted: every consumer sees the same instant, and
+ * the interval stops when the last scope using it is disposed.
+ */
+const sharedNow = ref(new Date())
+let clockTimer = null
+let clockUsers = 0
+
+export function useNow() {
+  if (!clockTimer) {
+    sharedNow.value = new Date()
+    clockTimer = setInterval(() => { sharedNow.value = new Date() }, 60 * 1000)
+  }
+  if (getCurrentScope()) {
+    clockUsers++
+    onScopeDispose(() => {
+      clockUsers--
+      if (clockUsers <= 0 && clockTimer) {
+        clearInterval(clockTimer)
+        clockTimer = null
+      }
+    })
+  }
+  return sharedNow
+}
+
+/**
  * 0=Sunday .. 6=Shabbat. The Jewish day rolls at sunset: in Israel we use
  * Jerusalem sunset; elsewhere we fall back to the civil day (no city known).
  */
@@ -40,9 +70,7 @@ export function hoshanaRabbahFor(shabbat) {
  * @param {() => string}     location     'israel' | 'chul'
  */
 export function useDailyGuide({ aliyahCount, shabbat, route, location }) {
-  const now = ref(new Date())
-  const timer = setInterval(() => { now.value = new Date() }, 60 * 1000)
-  if (getCurrentScope()) onScopeDispose(() => clearInterval(timer))
+  const now = useNow()
 
   const day = computed(() => jewishDayOfWeek(now.value, toValue(location)))
 

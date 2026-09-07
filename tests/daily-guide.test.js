@@ -6,7 +6,8 @@
  * sits relative to the Shabbat this parsha is read on.
  */
 import { describe, it, expect } from 'vitest'
-import { dailyGuide, urgency } from '../src/lib/progressMath.js'
+import { dailyGuide, urgency, isRouteComplete } from '../src/lib/progressMath.js'
+import { resolveDefaultWeek } from '../src/composables/useParsha.js'
 
 const SUNDAY = 0
 const MONDAY = 1
@@ -163,5 +164,60 @@ describe('anti-gating invariant', () => {
     const label = urgency(new Date(2026, 8, 10), shabbat)
     expect(typeof label).toBe('string')
     expect(label).not.toBeInstanceOf(Object)
+  })
+})
+
+/**
+ * 'late' and 'past' are only reachable when the app feeds urgency the Shabbat of
+ * the week actually ON SCREEN. Feeding it the coming Shabbat only — which is
+ * always today or later — made those two labels dead code.
+ *
+ * 4 Jan 2026 is a Sunday in the Vayechi -> Shemot changeover week.
+ */
+describe('the week on screen decides which urgency labels are reachable', () => {
+  const sunday = new Date(2026, 0, 4, 10, 0)
+  const thursday = new Date(2026, 0, 8, 10, 0)
+  const unfinished = () => false
+
+  /** Civil midnight of an HDate, the way the app hands a Shabbat to urgency(). */
+  const civilMidnight = (hdate) => {
+    const d = hdate.greg()
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  }
+
+  it("last week's parsha is 'late' on Sunday while the coming one is merely 'open'", () => {
+    const week = resolveDefaultWeek(sunday, true, unfinished)
+    expect(week.route).toBe(week.previous.route)
+    expect(urgency(sunday, civilMidnight(week.previous.shabbat))).toBe('late')
+    expect(urgency(sunday, civilMidnight(week.next.shabbat))).toBe('open')
+  })
+
+  it("turns 'past' once the lenient window of that week closes", () => {
+    const week = resolveDefaultWeek(sunday, true, unfinished)
+    expect(urgency(thursday, civilMidnight(week.previous.shabbat))).toBe('past')
+  })
+
+  it('per-route completeness is what decides the default week', () => {
+    // A three-aliyah stand-in parsha, complete in one progress map and not the other.
+    const entry = {
+      book: 'test',
+      aliyot: [
+        { n: 1, start: [0, 0], end: [0, 1], verseCount: 2 },
+        { n: 2, start: [0, 2], end: [0, 3], verseCount: 2 }
+      ],
+      total: 4
+    }
+    const full = {}
+    for (const key of ['0:0', '0:1', '0:2', '0:3']) {
+      full[key] = { hebrew1: true, hebrew2: true, targum: true }
+    }
+    const partial = { ...full, '0:3': { hebrew1: true, hebrew2: true, targum: false } }
+
+    const done = (progress) => (route) =>
+      route === 'vayechi' ? isRouteComplete(progress, entry) : true
+
+    expect(resolveDefaultWeek(sunday, true, done(full)).route).toBe('shemot')
+    expect(resolveDefaultWeek(sunday, true, done(partial)).route).toBe('vayechi')
+    expect(resolveDefaultWeek(sunday, true, done(partial)).late).toBe(true)
   })
 })

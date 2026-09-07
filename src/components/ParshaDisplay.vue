@@ -6,6 +6,17 @@
         <div class="title-section">
           <h1>פרשת {{ parashaHe }}</h1>
           <DailyGuide v-if="aliyotEntry" :guide="guide" :status="status" :isHebrew="isHebrew" />
+          <!-- The other week is always one click away (coming week, or the one
+               we are still finishing during the lenient Sunday-Tuesday window) -->
+          <p v-if="otherWeek">
+            <a :href="`#${otherWeek.route}`">{{ otherWeekText }}</a>
+          </p>
+          <!-- aliyot.json failed to load: the aliyah bar and the pointer are
+               missing until it succeeds, so say so and offer a retry -->
+          <p v-if="aliyotError && !aliyotData">
+            <span>{{ isHebrew ? 'לא ניתן לטעון את גבולות העליות.' : 'Could not load aliyah boundaries.' }}</span>
+            <button type="button" class="btn" @click="retryAliyot">{{ isHebrew ? 'נסה שוב' : 'Retry' }}</button>
+          </p>
           <AliyahBar
             v-if="aliyotEntry"
             :stats="aliyahStatsList"
@@ -50,14 +61,19 @@
     <!-- Error -->
     <div v-if="error" class="error">{{ isHebrew ? 'שגיאה:' : 'Error:' }} {{ error }}</div>
 
-    <!-- Focus Mode (Fullscreen) -->
+    <!-- Focus Mode (Fullscreen) — never over stale verses. A parsha change
+         closes it and empties `data` (see the watcher), so an in-flight or
+         failed navigation can no longer render the old parsha's verses while
+         writing progress under the new route. Gating on `loading` itself would
+         unmount it on a same-parsha layer reload (toggling Rashi from inside
+         focus mode) and throw the reader back to where they entered. -->
     <FocusMode
-      v-if="showFocusMode"
+      v-if="showFocusMode && !error && displayVerses.length > 0"
       :verses="displayVerses"
       :startIndex="focusIndex"
       :parasha="parasha"
       :settings="settings"
-      :pointerFn="() => pointer"
+      :pointerFn="() => scopedPointer"
       :aliyahOf="aliyahLabelFor"
       @exit="exitFocusMode"
     />
@@ -77,7 +93,7 @@
         :inCurrentAliyah="inCurrentAliyah(verse.perekNum, verse.pasukNum)"
         :data-verse-index="i"
         @focus="enterFocusMode"
-        @click="selectedIndex = i"
+        @click="selectVerse(i)"
         @phase-click="(eventData) => handlePhaseClick(i, eventData)"
       />
     </div>
@@ -92,8 +108,9 @@ import { useParsha } from '../composables/useParsha'
 import { useProgress } from '../composables/useProgress'
 import { useAliyot } from '../composables/useAliyot'
 import { useReadingState } from '../composables/useReadingState'
-import { useDailyGuide } from '../composables/useDailyGuide'
-import { parseKey } from '../lib/progressMath'
+import { useDailyGuide, useNow } from '../composables/useDailyGuide'
+import { parseKey, isRouteComplete } from '../lib/progressMath'
+import { toHebrew } from '../utils/hebrewUtils'
 import VerseView from './VerseView.vue'
 import FocusMode from './FocusMode.vue'
 import SettingsModal from './SettingsModal.vue'
@@ -104,14 +121,21 @@ const props = defineProps({
   parasha: {
     type: String,
     required: true
+  },
+  // Resolved by App.vue: { route, shabbat, late, previous, next }. Optional so
+  // the component still renders standalone.
+  week: {
+    type: Object,
+    default: null
   }
 })
 
 const { loadParsha, loading, error, data, chapterLengths, loadedChumash } = useData()
 const { settings } = useSettings()
-const { parshiyotList, resolveWeek } = useParsha()
+const { parshiyotList, getDefaultWeek } = useParsha()
 const { progress, setVerseProgress, getVerseProgress } = useProgress()
-const { getAliyot, aliyotData, verseInAliyah, aliyahFor } = useAliyot()
+const { getAliyot, aliyotData, aliyotError, retryAliyot, verseInAliyah, aliyahFor } = useAliyot()
+const now = useNow()
 
 const showSettings = ref(false)
 const selectedParsha = ref(props.parasha)
@@ -130,6 +154,10 @@ const enterFocusMode = (index) => {
 
 const exitFocusMode = () => {
   showFocusMode.value = false
+  // Reading ahead in focus mode moved the pointer; without re-seeding, the
+  // list-view selection still points at something already read and the next
+  // Space would un-mark it.
+  seedSelectionFromPointer()
 }
 
 const parashaHe = computed(() => {
@@ -144,10 +172,12 @@ const aliyotEntry = computed(() => (aliyotData.value ? getAliyot(props.parasha) 
 // Number of aliyot for the current parsha (read from the data; 7 until loaded)
 const aliyahCount = computed(() => aliyotEntry.value?.aliyot.length || 7)
 
-// Derived reading state: per-aliyah rollups, pointer, containing aliyah
+// Derived reading state: per-aliyah rollups, pointer, containing aliyah.
+// `pointer` stays the whole-parsha truth (AliyahBar's current chip);
+// `scopedPointer` is the same thing narrowed to the aliyah on screen.
 const {
   aliyahStatsList,
-  pointer,
+  scopedPointer,
   currentAliyahN,
   isPointer,
   inCurrentAliyah
@@ -156,15 +186,60 @@ const {
   chapterLengths: () => chapterLengths.value,
   loadedChumash: () => loadedChumash.value,
   progress: () => progress.value[props.parasha] || {},
-  style: () => settings.value.readingStyle
+  style: () => settings.value.readingStyle,
+  scope: () => (settings.value.displayMode === 'aliyah' ? settings.value.currentAliyah : null)
+})
+
+// Which week the app considers current. App.vue passes it in; the fallback
+// keeps this component usable on its own.
+const isRouteDone = (route) => {
+  const entry = aliyotData.value ? getAliyot(route) : null
+  if (!entry) return true
+  return isRouteComplete(progress.value[route] || {}, entry)
+}
+const week = computed(() => {
+  if (props.week) return props.week
+  void now.value
+  return getDefaultWeek(settings.value.location, isRouteDone)
+})
+
+// The Shabbat the parsha ON SCREEN is read on — the coming one, or last week's
+// while we are still finishing it. Without this, urgency could only ever look
+// forward and 'late' / 'past' were unreachable.
+const viewedShabbat = computed(() => {
+  const w = week.value
+  if (!w) return null
+  if (w.next?.route === props.parasha) return w.next.shabbat
+  if (w.previous?.route === props.parasha) return w.previous.shabbat
+  if (w.route === props.parasha) return w.shabbat
+  return null
+})
+
+// A link to the other week is always available: the coming week from anywhere
+// else, and last week's while the coming week is what we are showing.
+const otherWeek = computed(() => {
+  const w = week.value
+  if (!w?.next?.route) return null
+  if (props.parasha !== w.next.route) return { route: w.next.route, kind: 'next' }
+  if (w.previous?.route && w.previous.route !== w.next.route) {
+    return { route: w.previous.route, kind: 'previous' }
+  }
+  return null
+})
+
+const otherWeekText = computed(() => {
+  const o = otherWeek.value
+  if (!o) return ''
+  const name = parshiyotList.find(p => p.route === o.route)?.he || o.route
+  if (o.kind === 'next') return isHebrew.value ? `לשבוע הבא: ${name}` : `Coming week: ${name}`
+  return isHebrew.value ? `לשבוע שעבר: ${name}` : `Last week: ${name}`
 })
 
 // Advisory daily guide (never gates anything)
-const week = computed(() => resolveWeek(new Date(), settings.value.location === 'israel'))
 const { guide, status } = useDailyGuide({
   aliyahCount: () => aliyahCount.value,
-  // urgency only applies when viewing this week's parsha
-  shabbat: () => (week.value.route === props.parasha ? week.value.shabbat : null),
+  // urgency applies to whichever week's parsha is on screen
+  shabbat: () => viewedShabbat.value,
   route: () => props.parasha,
   location: () => settings.value.location
 })
@@ -190,13 +265,29 @@ const displayVerses = computed(() => {
     if (aliyah) verses = verses.filter(v => verseInAliyah(aliyah, v.perekNum, v.pasukNum))
   }
 
-  if (!entry) return verses
+  const labelled = entry ? labelAliyot(verses, entry) : verses
+  return withLeadingPerek(labelled)
+})
+
+// useData attaches a chapter label only to pasuk 0 of a chapter, so a list that
+// starts mid-chapter (any single aliyah, and the 24 parshiyot that start
+// mid-chapter) would show no chapter at all. Give the first displayed verse a
+// label without touching the underlying verse objects.
+const withLeadingPerek = (verses) => {
+  const first = verses[0]
+  if (!first || first.perek) return verses
+  const copy = verses.slice()
+  copy[0] = { ...first, perek: toHebrew(first.perekNum + 1) }
+  return copy
+}
+
+const labelAliyot = (verses, entry) => {
   const starts = new Map(entry.aliyot.map(a => [`${a.start[0]}:${a.start[1]}`, aliyahNames[a.n - 1]]))
   return verses.map(v => {
     const aliya = starts.get(`${v.perekNum}:${v.pasukNum}`) || null
     return aliya === (v.aliya || null) ? v : { ...v, aliya }
   })
-})
+}
 
 // Progress calculation (relative to displayVerses)
 const completedCount = computed(() => {
@@ -226,13 +317,29 @@ watch(aliyahCount, (count) => {
 // Load data when parasha changes
 watch(() => props.parasha, async (newParasha) => {
   selectedParsha.value = newParasha
-  await loadParsha(newParasha, settings.value.showRashi)
+  // Focus mode holds its own index into the old verse list, and the old verses
+  // would be rendered while progress is written under the new route.
+  showFocusMode.value = false
+  data.value = []
+  // Recovers from a first fetch of aliyot.json that failed (no-op once loaded)
+  retryAliyot()
+  await loadParsha(newParasha, {
+    showRashi: settings.value.showRashi,
+    targumType: settings.value.targumType
+  })
 }, { immediate: true })
 
-// Reload when showRashi changes
-watch(() => settings.value.showRashi, async () => {
-  await loadParsha(props.parasha, settings.value.showRashi)
-})
+// Reload when the layers we fetch change (showRashi, or picking Rashi as the
+// obligation layer — an array source, so unrelated settings writes don't reload)
+watch(
+  () => [settings.value.showRashi, settings.value.targumType],
+  async () => {
+    await loadParsha(props.parasha, {
+      showRashi: settings.value.showRashi,
+      targumType: settings.value.targumType
+    })
+  }
+)
 
 const navigateToParsha = () => {
   window.location.hash = selectedParsha.value
@@ -258,19 +365,32 @@ const handlePhaseClick = (verseIndex, { phase, field, wasRead }) => {
   if (!wasRead) advanceSelection()
 }
 
+const phaseOf = (ptr) => (ptr.phase === 'hebrew1' ? 1 : ptr.phase === 'hebrew2' ? 2 : 3)
+
 // Move the keyboard selection to the pointer (next unread step in the active
-// reading style) when it lies at or after the current verse; otherwise fall
-// back to the next phase / next verse.
+// reading style).
+//
+// In 'verse' style the pointer only ever moves forward, so a backward pointer
+// means it is behind us and we step on by hand. In 'aliyah' style the pointer
+// legitimately jumps back to the top of the same aliyah at every pass boundary
+// (all of hebrew1, then all of hebrew2, then all of targum) — refusing that
+// abandoned the pointer after the first pass, which silently discarded the
+// chosen reading style. So we follow it inside the same aliyah block.
 const advanceSelection = () => {
-  const ptr = pointer.value
+  const ptr = scopedPointer.value
   if (ptr) {
     const [p, v] = parseKey(ptr.key)
     const i = displayVerses.value.findIndex(x => x.perekNum === p && x.pasukNum === v)
-    if (i >= selectedIndex.value) {
-      const moved = i !== selectedIndex.value
+    const current = displayVerses.value[selectedIndex.value]
+    const sameAliyah =
+      !!current &&
+      aliyahFor(aliyotEntry.value, p, v)?.n ===
+        aliyahFor(aliyotEntry.value, current.perekNum, current.pasukNum)?.n
+    const follow =
+      i >= 0 && (i >= selectedIndex.value || (settings.value.readingStyle === 'aliyah' && sameAliyah))
+    if (follow) {
       selectedIndex.value = i
-      selectedPhase.value = ptr.phase === 'hebrew1' ? 1 : ptr.phase === 'hebrew2' ? 2 : 3
-      if (moved) scrollToSelected()
+      selectedPhase.value = phaseOf(ptr)
       return
     }
   }
@@ -280,8 +400,18 @@ const advanceSelection = () => {
   } else if (selectedIndex.value < maxIndex) {
     selectedIndex.value++
     selectedPhase.value = 1
-    scrollToSelected()
   }
+}
+
+// Clicking the card chrome selects that verse. The phase must move with the
+// index, or the pointer marker and the actual selection disagree and the next
+// Space un-marks something already read.
+const selectVerse = (i) => {
+  const verse = displayVerses.value[i]
+  if (!verse) return
+  selectedIndex.value = i
+  const rec = getVerseProgress(props.parasha, getVerseKey(verse))
+  selectedPhase.value = !rec.hebrew1 ? 1 : !rec.hebrew2 ? 2 : 3
 }
 
 // Toggle current phase and advance only if marking as newly read
@@ -308,6 +438,9 @@ const handleKeydown = (e) => {
   // Don't handle if focus mode is active, settings open, or typing in inputs
   if (showFocusMode.value || showSettings.value) return
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return
+  // Never swallow browser/OS shortcuts (Alt/Cmd+Arrow = Back, Ctrl+Space, ...)
+  if (e.ctrlKey || e.metaKey || e.altKey) return
+  if (e.shiftKey && e.key === ' ') return
 
   const maxIndex = displayVerses.value.length - 1
 
@@ -320,7 +453,6 @@ const handleKeydown = (e) => {
       } else if (selectedIndex.value < maxIndex) {
         selectedIndex.value++
         selectedPhase.value = 1
-        scrollToSelected()
       }
       break
     case 'ArrowUp':
@@ -331,7 +463,6 @@ const handleKeydown = (e) => {
       } else if (selectedIndex.value > 0) {
         selectedIndex.value--
         selectedPhase.value = 3
-        scrollToSelected()
       }
       break
     case 'ArrowRight':
@@ -339,7 +470,6 @@ const handleKeydown = (e) => {
       // RTL: right = backward (previous verse)
       if (selectedIndex.value > 0) {
         selectedIndex.value--
-        scrollToSelected()
       }
       break
     case 'ArrowLeft':
@@ -347,7 +477,6 @@ const handleKeydown = (e) => {
       // RTL: left = forward (next verse)
       if (selectedIndex.value < maxIndex) {
         selectedIndex.value++
-        scrollToSelected()
       }
       break
     case ' ':
@@ -363,19 +492,25 @@ const handleKeydown = (e) => {
   }
 }
 
+// Scroll the SELECTED PHASE into view, not just the verse: at large font sizes
+// a phase change alone can move the selection off-screen, and the arrow keys
+// have already cancelled the page's own scrolling.
 const scrollToSelected = () => {
   nextTick(() => {
-    const el = document.querySelector(`[data-verse-index="${selectedIndex.value}"]`)
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    }
+    const verseEl = document.querySelector(`[data-verse-index="${selectedIndex.value}"]`)
+    if (!verseEl) return
+    const el = verseEl.querySelector('.phase-selected') || verseEl
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
   })
 }
+
+// Every selection change — index or phase, keyboard or click — scrolls.
+watch([selectedIndex, selectedPhase], scrollToSelected)
 
 // Seed the keyboard selection at the reading pointer (the next unread step)
 // so Space always marks "the next thing to read". Falls back to the top.
 const seedSelectionFromPointer = () => {
-  const ptr = pointer.value
+  const ptr = scopedPointer.value
   if (ptr) {
     const [p, v] = parseKey(ptr.key)
     const i = displayVerses.value.findIndex(x => x.perekNum === p && x.pasukNum === v)
@@ -395,12 +530,17 @@ watch(() => displayVerses.value.length, seedSelectionFromPointer)
 watch(aliyotEntry, seedSelectionFromPointer)
 watch(loading, (isLoading) => { if (!isLoading) seedSelectionFromPointer() })
 
+// A transient offline start leaves aliyot.json unloaded for the session
+const onOnline = () => { retryAliyot() }
+
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown)
+  window.addEventListener('online', onOnline)
 })
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
+  window.removeEventListener('online', onOnline)
 })
 </script>
 

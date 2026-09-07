@@ -20,6 +20,7 @@
  * The full whitelist of keys any export may return:
  *   aliyahStats -> hebrew1, hebrew2, targum, complete, total, percent
  *   nextUnread  -> key, phase   (or null)
+ *   isRouteComplete -> a boolean (no object)
  *   dailyGuide  -> aliyot, review
  *   urgency     -> a string: 'upcoming' | 'open' | 'due' | 'late' | 'past'
  * This is enforced by tests/reading-state.test.js and tests/daily-guide.test.js.
@@ -118,8 +119,77 @@ export function aliyahStats(progress, keys) {
   return stats
 }
 
+/** True when [perek, pasuk] lies inside an aliyah's inclusive [start, end]. */
+function inAliyahRange(aliyah, perek, pasuk) {
+  const start = aliyah?.start
+  const end = aliyah?.end
+  if (!Array.isArray(start) || !Array.isArray(end)) return false
+  if (perek < start[0] || (perek === start[0] && pasuk < start[1])) return false
+  if (perek > end[0] || (perek === end[0] && pasuk > end[1])) return false
+  return true
+}
+
+/**
+ * True when every verse of a parsha is complete, judged WITHOUT chapter
+ * lengths: the aliyot entry already carries the expected verse count
+ * (`total`, or the sum of the aliyot `verseCount`s), and progress keys are
+ * unique, so counting the complete records that fall inside the aliyot ranges
+ * and comparing with that total is exact — no chumash fetch needed.
+ *
+ * `aliyotEntry` is one entry of aliyot.json:
+ *   { book, aliyot: [{ n, start:[p,v], end:[p,v], verseCount }], total }
+ * Returns false when the entry is missing or unusable (callers decide what an
+ * unknown parsha means; nothing here gates content).
+ */
+export function isRouteComplete(progress, aliyotEntry) {
+  const aliyot = aliyotEntry?.aliyot
+  if (!Array.isArray(aliyot) || aliyot.length === 0) return false
+
+  let total = aliyotEntry.total
+  if (!Number.isInteger(total)) {
+    total = 0
+    for (const a of aliyot) {
+      if (!Number.isInteger(a?.verseCount)) return false
+      total += a.verseCount
+    }
+  }
+  if (total <= 0) return false
+
+  let done = 0
+  for (const [key, rec] of Object.entries(progress || {})) {
+    if (!isVerseComplete(rec)) continue
+    let perek
+    let pasuk
+    try {
+      ;[perek, pasuk] = parseKey(key)
+    } catch (e) {
+      continue // a foreign key can never count towards the total
+    }
+    if (aliyot.some((a) => inAliyahRange(a, perek, pasuk))) done++
+  }
+  return done >= total
+}
+
 function isPhaseDone(progress, key, phase) {
   return progress?.[key]?.[phase] === true
+}
+
+/**
+ * Restrict `blocks` to the block indexes in `only` (a number or an array of
+ * numbers), keeping block order. Indexes outside the array are dropped, so an
+ * out-of-range scope yields an empty traversal (pointer null), never a throw.
+ */
+function scopeBlocks(blocks, only) {
+  if (only === undefined || only === null) return blocks
+  const wanted = Array.isArray(only) ? only : [only]
+  const picked = []
+  for (const i of wanted) {
+    if (!Number.isInteger(i)) {
+      throw new RangeError(`nextUnread: opts.only must hold integers, got ${JSON.stringify(i)}`)
+    }
+    if (i >= 0 && i < blocks.length) picked.push(blocks[i])
+  }
+  return picked
 }
 
 /**
@@ -129,12 +199,17 @@ function isPhaseDone(progress, key, phase) {
  * style 'verse' : keys in order (blocks flattened); per key hebrew1 -> hebrew2 -> targum.
  * style 'aliyah': per block, every key's hebrew1, then every key's hebrew2,
  *                 then every key's targum; then on to the next block.
+ *
+ * `opts.only` (number | number[]) restricts the traversal to those block
+ * indexes — the scoped pointer used when only one aliyah is displayed. The
+ * traversal order within a block is unchanged, so 'aliyah' style still runs
+ * hebrew1 over the whole block before hebrew2.
  */
-export function nextUnread(progress, blocks, style) {
+export function nextUnread(progress, blocks, style, opts = {}) {
   if (style !== 'verse' && style !== 'aliyah') {
     throw new RangeError(`nextUnread: unknown style ${JSON.stringify(style)}`)
   }
-  const list = blocks || []
+  const list = scopeBlocks(blocks || [], opts?.only)
 
   if (style === 'verse') {
     for (const block of list) {

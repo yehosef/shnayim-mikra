@@ -14,6 +14,7 @@ import {
   rangeKeys,
   aliyahStats,
   nextUnread,
+  isRouteComplete,
   dailyGuide,
   urgency
 } from '../src/lib/progressMath.js'
@@ -308,7 +309,7 @@ describe('anti-gating invariant', () => {
   it('every export is a function or the PHASES constant, and nothing else', () => {
     const names = Object.keys(lib).sort()
     expect(names).toEqual([
-      'PHASES', 'aliyahStats', 'dailyGuide', 'isVerseComplete',
+      'PHASES', 'aliyahStats', 'dailyGuide', 'isRouteComplete', 'isVerseComplete',
       'nextUnread', 'parseKey', 'rangeKeys', 'urgency', 'verseKey'
     ])
     for (const [name, value] of Object.entries(lib)) {
@@ -321,5 +322,117 @@ describe('anti-gating invariant', () => {
     for (let day = 0; day <= 6; day++) {
       for (const n of dailyGuide(day, 7).aliyot) expect(typeof n).toBe('number')
     }
+  })
+})
+
+/**
+ * Scoped pointer: displayMode 'aliyah' shows ONE aliyah, so the pointer has to
+ * be computed over that block alone or it lands outside the verses on screen
+ * (no marker, a seed that falls back to verse 0, an advance that sticks).
+ * The whole-parsha pointer stays the truth; this is a second, narrower view.
+ */
+describe('nextUnread scoped to one aliyah (opts.only)', () => {
+  it('stays inside the requested block instead of returning the parsha pointer', () => {
+    // Everything in block 0 is read; the unscoped pointer is in block 1.
+    const progress = mark(BLOCKS[0], { hebrew1: true, hebrew2: true, targum: true })
+    expect(nextUnread(progress, BLOCKS, 'verse')).toEqual({ key: BLOCKS[1][0], phase: 'hebrew1' })
+    expect(nextUnread(progress, BLOCKS, 'verse', { only: 2 }))
+      .toEqual({ key: BLOCKS[2][0], phase: 'hebrew1' })
+    expect(nextUnread(progress, BLOCKS, 'verse', { only: 0 })).toBe(null)
+  })
+
+  it('keeps the aliyah traversal order within the scoped block', () => {
+    // First pass over block 1 done: the scoped pointer goes back to its top for hebrew2.
+    const progress = mark(BLOCKS[1], { hebrew1: true })
+    expect(nextUnread(progress, BLOCKS, 'aliyah', { only: 1 }))
+      .toEqual({ key: BLOCKS[1][0], phase: 'hebrew2' })
+    // ... and verse style still walks the same block phase-by-phase per verse.
+    expect(nextUnread(progress, BLOCKS, 'verse', { only: 1 }))
+      .toEqual({ key: BLOCKS[1][0], phase: 'hebrew2' })
+  })
+
+  it('accepts several block indexes, in block order', () => {
+    const progress = mark(BLOCKS[1], { hebrew1: true, hebrew2: true, targum: true })
+    expect(nextUnread(progress, BLOCKS, 'verse', { only: [1, 2] }))
+      .toEqual({ key: BLOCKS[2][0], phase: 'hebrew1' })
+  })
+
+  it('is null (never a throw) for an out-of-range or finished scope', () => {
+    expect(nextUnread({}, BLOCKS, 'verse', { only: 9 })).toBe(null)
+    expect(nextUnread({}, BLOCKS, 'aliyah', { only: -1 })).toBe(null)
+    const all = mark(ALL_KEYS, { hebrew1: true, hebrew2: true, targum: true })
+    expect(nextUnread(all, BLOCKS, 'aliyah', { only: 1 })).toBe(null)
+  })
+
+  it('throws on a non-integer scope', () => {
+    expect(() => nextUnread({}, BLOCKS, 'verse', { only: 'first' })).toThrow(/opts.only/)
+    expect(() => nextUnread({}, BLOCKS, 'verse', { only: [0, 1.5] })).toThrow(/opts.only/)
+  })
+
+  it('leaves the unscoped result untouched', () => {
+    for (const style of ['verse', 'aliyah']) {
+      expect(nextUnread({}, BLOCKS, style, {})).toEqual(nextUnread({}, BLOCKS, style))
+      expect(nextUnread({}, BLOCKS, style, { only: null })).toEqual(nextUnread({}, BLOCKS, style))
+    }
+  })
+})
+
+/**
+ * Route completeness WITHOUT the chumash: the aliyot entry knows how many
+ * verses the parsha has, so counting complete records inside its ranges is
+ * exact. This is what lets the default week stay on last week's parsha while
+ * it is unfinished, before any chapter data has been fetched.
+ */
+describe('isRouteComplete', () => {
+  const ENTRY = {
+    book: 'test',
+    aliyot: [
+      { n: 1, start: [0, 3], end: [0, 9], verseCount: 7 },
+      { n: 2, start: [0, 10], end: [1, 3], verseCount: 6 },
+      { n: 3, start: [1, 4], end: [1, 10], verseCount: 7 }
+    ],
+    total: 20
+  }
+  const ALL_DONE = mark(ALL_KEYS, { hebrew1: true, hebrew2: true, targum: true })
+
+  it('is true only when every verse of the parsha is complete', () => {
+    expect(isRouteComplete(ALL_DONE, ENTRY)).toBe(true)
+    const oneShort = { ...ALL_DONE, [ALL_KEYS.at(-1)]: rec({ hebrew1: true, hebrew2: true }) }
+    expect(isRouteComplete(oneShort, ENTRY)).toBe(false)
+    expect(isRouteComplete({}, ENTRY)).toBe(false)
+  })
+
+  it('does not let verses outside the parsha make up the count', () => {
+    const short = { ...ALL_DONE }
+    delete short[ALL_KEYS[0]]
+    const padded = {
+      ...short,
+      ...mark(['9:9', '8:1'], { hebrew1: true, hebrew2: true, targum: true })
+    }
+    expect(isRouteComplete(padded, ENTRY)).toBe(false)
+  })
+
+  it('ignores malformed keys instead of throwing', () => {
+    const noisy = { ...ALL_DONE, bereshit: rec({ hebrew1: true, hebrew2: true, targum: true }) }
+    expect(isRouteComplete(noisy, ENTRY)).toBe(true)
+  })
+
+  it('falls back to the sum of verseCount when total is missing', () => {
+    const noTotal = { book: ENTRY.book, aliyot: ENTRY.aliyot }
+    expect(isRouteComplete(ALL_DONE, noTotal)).toBe(true)
+    const oneShort = { ...ALL_DONE, [ALL_KEYS[0]]: rec({ hebrew1: true }) }
+    expect(isRouteComplete(oneShort, noTotal)).toBe(false)
+  })
+
+  it('is false when the entry is missing or unusable', () => {
+    expect(isRouteComplete(ALL_DONE, null)).toBe(false)
+    expect(isRouteComplete(ALL_DONE, {})).toBe(false)
+    expect(isRouteComplete(ALL_DONE, { aliyot: [] })).toBe(false)
+    expect(isRouteComplete(ALL_DONE, { aliyot: ENTRY.aliyot, total: 0 })).toBe(false)
+  })
+
+  it('returns a bare boolean (nothing that could gate content)', () => {
+    expect(typeof isRouteComplete(ALL_DONE, ENTRY)).toBe('boolean')
+    expect(typeof isRouteComplete({}, ENTRY)).toBe('boolean')
   })
 })
