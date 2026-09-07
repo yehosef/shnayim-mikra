@@ -33,7 +33,7 @@ for (const file of walk(SRC)) {
     if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) return
     if (/!important/.test(line)) problems.push(`${rel}: !important`)
     if (/line-through/.test(line)) problems.push(`${rel}: line-through`)
-    if (/^\s*opacity\s*:/.test(line)) {
+    if (/opacity\s*:/.test(line) || /filter:\s*[^;]*opacity\(/.test(line)) {
       const prev = lines[i - 1] || ''
       if (!/allow-opacity:/.test(line) && !/allow-opacity:/.test(prev)) {
         problems.push(`${rel}: opacity without /* allow-opacity: reason */`)

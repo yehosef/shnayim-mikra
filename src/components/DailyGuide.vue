@@ -54,9 +54,29 @@ const statusText = computed(() => {
 // One-time notice: aliyah boundaries were corrected in this version, so
 // groupings shift by one aliyah compared with the previous release.
 const NOTICE_KEY = 'shnayim-notice-aliyot-v1'
+const PROGRESS_KEY = 'shnayim-progress'
 const showNotice = ref(readNotice())
+function hasExistingProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY)
+    if (!raw) return false
+    const parsed = JSON.parse(raw)
+    return parsed !== null && typeof parsed === 'object' && Object.keys(parsed).length > 0
+  } catch (e) {
+    return false
+  }
+}
 function readNotice() {
-  try { return localStorage.getItem(NOTICE_KEY) !== 'dismissed' } catch (e) { return false }
+  try {
+    if (!hasExistingProgress()) {
+      // Brand-new install: nothing to correct, so seed dismissal and never show it.
+      localStorage.setItem(NOTICE_KEY, 'dismissed')
+      return false
+    }
+    return localStorage.getItem(NOTICE_KEY) !== 'dismissed'
+  } catch (e) {
+    return false
+  }
 }
 const dismissNotice = () => {
   showNotice.value = false
