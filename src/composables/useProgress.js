@@ -1,32 +1,67 @@
 import { ref, watch } from 'vue'
+import { getItem, createPersister, onExternalWrite } from '../lib/storage'
 
-function loadProgress() {
-  const stored = localStorage.getItem('shnayim-progress')
-  if (!stored) return {}
+const KEY = 'shnayim-progress'
+
+function parseProgress(raw) {
+  if (!raw) return {}
   try {
-    return JSON.parse(stored)
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {}
+    return parsed
   } catch (e) {
     console.warn('Could not parse saved progress, starting fresh:', e)
     return {}
   }
 }
 
-const progress = ref(loadProgress())
+// Parshiyot cleared in this tab since the last write. Without this the merge
+// below would resurrect them from disk and clearing would never stick.
+const clearedRoutes = new Set()
 
-let progressTimer = null
-watch(progress, (val) => {
-  clearTimeout(progressTimer)
-  progressTimer = setTimeout(() => {
-    localStorage.setItem('shnayim-progress', JSON.stringify(val))
-    progressTimer = null
-  }, 300)
-}, { deep: true })
-
-window.addEventListener('beforeunload', () => {
-  if (progressTimer) {
-    clearTimeout(progressTimer)
-    localStorage.setItem('shnayim-progress', JSON.stringify(progress.value))
+/**
+ * Merge what is on disk into what this tab holds. Another tab may have written
+ * verses this tab never saw, and every persist rewrites the whole map, so
+ * without this a write silently discards the other tab's marks.
+ *
+ * Per verse key the in-memory record wins — this is the tab that just changed
+ * it — and every key only the other tab has is kept.
+ */
+function mergeProgress(disk, mem) {
+  const out = {}
+  for (const [route, verses] of Object.entries(disk)) {
+    if (clearedRoutes.has(route)) continue
+    if (verses && typeof verses === 'object') out[route] = { ...verses }
   }
+  for (const [route, verses] of Object.entries(mem)) {
+    out[route] = { ...(out[route] || {}), ...verses }
+  }
+  return out
+}
+
+const progress = ref(parseProgress(getItem(KEY)))
+
+const persister = createPersister(KEY, (raw) => {
+  const merged = mergeProgress(parseProgress(raw), progress.value)
+  const serialized = JSON.stringify(merged)
+  // Adopt the merged map so the next change is made on top of the other tab's
+  // verses instead of on top of a map that is already behind disk.
+  if (serialized !== JSON.stringify(progress.value)) progress.value = merged
+  clearedRoutes.clear()
+  return serialized
+})
+
+watch(progress, () => persister.schedule(), { deep: true })
+
+// Another tab wrote: adopt its map wholesale. `adopt` marks it as already
+// persisted so the watcher this assignment wakes does not write it back.
+onExternalWrite(KEY, (raw) => {
+  const incoming = parseProgress(raw)
+  const serialized = JSON.stringify(incoming)
+  if (serialized === JSON.stringify(progress.value)) return
+  clearedRoutes.clear()
+  persister.adopt(serialized)
+  progress.value = incoming
 })
 
 export function useProgress() {
@@ -65,6 +100,7 @@ export function useProgress() {
 
   const clearParshaProgress = (parasha) => {
     if (progress.value[parasha]) {
+      clearedRoutes.add(parasha)
       delete progress.value[parasha]
     }
   }

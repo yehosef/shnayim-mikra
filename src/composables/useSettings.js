@@ -1,4 +1,7 @@
 import { ref, watch } from 'vue'
+import { getItem, createPersister, onExternalWrite } from '../lib/storage'
+
+const KEY = 'shnayim-settings'
 
 const defaults = {
   // Interface settings
@@ -17,33 +20,37 @@ const defaults = {
   showEnglish: false,
 }
 
-function loadSettings() {
-  const stored = localStorage.getItem('shnayim-settings')
-  if (!stored) return { ...defaults }
+function parseSettings(raw) {
+  if (!raw) return { ...defaults }
   try {
-    return { ...defaults, ...JSON.parse(stored) }
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return { ...defaults }
+    return { ...defaults, ...parsed }
   } catch (e) {
     console.warn('Could not parse saved settings, using defaults:', e)
     return { ...defaults }
   }
 }
 
-const settings = ref(loadSettings())
+const settings = ref(parseSettings(getItem(KEY)))
 
-let settingsTimer = null
-watch(settings, (val) => {
-  clearTimeout(settingsTimer)
-  settingsTimer = setTimeout(() => {
-    localStorage.setItem('shnayim-settings', JSON.stringify(val))
-    settingsTimer = null
-  }, 300)
-}, { deep: true })
+const persister = createPersister(KEY, (raw) => {
+  // Same cross-tab discipline as progress: fold in what is on disk so a write
+  // never drops a key another tab added; this tab's values win on conflict.
+  const merged = { ...parseSettings(raw), ...settings.value }
+  const serialized = JSON.stringify(merged)
+  if (serialized !== JSON.stringify(settings.value)) settings.value = merged
+  return serialized
+})
 
-window.addEventListener('beforeunload', () => {
-  if (settingsTimer) {
-    clearTimeout(settingsTimer)
-    localStorage.setItem('shnayim-settings', JSON.stringify(settings.value))
-  }
+watch(settings, () => persister.schedule(), { deep: true })
+
+onExternalWrite(KEY, (raw) => {
+  const incoming = parseSettings(raw)
+  const serialized = JSON.stringify(incoming)
+  if (serialized === JSON.stringify(settings.value)) return
+  persister.adopt(serialized)
+  settings.value = incoming
 })
 
 export function useSettings() {
