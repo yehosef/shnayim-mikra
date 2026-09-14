@@ -60,20 +60,23 @@ export function resolveWeek(date, il) {
 
   // Vezot Haberachah window: opens as soon as no parsha Shabbat is left before
   // Sukkot (Shabbat Shuva / Ha'azinu already read, or only chag Shabbatot ahead)
-  // and runs through Hoshana Rabbah (diaspora: through Shmini Atzeret, since
-  // Simchat Torah is the next day). Keying on `day > 10` instead made 4–10
-  // Tishrei of a Yom-Kippur-on-Shabbat year resolve forward to Bereshit and
-  // then jump backwards to Vezot Haberachah on 11 Tishrei.
+  // and runs THROUGH Simchat Torah itself (IL 22 Tishrei, diaspora 23) — the
+  // day Vezot Haberachah is read. A bound that excluded that day left Simchat
+  // Torah itself falling through to the chag walk-forward loop below and
+  // resolving to Bereshit a day early. Keying on `day > 10` instead of walking
+  // back from Sukkot made 4–10 Tishrei of a Yom-Kippur-on-Shabbat year resolve
+  // forward to Bereshit and then jump backwards to Vezot Haberachah on 11
+  // Tishrei.
   if (hd.getMonth() === months.TISHREI) {
-    const lastDay = il ? 21 : 22
-    if (hd.getDate() <= lastDay) {
+    const simchatTorah = il ? 22 : 23
+    if (hd.getDate() <= simchatTorah) {
       const year = hd.getFullYear()
       const sukkot = new HDate(15, months.TISHREI, year)
       for (let s = shabbat; s.abs() < sukkot.abs(); s = s.add(7)) {
         const r = lookupShabbat(s, il)
         if (r) return r
       }
-      return { route: 'vzot-haberachah', shabbat: new HDate(lastDay + 1, months.TISHREI, year) }
+      return { route: 'vzot-haberachah', shabbat: new HDate(simchatTorah, months.TISHREI, year) }
     }
   }
 

@@ -219,11 +219,11 @@ describe('resolveDefaultWeek: the Bereshit / Vezot Haberachah boundary', () => {
     expect(late.shabbat.getDate()).toBe(23)
   })
 
-  it('from Simchat Torah to the Bereshit Shabbat, previous is Vezot Haberachah', () => {
+  it('from the day after Simchat Torah to the Bereshit Shabbat, previous is Vezot Haberachah', () => {
     for (const il of [true, false]) {
       for (const year of YEARS) {
         const simchatTorah = il ? 22 : 23
-        let d = new HDate(simchatTorah, months.TISHREI, year)
+        let d = new HDate(simchatTorah + 1, months.TISHREI, year)
         const bereshit = resolveDefaultWeek(d, il, ALL).next.shabbat
         while (d.abs() <= bereshit.abs()) {
           const r = resolveDefaultWeek(d, il, ALL)
@@ -235,6 +235,27 @@ describe('resolveDefaultWeek: the Bereshit / Vezot Haberachah boundary', () => {
     }
   })
 
+  it('Simchat Torah itself is the Vezot Haberachah week, not late, not Bereshit', () => {
+    for (const il of [true, false]) {
+      for (const year of YEARS) {
+        const simchatTorah = il ? 22 : 23
+        const d = new HDate(simchatTorah, months.TISHREI, year)
+
+        const withAll = resolveDefaultWeek(d, il, ALL)
+        expect(withAll.route, `${il} ${d.toString()}`).toBe('vzot-haberachah')
+        expect(withAll.late, `${il} ${d.toString()}`).toBe(false)
+        expect(withAll.shabbat.getDate(), `${il} ${d.toString()}`).toBe(simchatTorah)
+        expect(withAll.next.route, `${il} ${d.toString()}`).toBe('vzot-haberachah')
+
+        const withNone = resolveDefaultWeek(d, il, NONE)
+        expect(withNone.route, `${il} ${d.toString()}`).toBe('vzot-haberachah')
+        expect(withNone.late, `${il} ${d.toString()}`).toBe(false)
+        expect(withNone.shabbat.getDate(), `${il} ${d.toString()}`).toBe(simchatTorah)
+        expect(withNone.next.route, `${il} ${d.toString()}`).toBe('vzot-haberachah')
+      }
+    }
+  })
+
   it('the day before Simchat Torah still belongs to Vezot Haberachah', () => {
     for (const il of [true, false]) {
       for (const year of YEARS) {
@@ -242,6 +263,27 @@ describe('resolveDefaultWeek: the Bereshit / Vezot Haberachah boundary', () => {
         expect(resolveDefaultWeek(d, il, ALL).next.route).toBe('vzot-haberachah')
       }
     }
+  })
+
+  it('Simchat Torah itself still belongs to Vezot Haberachah', () => {
+    for (const il of [true, false]) {
+      for (const year of YEARS) {
+        const d = new HDate(il ? 22 : 23, months.TISHREI, year)
+        expect(resolveDefaultWeek(d, il, ALL).next.route).toBe('vzot-haberachah')
+      }
+    }
+  })
+
+  // Regression pin: 2026-10-03 is Simchat Torah on Shabbat in Israel (5787,
+  // Rosh Hashana on Thursday); 2026-10-04 is Simchat Torah on Sunday in the
+  // diaspora. Both used to fall through to Bereshit.
+  it('regression: Simchat Torah on Shabbat (il) and the following Sunday (diaspora), 2026', () => {
+    const shabbat = resolveDefaultWeek(new Date(2026, 9, 3, 10), true, () => false, 6)
+    expect(shabbat.route).toBe('vzot-haberachah')
+    expect(shabbat.late).toBe(false)
+
+    const sunday = resolveDefaultWeek(new Date(2026, 9, 4, 10), false, () => false, 0)
+    expect(sunday.route).toBe('vzot-haberachah')
   })
 })
 

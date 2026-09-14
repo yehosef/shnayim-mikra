@@ -52,7 +52,7 @@ describe('resolveWeek sweep 5786–5795', () => {
           const { route, shabbat } = resolveWeek(sunday, il)
           expect(parshiyot[route], `${year} ${d.toString()} -> ${route}`).toBeDefined()
 
-          const inVezotWindow = sunday.getMonth() === months.TISHREI && sunday.getDate() > 10 && sunday.getDate() <= (il ? 21 : 22)
+          const inVezotWindow = sunday.getMonth() === months.TISHREI && sunday.getDate() > 10 && sunday.getDate() <= (il ? 22 : 23)
           if (inVezotWindow && !(d.getDate() <= 14 && d.getMonth() === months.TISHREI)) {
             // Between Yom Kippur and Simchat Torah (with no Ha'azinu Shabbat
             // still ahead) the week belongs to Vezot Haberachah, whatever the
@@ -87,6 +87,20 @@ describe('resolveWeek sweep 5786–5795', () => {
         expect(resolveWeek(new HDate(21, months.TISHREI, year), il).route).toBe('vzot-haberachah')
         // after Simchat Torah: Bereshit
         expect(resolveWeek(new HDate(24, months.TISHREI, year), il).route).toBe('bereshit')
+      }
+    }
+  })
+
+  it('Simchat Torah itself resolves to Vezot Haberachah dated that day', () => {
+    for (const year of YEARS) {
+      for (const il of [true, false]) {
+        const simchatTorah = il ? 22 : 23
+        const onDay = resolveWeek(new HDate(simchatTorah, months.TISHREI, year), il)
+        expect(onDay.route, `${il} ${year}`).toBe('vzot-haberachah')
+        expect(onDay.shabbat.getDate(), `${il} ${year}`).toBe(simchatTorah)
+
+        const dayAfter = resolveWeek(new HDate(simchatTorah + 1, months.TISHREI, year), il)
+        expect(dayAfter.route, `${il} ${year}`).toBe('bereshit')
       }
     }
   })
@@ -172,7 +186,7 @@ describe('resolveWeek never moves backwards through Tishrei–Cheshvan', () => {
         // 3 Tishrei is Shabbat Ha'azinu; from 4 Tishrei only chag Shabbatot
         // remain before Simchat Torah.
         expect(resolveWeek(new HDate(3, months.TISHREI, year), il).route).toBe('haazinu')
-        for (let day = 4; day <= (il ? 21 : 22); day++) {
+        for (let day = 4; day <= (il ? 22 : 23); day++) {
           expect(
             resolveWeek(new HDate(day, months.TISHREI, year), il).route,
             `${year} il=${il} ${day} Tishrei`
