@@ -60,6 +60,13 @@
 
     <!-- Error -->
     <div v-if="error" class="error">{{ isHebrew ? 'שגיאה:' : 'Error:' }} {{ error }}</div>
+    <!-- The store rejected the last write (quota, blocked storage): marks made in
+         this session will not survive a reload. Advisory only — nothing is hidden. -->
+    <div v-if="persistFailed" class="error" role="alert">
+      {{ isHebrew
+        ? 'לא ניתן לשמור את ההתקדמות בדפדפן זה — הסימונים יאבדו בטעינה מחדש.'
+        : 'Progress could not be saved in this browser — marks made now will be lost on reload.' }}
+    </div>
 
     <!-- Focus Mode (Fullscreen) — never over stale verses. A parsha change
          closes it and empties `data` (see the watcher), so an in-flight or
@@ -134,7 +141,7 @@ const props = defineProps({
 const { loadParsha, loading, error, data, chapterLengths, loadedChumash } = useData()
 const { settings } = useSettings()
 const { parshiyotList, getDefaultWeek } = useParsha()
-const { progress, externalRevision, setVerseProgress, getVerseProgress } = useProgress()
+const { progress, externalRevision, persistFailed, setVerseProgress, getVerseProgress } = useProgress()
 const { getAliyot, aliyotData, aliyotError, retryAliyot, verseInAliyah, aliyahFor } = useAliyot()
 const now = useNow()
 
