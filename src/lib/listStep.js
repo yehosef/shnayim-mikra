@@ -76,6 +76,11 @@ export function nextListSelection({
     return { index: pointerIndex, phase: pointerPhase }
   }
 
+  // Parked (phase 0, nothing left to mark): there is no "next phase" to step
+  // to. Re-seed instead of treating 0 as a phase number, or the cursor would
+  // walk 0 -> 1 -> 2 -> 3 across a verse that is already read.
+  if (selectedPhase < 1) return seedListSelection({ pointerIndex, pointerPhase, scopeComplete, maxIndex })
+
   if (selectedPhase < 3) return { index: selectedIndex, phase: selectedPhase + 1 }
   if (selectedIndex < maxIndex) return { index: selectedIndex + 1, phase: 1 }
 

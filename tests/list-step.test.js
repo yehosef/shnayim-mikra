@@ -30,6 +30,28 @@ describe('nextListSelection — end of scope, scope complete', () => {
     expect(next).toEqual({ index: 5, phase: 0 })
   })
 
+  it('stays parked at phase 0 on repeated advances', () => {
+    const parked = { index: 5, phase: 0 }
+    const next = nextListSelection({
+      selectedIndex: 5, selectedPhase: 0,
+      pointerIndex: null, pointerPhase: null,
+      sameAliyah: false, readingStyle: 'verse',
+      maxIndex: 5, scopeComplete: true
+    })
+    expect(next).toEqual(parked)
+  })
+
+  it('from parked, a pointer that appeared behind the cursor is reached', () => {
+    // Another tab un-marked verse 2 while this one sat parked at the end.
+    const next = nextListSelection({
+      selectedIndex: 5, selectedPhase: 0,
+      pointerIndex: 2, pointerPhase: 3,
+      sameAliyah: false, readingStyle: 'verse',
+      maxIndex: 5, scopeComplete: false
+    })
+    expect(next).toEqual({ index: 2, phase: 3 })
+  })
+
   it('the keyboard action on a read phase never writes', () => {
     // The phase Space just parked on (or landed on via an arrow key) is read
     expect(keyboardMarkAction({ wasRead: true })).toBe(false)

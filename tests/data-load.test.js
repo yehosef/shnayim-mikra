@@ -12,7 +12,7 @@
  * real file is read from disk once (module scope) and reused across every
  * stub response to keep the suite fast.
  */
-import { describe, it, expect, beforeAll, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeAll, afterEach, vi, afterAll } from 'vitest'
 import { readFileSync } from 'node:fs'
 import parshiyot from '../src/data/parshiyot.js'
 import { useData } from '../src/composables/useData.js'
@@ -90,6 +90,9 @@ describe('useData().loadParsha — progress-key & verse-count contract', () => {
   })
   afterEach(() => {
     globalThis.fetch = makeFetchStub()
+  })
+  afterAll(() => {
+    globalThis.fetch = originalFetch
   })
 
   it('parshiyot.js has all 61 routes', () => {
