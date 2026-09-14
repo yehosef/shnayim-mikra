@@ -59,9 +59,31 @@ The `twoplusone` prototype is archived at `/Volumes/code/geula/archive/twopluson
   (only affects when a hidden tab rolls over); `.focus-content` still has `cursor: pointer`
   though only the text card advances; `public/logo.png` is unreferenced.
 
+## 2026-09-14 session: v1-fixes shipped, follow-up PR opened
+
+- Plan reviewed by a 16-agent workflow, then Codex gpt-5.6-sol and Claude Fable 5.1 CLI
+  reviews; decisions: ship first, keyboard Space never un-marks, persistence banner now.
+- **Production is `v1-fixes`** (master 49601fb, PR #1 merged 20:09Z, served bundle
+  `index-v3TWxNP4.js`). Acceptance on `vite preview`: reload persistence, drag/chrome guards,
+  Space x6, two-tab merge, targumType switching — all pass. `origin/v1-restart` deleted.
+- Branch `v1-followup` (PR #2) on top of master:
+  - Calendar: Vezot Haberachah window runs through Simchat Torah itself
+    (`useParsha.js` `simchatTorah = il ? 22 : 23`); before this, Simchat Torah resolved to
+    Bereshit in every year. Tests extended; vite-node dry-run 2026-10-03 il -> vzot, not late.
+  - List view: `src/lib/listStep.js` (pure, tested) — Space never writes false, parks at
+    phase 0 at the end of a scope (was a toggle loop that un-marked the last targum).
+  - `tests/data-load.test.js`: useData keys == parshiyot start/end for 61 routes, counts, HTML
+    fallback rejected, Rashi gating.
+  - Persistence: `persistFailed` ref + banner (`.error`, role=alert) when setItem throws.
+  - AGENTS.md -> symlink to CLAUDE.md; ci.yml push trigger master only; `.claude/worktrees/`
+    ignored.
+- Service-worker registration cannot be verified in the embedded browser pane (script fetch
+  error); offline/PWA-update items remain on the user's real-browser/phone checklist.
+- The plan with the full acceptance checklist: ~/.claude/plans/review-the-recent-work-clever-haven.md
+
 ## In Progress
 
-Nothing. `v1-fixes` is 14 commits ahead of `master`, pushed.
+PR #2 (`v1-followup`) awaiting merge before 2026-10-02 (Simchat Torah in Israel is 2026-10-03).
 
 ## Next Steps
 
@@ -79,7 +101,7 @@ Nothing. `v1-fixes` is 14 commits ahead of `master`, pushed.
 
 ```
 cd /Volumes/code/geula/shnayim-mikra
-npm test                 # 70 tests
+npm test                 # 200 tests
 npm run validate         # data (strict) + style contract
 npm run build            # prebuild regenerates aliyot.json and validates
 npm run dev              # http://localhost:5173
