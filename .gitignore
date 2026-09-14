@@ -26,3 +26,4 @@ logs
 # build-script scratch
 scripts/out
 scripts/.cache
+.claude/worktrees/
