@@ -77,6 +77,12 @@ function mergeProgress(disk, mem) {
 
 const progress = ref(parseProgress(getItem(KEY)))
 
+// True after the backing store rejected the last write (quota, blocked
+// storage). The marks still live in memory for this session, but they will
+// not survive a reload, and nothing else in the UI can tell. Cleared again by
+// the next write that succeeds.
+const persistFailed = ref(false)
+
 const persister = createPersister(KEY, (raw) => {
   const merged = mergeProgress(parseProgress(raw), progress.value)
   const serialized = JSON.stringify(merged)
@@ -86,7 +92,7 @@ const persister = createPersister(KEY, (raw) => {
   dirtyFields.clear()
   clearedRoutes.clear()
   return serialized
-})
+}, 300, (ok) => { persistFailed.value = !ok })
 
 watch(progress, () => persister.schedule(), { deep: true })
 
@@ -161,6 +167,7 @@ export function useProgress() {
   return {
     progress,
     externalRevision,
+    persistFailed,
     getVerseProgress,
     setVerseProgress,
     getParshaStats,

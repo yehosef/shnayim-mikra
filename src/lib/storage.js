@@ -133,8 +133,14 @@ export function onExternalWrite(key, fn) {
  * The debounce is a fixed window from the *first* pending change, not a timer
  * restarted by every change: a user marking verses steadily must not be able to
  * hold the write off indefinitely.
+ *
+ * `onWrite(ok)` is called after every attempted write with the `setItem`
+ * result. A rejected write (quota, blocked storage) keeps the value for this
+ * session only and looks exactly like a successful one from the UI, so the
+ * caller must surface it — silently losing a week of marks on reload is the one
+ * data-loss path the merge logic cannot cover.
  */
-export function createPersister(key, produce, delay = 300) {
+export function createPersister(key, produce, delay = 300, onWrite) {
   let timer = null
 
   const flush = () => {
@@ -145,7 +151,8 @@ export function createPersister(key, produce, delay = 300) {
     const current = getItem(key)
     const next = produce(current)
     if (next === null || next === undefined || next === current) return
-    setItem(key, next)
+    const ok = setItem(key, next)
+    if (typeof onWrite === 'function') onWrite(ok)
   }
 
   const schedule = () => {

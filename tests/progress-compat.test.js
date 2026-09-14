@@ -317,10 +317,36 @@ describe('two-tab progress merge', () => {
     }
     const a = await openTab(blocked)
     expect(a.getVerseProgress('bereshit', '0:0').hebrew1).toBe(false)
+    expect(a.persistFailed.value).toBe(false)
     a.setVerseProgress('bereshit', '0:0', 'hebrew1', true)
     await a.tick()
     a.fire('pagehide')
     expect(a.getVerseProgress('bereshit', '0:0').hebrew1).toBe(true)
+    // The mark is session-only now; the UI must be told.
+    expect(a.persistFailed.value).toBe(true)
+  })
+
+  it('reports a rejected write and clears the flag once a write succeeds again', async () => {
+    let reject = true
+    const flaky = {
+      getItem: (k) => store.getItem(k),
+      setItem: (k, v) => { if (reject) throw new Error('QuotaExceededError'); store.setItem(k, v) },
+      removeItem: (k) => store.removeItem(k)
+    }
+    const a = await openTab(flaky)
+    a.setVerseProgress('bereshit', '0:0', 'hebrew1', true)
+    await a.tick()
+    a.fire('pagehide')
+    expect(a.persistFailed.value).toBe(true)
+    expect(store.getItem('shnayim-progress')).toBeNull()
+
+    reject = false
+    a.setVerseProgress('bereshit', '0:0', 'hebrew2', true)
+    await a.tick()
+    a.fire('pagehide')
+    expect(a.persistFailed.value).toBe(false)
+    const disk = JSON.parse(store.getItem('shnayim-progress'))
+    expect(disk.bereshit['0:0']).toEqual({ hebrew1: true, hebrew2: true, targum: false })
   })
 })
 
