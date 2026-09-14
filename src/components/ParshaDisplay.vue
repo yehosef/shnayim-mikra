@@ -110,6 +110,7 @@ import { useAliyot } from '../composables/useAliyot'
 import { useReadingState } from '../composables/useReadingState'
 import { useDailyGuide, useNow } from '../composables/useDailyGuide'
 import { parseKey, isRouteComplete } from '../lib/progressMath'
+import { nextListSelection, seedListSelection, keyboardMarkAction } from '../lib/listStep'
 import { toHebrew } from '../utils/hebrewUtils'
 import VerseView from './VerseView.vue'
 import FocusMode from './FocusMode.vue'
@@ -396,32 +397,41 @@ const phaseOf = (ptr) => (ptr.phase === 'hebrew1' ? 1 : ptr.phase === 'hebrew2' 
 // legitimately jumps back to the top of the same aliyah at every pass boundary
 // (all of hebrew1, then all of hebrew2, then all of targum) — refusing that
 // abandoned the pointer after the first pass, which silently discarded the
-// chosen reading style. So we follow it inside the same aliyah block.
+// chosen reading style. So we follow it inside the same aliyah block. See
+// src/lib/listStep.js (nextListSelection) for the pure decision, including
+// the last-resort fallback when neither the pointer nor a manual step moves
+// the selection (the end of a scope: Space must park, not sit still).
 const advanceSelection = () => {
   const ptr = scopedPointer.value
+  let pointerIndex = null
+  let pointerPhase = null
+  let sameAliyah = false
   if (ptr) {
     const [p, v] = parseKey(ptr.key)
     const i = displayVerses.value.findIndex(x => x.perekNum === p && x.pasukNum === v)
-    const current = displayVerses.value[selectedIndex.value]
-    const sameAliyah =
-      !!current &&
-      aliyahFor(aliyotEntry.value, p, v)?.n ===
-        aliyahFor(aliyotEntry.value, current.perekNum, current.pasukNum)?.n
-    const follow =
-      i >= 0 && (i >= selectedIndex.value || (settings.value.readingStyle === 'aliyah' && sameAliyah))
-    if (follow) {
-      selectedIndex.value = i
-      selectedPhase.value = phaseOf(ptr)
-      return
+    if (i >= 0) {
+      pointerIndex = i
+      pointerPhase = phaseOf(ptr)
+      const current = displayVerses.value[selectedIndex.value]
+      sameAliyah =
+        !!current &&
+        aliyahFor(aliyotEntry.value, p, v)?.n ===
+          aliyahFor(aliyotEntry.value, current.perekNum, current.pasukNum)?.n
     }
   }
-  const maxIndex = displayVerses.value.length - 1
-  if (selectedPhase.value < 3) {
-    selectedPhase.value++
-  } else if (selectedIndex.value < maxIndex) {
-    selectedIndex.value++
-    selectedPhase.value = 1
-  }
+
+  const next = nextListSelection({
+    selectedIndex: selectedIndex.value,
+    selectedPhase: selectedPhase.value,
+    pointerIndex,
+    pointerPhase,
+    sameAliyah,
+    readingStyle: settings.value.readingStyle,
+    maxIndex: displayVerses.value.length - 1,
+    scopeComplete: scopeComplete.value
+  })
+  selectedIndex.value = next.index
+  selectedPhase.value = next.phase
 }
 
 // Clicking the card chrome selects that verse. The phase must move with the
@@ -435,7 +445,11 @@ const selectVerse = (i) => {
   selectedPhase.value = !rec.hebrew1 ? 1 : !rec.hebrew2 ? 2 : 3
 }
 
-// Toggle current phase and advance only if marking as newly read
+// Mark the current phase read and advance — the keyboard path (Space/Enter).
+// Unlike VerseView's text click (handlePhaseClick), this NEVER un-marks: a
+// phase reached already read (by arrowing onto it, or because the scope just
+// completed) is left alone and Space simply advances, so Space can never
+// become a toggle loop.
 const toggleCurrentPhase = () => {
   const verse = displayVerses.value[selectedIndex.value]
   if (!verse) return
@@ -446,15 +460,13 @@ const toggleCurrentPhase = () => {
   const verseKey = getVerseKey(verse)
   const phaseField = selectedPhase.value === 1 ? 'hebrew1' : selectedPhase.value === 2 ? 'hebrew2' : 'targum'
 
-  // Get current progress to check if already read
   const currentProgress = getVerseProgress(props.parasha, verseKey)
   const wasRead = currentProgress[phaseField]
 
-  // Toggle the value
-  setVerseProgress(props.parasha, verseKey, phaseField, !wasRead)
-
-  // Only auto-advance if we just marked it as read (was unread before)
-  if (!wasRead) advanceSelection()
+  if (keyboardMarkAction({ wasRead })) {
+    setVerseProgress(props.parasha, verseKey, phaseField, true)
+  }
+  advanceSelection()
 }
 
 // Keyboard navigation for list view - navigates by phase (section) within verses
@@ -509,7 +521,7 @@ const handleKeydown = (e) => {
       break
     case ' ':
       e.preventDefault()
-      // Toggle current phase - advance only if marking as newly read
+      // Mark the current phase read (if unread) and always advance
       toggleCurrentPhase()
       break
     case 'Enter':
@@ -548,22 +560,24 @@ watch([selectedIndex, selectedPhase], scrollToSelected)
 // top of the list the right place to start.
 const seedSelectionFromPointer = () => {
   const ptr = scopedPointer.value
+  let pointerIndex = null
+  let pointerPhase = null
   if (ptr) {
     const [p, v] = parseKey(ptr.key)
     const i = displayVerses.value.findIndex(x => x.perekNum === p && x.pasukNum === v)
     if (i >= 0) {
-      selectedIndex.value = i
-      selectedPhase.value = ptr.phase === 'hebrew1' ? 1 : ptr.phase === 'hebrew2' ? 2 : 3
-      return
+      pointerIndex = i
+      pointerPhase = phaseOf(ptr)
     }
   }
-  if (scopeComplete.value && displayVerses.value.length > 0) {
-    selectedIndex.value = displayVerses.value.length - 1
-    selectedPhase.value = 0
-    return
-  }
-  selectedIndex.value = 0
-  selectedPhase.value = 1
+  const next = seedListSelection({
+    pointerIndex,
+    pointerPhase,
+    scopeComplete: scopeComplete.value,
+    maxIndex: displayVerses.value.length - 1
+  })
+  selectedIndex.value = next.index
+  selectedPhase.value = next.phase
 }
 
 // Re-seed when display mode / aliyah changes, or when the verse list is (re)loaded
