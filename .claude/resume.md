@@ -66,7 +66,7 @@ The `twoplusone` prototype is archived at `/Volumes/code/geula/archive/twopluson
 - **Production is `v1-fixes`** (master 49601fb, PR #1 merged 20:09Z, served bundle
   `index-v3TWxNP4.js`). Acceptance on `vite preview`: reload persistence, drag/chrome guards,
   Space x6, two-tab merge, targumType switching — all pass. `origin/v1-restart` deleted.
-- Branch `v1-followup` (PR #2) on top of master:
+- Branch `v1-followup` (PR #2, merged 2026-09-15, production 60d8c09):
   - Calendar: Vezot Haberachah window runs through Simchat Torah itself
     (`useParsha.js` `simchatTorah = il ? 22 : 23`); before this, Simchat Torah resolved to
     Bereshit in every year. Tests extended; vite-node dry-run 2026-10-03 il -> vzot, not late.
@@ -83,9 +83,22 @@ The `twoplusone` prototype is archived at `/Volumes/code/geula/archive/twopluson
 
 ## In Progress
 
-PR #2 (`v1-followup`) awaiting merge before 2026-10-02 (Simchat Torah in Israel is 2026-10-03).
+Nothing. PR #2 merged 2026-09-15; production is master 60d8c09 (served bundle `index-DF0rDPC3.js`).
 
-## Next Steps
+## Next Steps (v1.1 candidates, none urgent)
+
+- User acceptance on the phone/installed PWA: checklist in
+  `~/.claude/plans/review-the-recent-work-clever-haven.md` Phase 3 (offline, PWA update prompt,
+  swipe-away flush, aliyah boundaries vs a chumash). SW registration cannot be checked from the
+  embedded browser pane.
+- `useSettings.js` persister has no `persistFailed` equivalent (reviewer MEDIUM).
+- `createPersister` skips `onWrite` when the merged string equals disk, so a stale
+  `persistFailed` can linger until the next real write (reviewer LOW).
+- Export/import of progress JSON; precache-size test in `tests/pwa-config.test.js`;
+  hash-pinning scope decision; leftovers (`App.vue` civil-day rollover key,
+  `FocusMode.vue` `.focus-content` cursor, unreferenced `public/logo.*`).
+
+## Previous next steps (2026-09-07)
 
 1. User reviews the Vercel preview for `v1-fixes` (log in to Vercel) or runs it locally, then
    merges `v1-fixes` into `master` (auto-deploys production).
