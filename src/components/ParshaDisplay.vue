@@ -86,10 +86,25 @@
     />
 
     <!-- Content -->
-    <div v-if="!loading && !error && !showFocusMode" class="content" :class="{ 'content-pasuk': pasukMode }">
+    <div v-if="!loading && !error && !showFocusMode" class="content">
       <!-- One pasuk at a time: crossfade when the shown pasuk changes, and
            narrow side arrows at the page edges (RTL: next is to the left). -->
       <template v-if="pasukMode">
+        <!-- Arrow row above the card. RTL: previous on the right, next on the left. -->
+        <div class="pasuk-nav-row">
+          <button
+            class="pasuk-nav"
+            :disabled="selectedIndex <= 0"
+            @click.stop="stepVerse(-1)"
+            title="פסוק קודם (→)"
+          >→</button>
+          <button
+            class="pasuk-nav"
+            :disabled="selectedIndex >= displayVerses.length - 1"
+            @click.stop="stepVerse(1)"
+            title="פסוק הבא (←)"
+          >←</button>
+        </div>
         <Transition name="pasuk-fade" mode="out-in">
           <VerseView
             v-if="visibleVerses[0]"
@@ -97,18 +112,6 @@
             v-bind="verseBindings(visibleVerses[0])"
           />
         </Transition>
-        <button
-          class="pasuk-nav pasuk-nav-left"
-          :disabled="selectedIndex >= displayVerses.length - 1"
-          @click.stop="stepVerse(1)"
-          title="פסוק הבא (←)"
-        >←</button>
-        <button
-          class="pasuk-nav pasuk-nav-right"
-          :disabled="selectedIndex <= 0"
-          @click.stop="stepVerse(-1)"
-          title="פסוק קודם (→)"
-        >→</button>
       </template>
       <template v-else>
         <VerseView
@@ -876,10 +879,6 @@ h1 {
   padding: 0 1rem;
 }
 
-/* One-pasuk mode: keep the card clear of the side arrows */
-.content-pasuk {
-  padding: 0 2.5rem;
-}
 
 /* Crossfade between pasukim when the shown pasuk changes */
 .content .pasuk-fade-enter-active,
@@ -892,29 +891,24 @@ h1 {
   opacity: 0;
 }
 
-/* Narrow side arrows at the page edges (same look as focus mode, less width) */
+/* Arrow row above the single card: previous on the right, next on the left */
+.pasuk-nav-row {
+  direction: rtl;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 0.5rem;
+}
+
 .pasuk-nav {
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border: none;
-  padding: 1.25rem 0.35rem;
+  padding: 0.4rem 1rem;
   border-radius: 10px;
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
-  z-index: 50;
-}
-
-.pasuk-nav-left {
-  left: 0.25rem;
-}
-
-.pasuk-nav-right {
-  right: 0.25rem;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
 }
 
 .pasuk-nav:disabled {
