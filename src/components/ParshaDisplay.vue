@@ -88,7 +88,7 @@
     <!-- Content -->
     <div v-if="!loading && !error && !showFocusMode" class="content">
       <VerseView
-        v-for="(verse, i) in displayVerses"
+        v-for="{ verse, i } in visibleVerses"
         :key="`${verse.perekNum}-${verse.pasukNum}`"
         :verse="verse"
         :index="i"
@@ -102,6 +102,7 @@
         @focus="enterFocusMode"
         @click="selectVerse(i)"
         @phase-click="(eventData) => handlePhaseClick(i, eventData)"
+        @toggle-complete="toggleVerseComplete(i)"
       />
     </div>
   </div>
@@ -298,6 +299,21 @@ const displayVerses = computed(() => {
   return withLeadingPerek(labelled)
 })
 
+// What the list actually renders. 'pasuk' mode ("verse by verse") shows ONE
+// pasuk — the selected one, i.e. the next thing to read — twice plus its
+// targum, and nothing else; the other modes render the whole scope. Selection,
+// pointer and keyboard logic all keep working on the full `displayVerses`
+// index space; only the rendering is narrowed. The single verse always
+// carries its chapter label, since there is no list context to infer it from.
+const visibleVerses = computed(() => {
+  const verses = displayVerses.value
+  if (settings.value.displayMode !== 'pasuk') return verses.map((verse, i) => ({ verse, i }))
+  if (verses.length === 0) return []
+  const i = Math.min(Math.max(selectedIndex.value, 0), verses.length - 1)
+  const verse = verses[i]
+  return [{ verse: verse.perek ? verse : { ...verse, perek: toHebrew(verse.perekNum + 1) }, i }]
+})
+
 // useData attaches a chapter label only to pasuk 0 of a chapter, so a list that
 // starts mid-chapter (any single aliyah, and the 24 parshiyot that start
 // mid-chapter) would show no chapter at all. Give the first displayed verse a
@@ -392,6 +408,28 @@ const handlePhaseClick = (verseIndex, { phase, field, wasRead }) => {
 
   // Only auto-advance if we just marked it as read (was unread before)
   if (!wasRead) advanceSelection()
+}
+
+// The corner check on a card: mark the whole pasuk (all three readings) when
+// it is incomplete, clear all three when it is complete. Marking advances the
+// selection like finishing the pasuk by hand would; clearing leaves the
+// selection on the pasuk's first reading.
+const toggleVerseComplete = (verseIndex) => {
+  const verse = displayVerses.value[verseIndex]
+  if (!verse) return
+  const verseKey = getVerseKey(verse)
+  const rec = getVerseProgress(props.parasha, verseKey)
+  const complete = !!(rec.hebrew1 && rec.hebrew2 && rec.targum)
+  for (const field of ['hebrew1', 'hebrew2', 'targum']) {
+    setVerseProgress(props.parasha, verseKey, field, !complete)
+  }
+  selectedIndex.value = verseIndex
+  if (complete) {
+    selectedPhase.value = 1
+  } else {
+    selectedPhase.value = 3
+    advanceSelection()
+  }
 }
 
 const phaseOf = (ptr) => (ptr.phase === 'hebrew1' ? 1 : ptr.phase === 'hebrew2' ? 2 : 3)

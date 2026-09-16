@@ -18,8 +18,19 @@
       <span class="pointer-icon">▶</span>
     </div>
 
-    <!-- Completion Indicator -->
-    <div class="completion-indicator" :class="{ 'complete': isCompleted }">
+    <!-- Completion Indicator — also a toggle for the whole pasuk: marks all
+         three readings when incomplete, clears all three when complete. -->
+    <div
+      class="completion-indicator"
+      :class="{ 'complete': isCompleted }"
+      role="button"
+      tabindex="0"
+      :aria-pressed="isCompleted"
+      :title="isCompleted ? 'בטל סימון הפסוק' : 'סמן את כל הפסוק כנקרא'"
+      @click.stop="emit('toggle-complete')"
+      @keydown.enter.prevent.stop="emit('toggle-complete')"
+      @keydown.space.prevent.stop="emit('toggle-complete')"
+    >
       <span v-if="isCompleted" class="completion-checkmark">✓</span>
       <span v-else class="completion-dot"></span>
     </div>
@@ -142,7 +153,7 @@ const props = defineProps({
 // 'click' is declared so the parent's @click on <VerseView> is a component
 // event, not a fallthrough native listener on the root div (a native root
 // listener fired after the phase click and reverted the advanced selection).
-const emit = defineEmits(['focus', 'phase-click', 'click'])
+const emit = defineEmits(['focus', 'phase-click', 'click', 'toggle-complete'])
 
 const { getVerseProgress } = useProgress()
 
@@ -213,7 +224,7 @@ const handlePhaseClick = (phase, field, event) => {
 // Only the non-text chrome of the card selects the verse; clicks on a reading
 // target or the focus button are handled by their own handlers.
 const handleRootClick = (e) => {
-  if (e.target?.closest?.('.clickable-text, .focus-btn')) return
+  if (e.target?.closest?.('.clickable-text, .focus-btn, .completion-indicator')) return
   emit('click', e)
 }
 
@@ -280,6 +291,7 @@ const formattedTorahText = computed(() => {
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .completion-dot {
