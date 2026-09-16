@@ -86,24 +86,37 @@
     />
 
     <!-- Content -->
-    <div v-if="!loading && !error && !showFocusMode" class="content">
-      <VerseView
-        v-for="{ verse, i } in visibleVerses"
-        :key="`${verse.perekNum}-${verse.pasukNum}`"
-        :verse="verse"
-        :index="i"
-        :parasha="parasha"
-        :settings="settings"
-        :isSelected="selectedIndex === i"
-        :selectedPhase="selectedIndex === i ? selectedPhase : 0"
-        :isPointer="isPointer(verse.perekNum, verse.pasukNum)"
-        :inCurrentAliyah="inCurrentAliyah(verse.perekNum, verse.pasukNum)"
-        :data-verse-index="i"
-        @focus="enterFocusMode"
-        @click="selectVerse(i)"
-        @phase-click="(eventData) => handlePhaseClick(i, eventData)"
-        @toggle-complete="toggleVerseComplete(i)"
-      />
+    <div v-if="!loading && !error && !showFocusMode" class="content" :class="{ 'content-pasuk': pasukMode }">
+      <!-- One pasuk at a time: crossfade when the shown pasuk changes, and
+           narrow side arrows at the page edges (RTL: next is to the left). -->
+      <template v-if="pasukMode">
+        <Transition name="pasuk-fade" mode="out-in">
+          <VerseView
+            v-if="visibleVerses[0]"
+            :key="`${visibleVerses[0].verse.perekNum}-${visibleVerses[0].verse.pasukNum}`"
+            v-bind="verseBindings(visibleVerses[0])"
+          />
+        </Transition>
+        <button
+          class="pasuk-nav pasuk-nav-left"
+          :disabled="selectedIndex >= displayVerses.length - 1"
+          @click.stop="stepVerse(1)"
+          title="פסוק הבא (←)"
+        >←</button>
+        <button
+          class="pasuk-nav pasuk-nav-right"
+          :disabled="selectedIndex <= 0"
+          @click.stop="stepVerse(-1)"
+          title="פסוק קודם (→)"
+        >→</button>
+      </template>
+      <template v-else>
+        <VerseView
+          v-for="item in visibleVerses"
+          :key="`${item.verse.perekNum}-${item.verse.pasukNum}`"
+          v-bind="verseBindings(item)"
+        />
+      </template>
     </div>
   </div>
 </template>
@@ -305,14 +318,41 @@ const displayVerses = computed(() => {
 // pointer and keyboard logic all keep working on the full `displayVerses`
 // index space; only the rendering is narrowed. The single verse always
 // carries its chapter label, since there is no list context to infer it from.
+const pasukMode = computed(() => settings.value.displayMode === 'pasuk')
+
 const visibleVerses = computed(() => {
   const verses = displayVerses.value
-  if (settings.value.displayMode !== 'pasuk') return verses.map((verse, i) => ({ verse, i }))
+  if (!pasukMode.value) return verses.map((verse, i) => ({ verse, i }))
   if (verses.length === 0) return []
   const i = Math.min(Math.max(selectedIndex.value, 0), verses.length - 1)
   const verse = verses[i]
   return [{ verse: verse.perek ? verse : { ...verse, perek: toHebrew(verse.perekNum + 1) }, i }]
 })
+
+// Props + listeners for one VerseView; shared by the one-pasuk and list renders.
+const verseBindings = ({ verse, i }) => ({
+  verse,
+  index: i,
+  parasha: props.parasha,
+  settings: settings.value,
+  isSelected: selectedIndex.value === i,
+  selectedPhase: selectedIndex.value === i ? selectedPhase.value : 0,
+  isPointer: isPointer(verse.perekNum, verse.pasukNum),
+  inCurrentAliyah: inCurrentAliyah(verse.perekNum, verse.pasukNum),
+  'data-verse-index': i,
+  onFocus: enterFocusMode,
+  onClick: () => selectVerse(i),
+  onPhaseClick: (eventData) => handlePhaseClick(i, eventData),
+  onToggleComplete: () => toggleVerseComplete(i)
+})
+
+// Side arrows in one-pasuk mode. Landing on a pasuk selects its first unread
+// reading (selectVerse), so Space keeps meaning "the next thing to read".
+const stepVerse = (delta) => {
+  const i = selectedIndex.value + delta
+  if (i < 0 || i > displayVerses.value.length - 1) return
+  selectVerse(i)
+}
 
 // useData attaches a chapter label only to pasuk 0 of a chapter, so a list that
 // starts mid-chapter (any single aliyah, and the 24 parshiyot that start
@@ -834,5 +874,54 @@ h1 {
   max-width: 1200px;
   margin: 2rem auto;
   padding: 0 1rem;
+}
+
+/* One-pasuk mode: keep the card clear of the side arrows */
+.content-pasuk {
+  padding: 0 2.5rem;
+}
+
+/* Crossfade between pasukim when the shown pasuk changes */
+.content .pasuk-fade-enter-active,
+.content .pasuk-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.content .pasuk-fade-enter-from,
+.content .pasuk-fade-leave-to {
+  /* allow-opacity: transient crossfade between pasukim, not a read-state style */
+  opacity: 0;
+}
+
+/* Narrow side arrows at the page edges (same look as focus mode, less width) */
+.pasuk-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  padding: 1.25rem 0.35rem;
+  border-radius: 10px;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+  z-index: 50;
+}
+
+.pasuk-nav-left {
+  left: 0.25rem;
+}
+
+.pasuk-nav-right {
+  right: 0.25rem;
+}
+
+.pasuk-nav:disabled {
+  /* allow-opacity: disabled side arrow at the first/last pasuk, not text */
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: #d1d5db;
+  box-shadow: none;
 }
 </style>
