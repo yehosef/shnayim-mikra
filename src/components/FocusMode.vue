@@ -63,14 +63,16 @@
 
     <!-- Main Content - Sequential 3-Step Display -->
     <div ref="contentEl" class="focus-content" @pointerdown="handlePointerDown">
-      <!-- Step Label -->
-      <div class="step-label">{{ stepLabel }}</div>
-
       <!-- The piece being read. Keyed by verse+step so every move — a mark,
            an arrow, 1/2/3 — slides the old card out and the new one in. On a
-           mark, advanceStep first lets the card turn green, then moves on. -->
+           mark, advanceStep first lets the card turn green, then moves on.
+           The step label travels with the card so it cannot announce the next
+           step while the previous card is still on its way out. -->
       <Transition name="focus-slide" mode="out-in">
         <div class="text-stage" :key="`${currentIndex}-${currentStep}`">
+          <!-- Step Label -->
+          <div class="step-label">{{ stepLabel }}</div>
+
           <!-- Hebrew Text (Steps 1 & 2) -->
           <div
             v-if="currentStep === 1 || currentStep === 2"
@@ -353,7 +355,7 @@ const markPhase = (field, value) => {
 }
 
 // How long the just-read card stays on screen, green, before sliding away.
-const MARK_HOLD_MS = 350
+const MARK_HOLD_MS = 450
 // True between the mark and the move; a second Space/tap in that window is
 // ignored rather than marking the NEXT piece the reader has not seen yet.
 const advancing = ref(false)
@@ -787,22 +789,23 @@ onUnmounted(() => {
 .text-stage {
   width: 100%;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
 .focus-slide-leave-active {
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition: transform 0.35s ease-in, opacity 0.35s ease-in;
 }
 .focus-slide-enter-active {
-  transition: transform 0.25s ease, opacity 0.25s ease;
+  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
 }
 .focus-slide-leave-to {
-  transform: translateX(-80px);
+  transform: translateX(-160px);
   /* allow-opacity: transient slide-out of the card just read, not a read-state style */
   opacity: 0;
 }
 .focus-slide-enter-from {
-  transform: translateX(80px);
+  transform: translateX(160px);
   /* allow-opacity: transient slide-in of the next card, not a read-state style */
   opacity: 0;
 }
@@ -812,9 +815,12 @@ onUnmounted(() => {
   transform: translateY(-2px);
 }
 
+/* Read: the same green as a read card in the list view, so the cue is
+   unmistakable during the hold before the card slides away. */
 .text-display.step-complete {
   border-color: #10b981;
-  background: #f0fdf4;
+  background: #dcfce7;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
 }
 
 .torah {
