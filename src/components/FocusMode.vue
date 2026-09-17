@@ -66,40 +66,47 @@
       <!-- Step Label -->
       <div class="step-label">{{ stepLabel }}</div>
 
-      <!-- Hebrew Text (Steps 1 & 2) -->
-      <div
-        v-if="currentStep === 1 || currentStep === 2"
-        class="text-display torah font-sbl"
-        :class="{ 'step-complete': currentStep === 1 ? progress.hebrew1 : progress.hebrew2 }"
-        @click="handleTextClick"
-      >
-        {{ formattedTorahText }}
-      </div>
+      <!-- The piece being read. Keyed by verse+step so every move — a mark,
+           an arrow, 1/2/3 — slides the old card out and the new one in. On a
+           mark, advanceStep first lets the card turn green, then moves on. -->
+      <Transition name="focus-slide" mode="out-in">
+        <div class="text-stage" :key="`${currentIndex}-${currentStep}`">
+          <!-- Hebrew Text (Steps 1 & 2) -->
+          <div
+            v-if="currentStep === 1 || currentStep === 2"
+            class="text-display torah font-sbl"
+            :class="{ 'step-complete': currentStep === 1 ? progress.hebrew1 : progress.hebrew2 }"
+            @click="handleTextClick"
+          >
+            {{ formattedTorahText }}
+          </div>
 
-      <!-- Targum (Step 3) -->
-      <div
-        v-if="currentStep === 3 && targumLayer === 'onkelos'"
-        class="text-display targum font-sbl"
-        :class="{ 'step-complete': progress.targum }"
-        @click="handleTextClick"
-        v-html="currentVerse.targum"
-      ></div>
+          <!-- Targum (Step 3) -->
+          <div
+            v-if="currentStep === 3 && targumLayer === 'onkelos'"
+            class="text-display targum font-sbl"
+            :class="{ 'step-complete': progress.targum }"
+            @click="handleTextClick"
+            v-html="currentVerse.targum"
+          ></div>
 
-      <div
-        v-if="currentStep === 3 && targumLayer === 'rashi'"
-        class="text-display targum"
-        :class="{ 'step-complete': progress.targum, 'font-rashi': settings.fontRashi }"
-        @click="handleTextClick"
-        v-html="currentVerse.rashi.join('  ')"
-      ></div>
+          <div
+            v-if="currentStep === 3 && targumLayer === 'rashi'"
+            class="text-display targum"
+            :class="{ 'step-complete': progress.targum, 'font-rashi': settings.fontRashi }"
+            @click="handleTextClick"
+            v-html="currentVerse.rashi.join('  ')"
+          ></div>
 
-      <div
-        v-if="currentStep === 3 && targumLayer === 'english'"
-        class="text-display targum english-targum"
-        :class="{ 'step-complete': progress.targum }"
-        @click="handleTextClick"
-        v-html="currentVerse.english || 'No English translation available'"
-      ></div>
+          <div
+            v-if="currentStep === 3 && targumLayer === 'english'"
+            class="text-display targum english-targum"
+            :class="{ 'step-complete': progress.targum }"
+            @click="handleTextClick"
+            v-html="currentVerse.english || 'No English translation available'"
+          ></div>
+        </div>
+      </Transition>
 
       <!-- Instruction -->
       <div class="instruction">
@@ -317,9 +324,13 @@ watch(currentIndex, () => {
   currentStep.value = determineStartingStep()
 })
 
-// Initialize step on mount
-onMounted(() => {
-  currentStep.value = determineStartingStep()
+// Initialize the step synchronously (not in onMounted): the card is keyed by
+// verse+step, so setting it after mount would slide the first card out for
+// no reason the moment focus mode opens.
+currentStep.value = determineStartingStep()
+
+onUnmounted(() => {
+  if (advanceTimer !== null) clearTimeout(advanceTimer)
 })
 
 // Move to a position inside the displayed verses. The step is set by hand, so
@@ -341,9 +352,17 @@ const markPhase = (field, value) => {
   return true
 }
 
+// How long the just-read card stays on screen, green, before sliding away.
+const MARK_HOLD_MS = 350
+// True between the mark and the move; a second Space/tap in that window is
+// ignored rather than marking the NEXT piece the reader has not seen yet.
+const advancing = ref(false)
+let advanceTimer = null
+
 const advanceStep = () => {
   if (showSettings.value || showHelp.value) return // Don't advance when overlays are open
   if (!verseKey.value) return
+  if (advancing.value) return
 
   const field = currentStep.value === 1 ? 'hebrew1' : currentStep.value === 2 ? 'hebrew2' : 'targum'
   markPhase(field, true)
@@ -360,12 +379,18 @@ const advanceStep = () => {
     sameAliyah: pointer ? sameAliyahAsCurrent(pointer.index) : false
   })
 
-  // null = nothing left to read anywhere in this view.
-  if (!next) {
-    emit('exit')
-    return
-  }
-  goTo(next)
+  // Let the card show its read state (green) before it slides out.
+  advancing.value = true
+  advanceTimer = setTimeout(() => {
+    advanceTimer = null
+    advancing.value = false
+    // null = nothing left to read anywhere in this view.
+    if (!next) {
+      emit('exit')
+      return
+    }
+    goTo(next)
+  }, MARK_HOLD_MS)
 }
 
 const jumpToStep = (step) => {
@@ -755,6 +780,31 @@ onUnmounted(() => {
   text-align: center;
   transition: all 0.3s ease;
   border: 3px solid transparent;
+}
+
+/* The stage holds one card; Transition slides the old one out to the left
+   (the reading direction) and the new one in from the right. */
+.text-stage {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.focus-slide-leave-active {
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.focus-slide-enter-active {
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+.focus-slide-leave-to {
+  transform: translateX(-80px);
+  /* allow-opacity: transient slide-out of the card just read, not a read-state style */
+  opacity: 0;
+}
+.focus-slide-enter-from {
+  transform: translateX(80px);
+  /* allow-opacity: transient slide-in of the next card, not a read-state style */
+  opacity: 0;
 }
 
 .text-display:hover {

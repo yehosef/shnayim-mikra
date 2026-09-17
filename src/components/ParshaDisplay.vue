@@ -98,6 +98,9 @@
             @click.stop="stepVerse(-1)"
             title="פסוק קודם (→)"
           >→</button>
+          <button class="mode-toggle" @click.stop="switchDisplayMode('aliyah')">
+            {{ isHebrew ? 'הצג את העלייה' : 'Show the aliyah' }}
+          </button>
           <button
             class="pasuk-nav"
             :disabled="selectedIndex >= displayVerses.length - 1"
@@ -114,6 +117,11 @@
         </Transition>
       </template>
       <template v-else>
+        <div class="pasuk-nav-row">
+          <button class="mode-toggle" @click.stop="switchDisplayMode('pasuk')">
+            {{ isHebrew ? 'פסוק אחד בכל פעם' : 'One pasuk at a time' }}
+          </button>
+        </div>
         <VerseView
           v-for="item in visibleVerses"
           :key="`${item.verse.perekNum}-${item.verse.pasukNum}`"
@@ -348,6 +356,26 @@ const verseBindings = ({ verse, i }) => ({
   onPhaseClick: (eventData) => handlePhaseClick(i, eventData),
   onToggleComplete: () => toggleVerseComplete(i)
 })
+
+// One-tap switch between "one pasuk" and "the aliyah". The selection stays on
+// the same pasuk across the switch (the mode watchers re-seed from the pointer,
+// so it is put back by key afterwards); going to the aliyah view opens the
+// aliyah that pasuk is in, which is what "where am I in the aliyah" means.
+const switchDisplayMode = async (mode) => {
+  const verse = displayVerses.value[selectedIndex.value]
+  const phase = selectedPhase.value
+  if (mode === 'aliyah' && verse && aliyotEntry.value) {
+    const n = aliyahFor(aliyotEntry.value, verse.perekNum, verse.pasukNum)?.n
+    if (n) settings.value.currentAliyah = n
+  }
+  settings.value.displayMode = mode
+  await nextTick()
+  if (!verse) return
+  const i = displayVerses.value.findIndex(x => x.perekNum === verse.perekNum && x.pasukNum === verse.pasukNum)
+  if (i < 0) return
+  selectedIndex.value = i
+  selectedPhase.value = phase
+}
 
 // Side arrows in one-pasuk mode. Landing on a pasuk selects its first unread
 // reading (selectVerse), so Space keeps meaning "the next thing to read".
@@ -897,6 +925,16 @@ h1 {
   display: flex;
   justify-content: space-between;
   margin: 0 0 0.5rem;
+}
+
+.mode-toggle {
+  background: white;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  padding: 0.4rem 0.9rem;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  cursor: pointer;
 }
 
 .pasuk-nav {
