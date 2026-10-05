@@ -1,5 +1,5 @@
 <template>
-  <div class="aliyah-bar" role="list">
+  <div class="aliyah-bar" role="list" :aria-label="isHebrew ? 'עליות' : 'Aliyot'">
     <button
       v-for="a in stats"
       :key="a.n"
@@ -13,11 +13,12 @@
         'is-suggested': guideAliyot.includes(a.n)
       }"
       :title="chipTitle(a)"
+      :aria-label="chipTitle(a)"
       @click="$emit('select', a.n)"
     >
       <span class="chip-name">{{ names[a.n - 1] }}</span>
       <span class="chip-count">{{ a.complete }}/{{ a.total }}</span>
-      <span v-if="a.n === currentN" class="chip-pointer" aria-label="current">▶</span>
+      <span v-if="a.n === currentN" class="chip-pointer" role="img" :aria-label="isHebrew ? 'כאן אתה נמצא' : 'You are here'">▶</span>
     </button>
   </div>
 </template>
@@ -60,40 +61,42 @@ const chipTitle = (a) => {
   align-items: center;
   gap: 0.35rem;
   padding: 0.3rem 0.6rem;
-  border-radius: 999px;
-  border: 1px solid #d1d5db;
-  background: #f9fafb;
-  color: #374151;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--c-border);
+  background: var(--c-bg);
+  color: var(--c-text-2);
   font-family: inherit;
   font-size: 0.85rem;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition:
+    border-color var(--motion-base) var(--ease-out),
+    background-color var(--motion-base) var(--ease-out);
 }
 
 .aliyah-chip:hover {
-  border-color: #9ca3af;
-  background: #f3f4f6;
+  border-color: var(--c-faint);
+  background: var(--c-surface-2);
 }
 
 .aliyah-chip.is-complete {
-  background: #dcfce7;
-  border-color: #10b981;
+  background: var(--c-read-bg);
+  border-color: var(--c-read-border);
 }
 
 .aliyah-chip.is-suggested {
   border-style: dashed;
-  border-color: #3b82f6;
+  border-color: var(--c-scope);
 }
 
 .aliyah-chip.is-current {
-  border-color: #d4a574;
-  box-shadow: 0 0 0 2px rgba(212, 165, 116, 0.35);
+  border-color: var(--c-pointer);
+  box-shadow: 0 0 0 2px rgba(var(--c-pointer-rgb), 0.35);
 }
 
 .aliyah-chip.is-selected {
-  background: #dbeafe;
-  border-color: #2563eb;
-  color: #1e40af;
+  background: var(--c-scope-bg);
+  border-color: var(--c-scope-strong);
+  color: var(--c-scope-text);
 }
 
 .chip-name {
@@ -101,12 +104,37 @@ const chipTitle = (a) => {
 }
 
 .chip-count {
-  color: #6b7280;
+  color: var(--c-muted);
   font-variant-numeric: tabular-nums;
 }
 
 .chip-pointer {
-  color: #d4a574;
+  color: var(--c-pointer);
   font-size: 0.8em;
+}
+
+/* Phone: one horizontally scrollable row instead of wrapping onto several
+   lines. The padding keeps the pointer ring from being clipped by the scroll
+   box. */
+@media (max-width: 600px) {
+  .aliyah-bar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0.3rem;
+    margin: 0.15rem 0;
+    padding: 3px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .aliyah-bar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .aliyah-chip {
+    flex-shrink: 0;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+  }
 }
 </style>

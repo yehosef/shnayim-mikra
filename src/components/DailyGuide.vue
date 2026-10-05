@@ -4,7 +4,7 @@
     <span v-if="statusText" class="guide-status" :class="'status-' + status">{{ statusText }}</span>
     <span v-if="showNotice" class="guide-notice">
       {{ noticeText }}
-      <button type="button" class="notice-dismiss" @click="dismissNotice" :title="isHebrew ? 'סגור' : 'Dismiss'">✕</button>
+      <button type="button" class="notice-dismiss" @click="dismissNotice" :title="isHebrew ? 'סגור' : 'Dismiss'" :aria-label="isHebrew ? 'סגור' : 'Dismiss'">✕</button>
     </span>
   </div>
 </template>
@@ -94,7 +94,7 @@ const noticeText = computed(() => props.isHebrew
   align-items: center;
   gap: 0.75rem;
   font-size: 0.85rem;
-  color: #4b5563;
+  color: var(--c-text-2);
   margin: 0.25rem 0 0.5rem;
 }
 
@@ -104,9 +104,9 @@ const noticeText = computed(() => props.isHebrew
 
 .guide-status {
   padding: 0.15rem 0.5rem;
-  border-radius: 999px;
-  background: #f3f4f6;
-  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-pill);
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-border-soft);
 }
 
 .status-due {
@@ -126,10 +126,10 @@ const noticeText = computed(() => props.isHebrew
   align-items: center;
   gap: 0.4rem;
   padding: 0.15rem 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: #eff6ff;
   border: 1px solid #bfdbfe;
-  color: #1e40af;
+  color: var(--c-scope-text);
 }
 
 .notice-dismiss {
@@ -139,5 +139,13 @@ const noticeText = computed(() => props.isHebrew
   cursor: pointer;
   font-size: 0.9em;
   padding: 0 0.2rem;
+}
+
+/* Phone: tighter lines under the compact header. */
+@media (max-width: 600px) {
+  .daily-guide {
+    gap: 0.4rem;
+    margin: 0.1rem 0 0.2rem;
+  }
 }
 </style>

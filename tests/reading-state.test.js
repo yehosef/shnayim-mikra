@@ -312,7 +312,7 @@ describe('anti-gating invariant', () => {
     const names = Object.keys(lib).sort()
     expect(names).toEqual([
       'PHASES', 'aliyahStats', 'dailyGuide', 'isRouteComplete', 'isVerseComplete',
-      'nextUnread', 'parseKey', 'rangeKeys', 'urgency', 'verseKey'
+      'nextUnread', 'parseKey', 'rangeKeys', 'routeProgressState', 'urgency', 'verseKey'
     ])
     for (const [name, value] of Object.entries(lib)) {
       if (name === 'PHASES') continue

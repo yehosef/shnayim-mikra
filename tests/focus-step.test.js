@@ -8,7 +8,34 @@
  *     Space had become a dead key that neither advanced nor exited.
  */
 import { describe, it, expect } from 'vitest'
-import { followsPointer, nextFocusPosition } from '../src/lib/focusStep.js'
+import {
+  followsPointer,
+  nextFocusPosition,
+  stepDownPosition,
+  stepUpPosition,
+  neighbourIndex
+} from '../src/lib/focusStep.js'
+
+describe('arrow navigation positions', () => {
+  it('ArrowDown walks the pieces, then the first piece of the next pasuk, and stops at the end', () => {
+    expect(stepDownPosition({ index: 2, step: 1, lastIndex: 9 })).toEqual({ index: 2, step: 2 })
+    expect(stepDownPosition({ index: 2, step: 3, lastIndex: 9 })).toEqual({ index: 3, step: 1 })
+    expect(stepDownPosition({ index: 9, step: 3, lastIndex: 9 })).toEqual({ index: 9, step: 3 })
+  })
+
+  it('ArrowUp walks back, then the last piece of the previous pasuk, and stops at the start', () => {
+    expect(stepUpPosition({ index: 2, step: 3 })).toEqual({ index: 2, step: 2 })
+    expect(stepUpPosition({ index: 2, step: 1 })).toEqual({ index: 1, step: 3 })
+    expect(stepUpPosition({ index: 0, step: 1 })).toEqual({ index: 0, step: 1 })
+  })
+
+  it('next / previous pasuk, or null at either end', () => {
+    expect(neighbourIndex({ index: 4, delta: 1, lastIndex: 9 })).toBe(5)
+    expect(neighbourIndex({ index: 4, delta: -1, lastIndex: 9 })).toBe(3)
+    expect(neighbourIndex({ index: 9, delta: 1, lastIndex: 9 })).toBeNull()
+    expect(neighbourIndex({ index: 0, delta: -1, lastIndex: 9 })).toBeNull()
+  })
+})
 
 describe('followsPointer', () => {
   it('follows a pointer that is ahead of, or on, the current verse', () => {

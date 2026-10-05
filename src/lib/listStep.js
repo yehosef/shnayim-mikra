@@ -86,3 +86,50 @@ export function nextListSelection({
 
   return seedListSelection({ pointerIndex, pointerPhase, scopeComplete, maxIndex })
 }
+
+/** ArrowDown in the list: next phase, or phase 1 of the next pasuk. */
+export function listPhaseDown({ index, phase, maxIndex }) {
+  if (phase < 3) return { index, phase: phase + 1 }
+  if (index < maxIndex) return { index: index + 1, phase: 1 }
+  return { index, phase }
+}
+
+/**
+ * ArrowUp in the list: previous phase, or phase 3 of the previous pasuk. From
+ * "no phase" (a finished scope, phase 0) step into the last phase of the pasuk
+ * the selection is parked on.
+ */
+export function listPhaseUp({ index, phase }) {
+  if (phase === 0) return { index, phase: 3 }
+  if (phase > 1) return { index, phase: phase - 1 }
+  if (index > 0) return { index: index - 1, phase: 3 }
+  return { index, phase }
+}
+
+/**
+ * The selection after the displayed list changed (a setting toggled, the
+ * aliyah data or a layer finished loading, another tab saved progress).
+ *
+ * `keptIndex` is where the selected pasuk sits in the NEW list (-1 or null when
+ * it is no longer shown). `anchored` is false while the selection is only the
+ * placeholder seeded before the reading pointer could be derived (top of the
+ * list while aliyot.json / the chumash load) and the reader has not moved it.
+ *
+ * Returns the selection to keep, or null when the caller should re-seed from
+ * the pointer. Keeping the pasuk is what stops the one-pasuk card from jumping
+ * to another pasuk whenever a setting changes or another tab saves.
+ */
+export function selectionAfterViewChange({ keptIndex, phase, anchored }) {
+  if (!anchored) return null
+  if (!Number.isInteger(keptIndex) || keptIndex < 0) return null
+  return { index: keptIndex, phase }
+}
+
+/**
+ * A number that orders pesukim across views (indices into the displayed list
+ * change meaning when the list is filtered; perek:pasuk does not). Used to give
+ * a pasuk change in one-pasuk mode its direction.
+ */
+export function pasukOrdinal(perekNum, pasukNum) {
+  return perekNum * 1000 + pasukNum
+}

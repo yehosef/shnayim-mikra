@@ -58,3 +58,34 @@ export function nextFocusPosition({
   if (pointer) return { index: pointer.index, step: pointer.step }
   return null
 }
+
+/**
+ * ArrowDown: the next piece, or the first piece of the next pasuk. Returns the
+ * same position at the very end (nothing to move to).
+ */
+export function stepDownPosition({ index, step, lastIndex }) {
+  if (step < 3) return { index, step: step + 1 }
+  if (index < lastIndex) return { index: index + 1, step: 1 }
+  return { index, step }
+}
+
+/**
+ * ArrowUp: the previous piece, or the last piece of the previous pasuk.
+ * Returns the same position at the very start.
+ */
+export function stepUpPosition({ index, step }) {
+  if (step > 1) return { index, step: step - 1 }
+  if (index > 0) return { index: index - 1, step: 3 }
+  return { index, step }
+}
+
+/**
+ * The on-screen arrows and ArrowLeft / ArrowRight: the neighbouring pasuk, or
+ * null at either end. `delta` is +1 for next, -1 for previous. The piece is
+ * chosen by the caller (the first unread one on that pasuk).
+ */
+export function neighbourIndex({ index, delta, lastIndex }) {
+  const i = index + delta
+  if (i < 0 || i > lastIndex) return null
+  return i
+}

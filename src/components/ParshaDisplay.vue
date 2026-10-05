@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- Header -->
-    <div class="header">
+    <div ref="headerEl" class="header">
       <div class="container">
         <div class="title-section">
           <h1>פרשת {{ parashaHe }}</h1>
@@ -29,7 +29,7 @@
           <!-- Aliyah Selector (shown in aliyah mode) -->
           <div v-if="settings.displayMode === 'aliyah'" class="aliyah-selector">
             <span class="aliyah-label">{{ isHebrew ? 'עליה:' : 'Aliyah:' }}</span>
-            <select v-model="settings.currentAliyah" class="aliyah-dropdown">
+            <select v-model="settings.currentAliyah" class="aliyah-dropdown" :aria-label="t('עליה', 'Aliyah')">
               <option v-for="n in aliyahCount" :key="n" :value="n">{{ aliyahNames[n - 1] }}</option>
             </select>
           </div>
@@ -44,9 +44,22 @@
           </div>
         </div>
         <div class="controls">
-          <button @click="showSettings = !showSettings" class="btn">⚙️</button>
-          <select v-model="selectedParsha" @change="navigateToParsha" class="parsha-select">
-            <option v-for="p in parshiyotList" :key="p.route" :value="p.route">{{ p.he }}</option>
+          <button
+            @click="showSettings = !showSettings"
+            class="btn"
+            :title="t('הגדרות', 'Settings')"
+            :aria-label="t('הגדרות', 'Settings')"
+          >⚙️</button>
+          <!-- ✓ every piece of the parsha is read, ◐ partly read (derived from
+               progress, see parshaMarks) -->
+          <select
+            v-model="selectedParsha"
+            @change="navigateToParsha"
+            class="parsha-select"
+            :title="t('✓ הושלמה · ◐ בקריאה', '✓ finished · ◐ in progress')"
+            :aria-label="t('בחירת פרשה', 'Choose a parsha')"
+          >
+            <option v-for="p in parshiyotList" :key="p.route" :value="p.route">{{ p.he }}{{ parshaMarks[p.route] }}</option>
           </select>
         </div>
       </div>
@@ -82,13 +95,16 @@
       :settings="settings"
       :pointerFn="() => scopedPointer"
       :aliyahOf="aliyahLabelFor"
+      :pointerAt="isPointer"
+      :inScopeAt="inCurrentAliyah"
       @exit="exitFocusMode"
     />
 
     <!-- Content -->
     <div v-if="!loading && !error && !showFocusMode" class="content">
-      <!-- One pasuk at a time: crossfade when the shown pasuk changes, and
-           narrow side arrows at the page edges (RTL: next is to the left). -->
+      <!-- One pasuk at a time. A pasuk change uses the shared motion
+           (src/lib/motion.js, motion-* classes in src/style.css): forward
+           enters from the left, backward from the right. -->
       <template v-if="pasukMode">
         <!-- Arrow row above the card. RTL: previous on the right, next on the left. -->
         <div class="pasuk-nav-row">
@@ -96,24 +112,40 @@
             class="pasuk-nav"
             :disabled="selectedIndex <= 0"
             @click.stop="stepVerse(-1)"
-            title="פסוק קודם (→)"
+            :title="t('פסוק קודם (→)', 'Previous pasuk (→)')"
+            :aria-label="t('פסוק קודם', 'Previous pasuk')"
           >→</button>
-          <button class="mode-toggle" @click.stop="switchDisplayMode('aliyah')">
+          <!-- Disabled until the aliyah boundaries have loaded: before that the
+               aliyah filter cannot apply and the whole parsha would show. -->
+          <button class="mode-toggle" :disabled="!aliyotEntry" @click.stop="switchDisplayMode('aliyah')">
             {{ isHebrew ? 'הצג את העלייה' : 'Show the aliyah' }}
           </button>
           <button
             class="pasuk-nav"
             :disabled="selectedIndex >= displayVerses.length - 1"
             @click.stop="stepVerse(1)"
-            title="פסוק הבא (←)"
+            :title="t('פסוק הבא (←)', 'Next pasuk (←)')"
+            :aria-label="t('פסוק הבא', 'Next pasuk')"
           >←</button>
         </div>
-        <Transition name="pasuk-fade" mode="out-in">
-          <VerseView
+        <!-- The wrapper carries the motion classes: VerseView's own scoped
+             `transition` would otherwise override them. -->
+        <Transition
+          :name="pasukTransition"
+          mode="out-in"
+          @before-leave="onPasukMotionStart"
+          @before-enter="onPasukMotionStart"
+          @enter="onPasukEnter"
+          @after-enter="onPasukMotionEnd"
+          @enter-cancelled="onPasukMotionEnd"
+        >
+          <div
             v-if="visibleVerses[0]"
-            :key="`${visibleVerses[0].verse.perekNum}-${visibleVerses[0].verse.pasukNum}`"
-            v-bind="verseBindings(visibleVerses[0])"
-          />
+            :key="visiblePasukKey"
+            class="pasuk-card"
+          >
+            <VerseView v-bind="verseBindings(visibleVerses[0])" />
+          </div>
         </Transition>
       </template>
       <template v-else>
@@ -138,11 +170,30 @@ import { useData } from '../composables/useData'
 import { useSettings } from '../composables/useSettings'
 import { useParsha } from '../composables/useParsha'
 import { useProgress } from '../composables/useProgress'
+import { useCycles } from '../composables/useCycles'
 import { useAliyot } from '../composables/useAliyot'
 import { useReadingState } from '../composables/useReadingState'
 import { useDailyGuide, useNow } from '../composables/useDailyGuide'
-import { parseKey, isRouteComplete } from '../lib/progressMath'
-import { nextListSelection, seedListSelection, keyboardMarkAction } from '../lib/listStep'
+import { parseKey, isRouteComplete, routeProgressState } from '../lib/progressMath'
+import {
+  nextListSelection,
+  seedListSelection,
+  keyboardMarkAction,
+  listPhaseDown,
+  listPhaseUp,
+  selectionAfterViewChange,
+  pasukOrdinal
+} from '../lib/listStep'
+import { neighbourIndex } from '../lib/focusStep'
+import { listKeyAction, mayAdvance } from '../lib/inputGuard'
+import {
+  MARK_HOLD_MS,
+  MOTION_GUARD_MAX_MS,
+  TRANSITION_FORWARD,
+  classifyMove,
+  transitionNameFor,
+  holdBeforeMove
+} from '../lib/motion'
 import { toHebrew } from '../utils/hebrewUtils'
 import VerseView from './VerseView.vue'
 import FocusMode from './FocusMode.vue'
@@ -167,6 +218,7 @@ const { loadParsha, loading, error, data, chapterLengths, loadedChumash } = useD
 const { settings } = useSettings()
 const { parshiyotList, getDefaultWeek } = useParsha()
 const { progress, externalRevision, persistFailed, setVerseProgress, getVerseProgress } = useProgress()
+const { bulkRevision } = useCycles()
 const { getAliyot, aliyotData, aliyotError, retryAliyot, verseInAliyah, aliyahFor } = useAliyot()
 const now = useNow()
 
@@ -179,11 +231,37 @@ const selectedIndex = ref(0) // Which verse is selected
 // used when everything on screen is already read so that Space has nothing to
 // un-mark (VerseView already treats 0 as "no phase highlighted").
 const selectedPhase = ref(1)
+// False while the selection is only the placeholder seeded before the reading
+// pointer could be derived (aliyot.json / the chumash still loading) and the
+// reader has not moved it. Such a selection follows the pointer once it
+// appears; a selection the reader made, or one seeded from the pointer, stays
+// on its pasuk when the view changes (selectionAfterViewChange).
+const anchored = ref(false)
+
+// One-pasuk mode motion: the hold after a mark that changes the pasuk, and the
+// guard that keeps a press from marking a card that is not fully shown yet.
+const holding = ref(false)
+let holdTimer = null
+const pasukTransition = ref(TRANSITION_FORWARD)
+const pasukMoving = ref(false)
+let pasukGuardTimer = null
+// Set by an advance just before it moves the selection, so a backward move
+// (the jump back to the top of the aliyah) is classified as such.
+let moveIsAdvance = false
+
+const cancelHold = () => {
+  if (holdTimer !== null) {
+    clearTimeout(holdTimer)
+    holdTimer = null
+  }
+  holding.value = false
+}
 
 // Aliyah names in Hebrew
 const aliyahNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שביעי']
 
 const enterFocusMode = (index) => {
+  cancelHold()
   focusIndex.value = index
   showFocusMode.value = true
 }
@@ -201,6 +279,7 @@ const parashaHe = computed(() => {
 })
 
 const isHebrew = computed(() => settings.value.interfaceLanguage === 'he')
+const t = (he, en) => (isHebrew.value ? he : en)
 
 // Aliyah boundaries come from the generated aliyot.json (never from parshiyot.js)
 const aliyotEntry = computed(() => (aliyotData.value ? getAliyot(props.parasha) : null))
@@ -234,6 +313,21 @@ const isRouteDone = (route) => {
   if (!entry) return true
   return isRouteComplete(progress.value[route] || {}, entry)
 }
+// Mark per parsha for the picker: ✓ when every piece is read, ◐ when partly
+// read, nothing otherwise. Judged from stored progress and the aliyot entry's
+// verse ranges (routeProgressState), so no parsha text has to be loaded; a
+// parsha with no aliyot entry yet (aliyot.json still loading) gets no mark.
+const parshaMarks = computed(() => {
+  const marks = {}
+  for (const p of parshiyotList) {
+    const state = aliyotData.value
+      ? routeProgressState(progress.value[p.route] || {}, getAliyot(p.route))
+      : null
+    marks[p.route] = state === 'complete' ? ' ✓' : state === 'partial' ? ' ◐' : ''
+  }
+  return marks
+})
+
 const week = computed(() => {
   if (props.week) return props.week
   void now.value
@@ -340,6 +434,66 @@ const visibleVerses = computed(() => {
   return [{ verse: verse.perek ? verse : { ...verse, perek: toHebrew(verse.perekNum + 1) }, i }]
 })
 
+// Identity of the one pasuk on screen in one-pasuk mode ('perek-pasuk').
+const visiblePasukKey = computed(() => {
+  if (!pasukMode.value) return null
+  const v = visibleVerses.value[0]?.verse
+  return v ? `${v.perekNum}-${v.pasukNum}` : null
+})
+
+const ordinalOfKey = (key) => {
+  const [p, v] = key.split('-').map(Number)
+  return pasukOrdinal(p, v)
+}
+
+// Pick the direction of a pasuk change before the new card renders (a 'pre'
+// watcher runs before the render that swaps the keyed card).
+watch(visiblePasukKey, (key, old) => {
+  const advance = moveIsAdvance
+  moveIsAdvance = false
+  if (!key || !old) return
+  const move = classifyMove({
+    from: { index: ordinalOfKey(old) },
+    to: { index: ordinalOfKey(key) },
+    advance
+  })
+  pasukTransition.value = transitionNameFor(move)
+})
+
+// True from the moment the old card starts leaving until the new one has
+// finished entering (mode="out-in" runs leave, then enter, back to back). A
+// Space or tap then must not mark anything: it would land on a card that is
+// not the one the reader is looking at.
+const pasukBusy = computed(() => pasukMode.value && pasukMoving.value)
+
+const clearPasukGuardTimer = () => {
+  if (pasukGuardTimer !== null) {
+    clearTimeout(pasukGuardTimer)
+    pasukGuardTimer = null
+  }
+}
+
+const onPasukMotionStart = () => {
+  pasukMoving.value = true
+  clearPasukGuardTimer()
+  // Safety net: never leave input blocked if after-enter does not fire.
+  pasukGuardTimer = setTimeout(() => {
+    pasukGuardTimer = null
+    pasukMoving.value = false
+  }, MOTION_GUARD_MAX_MS)
+}
+
+// Scroll only once the new card is in the page; before that the lookup finds
+// nothing and a long previous pasuk leaves the new one scrolled down.
+const onPasukEnter = () => {
+  scrollToSelected()
+}
+
+const onPasukMotionEnd = () => {
+  clearPasukGuardTimer()
+  pasukMoving.value = false
+}
+
 // Props + listeners for one VerseView; shared by the one-pasuk and list renders.
 const verseBindings = ({ verse, i }) => ({
   verse,
@@ -362,6 +516,10 @@ const verseBindings = ({ verse, i }) => ({
 // so it is put back by key afterwards); going to the aliyah view opens the
 // aliyah that pasuk is in, which is what "where am I in the aliyah" means.
 const switchDisplayMode = async (mode) => {
+  cancelHold()
+  // Without aliyah boundaries the aliyah filter cannot apply (the button is
+  // disabled too; this also covers any other caller).
+  if (mode === 'aliyah' && !aliyotEntry.value) return
   const verse = displayVerses.value[selectedIndex.value]
   const phase = selectedPhase.value
   if (mode === 'aliyah' && verse && aliyotEntry.value) {
@@ -377,11 +535,14 @@ const switchDisplayMode = async (mode) => {
   selectedPhase.value = phase
 }
 
-// Side arrows in one-pasuk mode. Landing on a pasuk selects its first unread
-// reading (selectVerse), so Space keeps meaning "the next thing to read".
+// The on-screen arrows and ArrowLeft / ArrowRight (next is on the left).
+// Landing on a pasuk selects its first unread reading (selectVerse), so Space
+// keeps meaning "the next thing to read" — the arrow keys used to keep the old
+// phase, so Space could mark the new pasuk's translation first.
 const stepVerse = (delta) => {
-  const i = selectedIndex.value + delta
-  if (i < 0 || i > displayVerses.value.length - 1) return
+  cancelHold()
+  const i = neighbourIndex({ index: selectedIndex.value, delta, lastIndex: displayVerses.value.length - 1 })
+  if (i === null) return
   selectVerse(i)
 }
 
@@ -389,7 +550,7 @@ const stepVerse = (delta) => {
 // starts mid-chapter (any single aliyah, and the 24 parshiyot that start
 // mid-chapter) would show no chapter at all. Give the first displayed verse a
 // label without touching the underlying verse objects.
-const withLeadingPerek = (verses) => {
+function withLeadingPerek(verses) {
   const first = verses[0]
   if (!first || first.perek) return verses
   const copy = verses.slice()
@@ -397,7 +558,7 @@ const withLeadingPerek = (verses) => {
   return copy
 }
 
-const labelAliyot = (verses, entry) => {
+function labelAliyot(verses, entry) {
   const starts = new Map(entry.aliyot.map(a => [`${a.start[0]}:${a.start[1]}`, aliyahNames[a.n - 1]]))
   return verses.map(v => {
     const aliya = starts.get(`${v.perekNum}:${v.pasukNum}`) || null
@@ -433,6 +594,7 @@ watch(aliyahCount, (count) => {
 // Load data when parasha changes
 watch(() => props.parasha, async (newParasha) => {
   selectedParsha.value = newParasha
+  cancelHold()
   // Focus mode holds its own index into the old verse list, and the old verses
   // would be rendered while progress is written under the new route.
   showFocusMode.value = false
@@ -464,8 +626,16 @@ const navigateToParsha = () => {
 // Get verse key for progress tracking
 const getVerseKey = (verse) => `${verse.perekNum}:${verse.pasukNum}`
 
+// Whether a tap / Space / the corner check may mark now. In one-pasuk mode a
+// mark that changes the pasuk holds first, and the next card then enters; a
+// press in either window would land on a card that is not the one shown (the
+// second tap of a double tap used to un-mark the translation just marked).
+const canMarkNow = () => mayAdvance({ holding: holding.value, moving: pasukBusy.value })
+
 // Handle click on a phase in VerseView
 const handlePhaseClick = (verseIndex, { phase, field, wasRead }) => {
+  if (!canMarkNow()) return
+  anchored.value = true
   selectedIndex.value = verseIndex
   selectedPhase.value = phase
 
@@ -486,8 +656,10 @@ const handlePhaseClick = (verseIndex, { phase, field, wasRead }) => {
 // selection like finishing the pasuk by hand would; clearing leaves the
 // selection on the pasuk's first reading.
 const toggleVerseComplete = (verseIndex) => {
+  if (!canMarkNow()) return
   const verse = displayVerses.value[verseIndex]
   if (!verse) return
+  anchored.value = true
   const verseKey = getVerseKey(verse)
   const rec = getVerseProgress(props.parasha, verseKey)
   const complete = !!(rec.hebrew1 && rec.hebrew2 && rec.targum)
@@ -517,7 +689,32 @@ const phaseOf = (ptr) => (ptr.phase === 'hebrew1' ? 1 : ptr.phase === 'hebrew2' 
 // src/lib/listStep.js (nextListSelection) for the pure decision, including
 // the last-resort fallback when neither the pointer nor a manual step moves
 // the selection (the end of a scope: Space must park, not sit still).
+//
+// In one-pasuk mode, when the next selection is on another pasuk, the marked
+// piece first holds its green (MARK_HOLD_MS), the same hold as the focus view.
+// Any navigation during the hold cancels it (cancelHold).
 const advanceSelection = () => {
+  const next = nextSelection()
+  cancelHold()
+  if (holdBeforeMove({ view: 'list', pasukMode: pasukMode.value, fromIndex: selectedIndex.value, toIndex: next.index })) {
+    holding.value = true
+    holdTimer = setTimeout(() => {
+      holdTimer = null
+      holding.value = false
+      applyAdvance(next)
+    }, MARK_HOLD_MS)
+    return
+  }
+  applyAdvance(next)
+}
+
+const applyAdvance = (next) => {
+  moveIsAdvance = pasukMode.value && next.index !== selectedIndex.value
+  selectedIndex.value = next.index
+  selectedPhase.value = next.phase
+}
+
+const nextSelection = () => {
   const ptr = scopedPointer.value
   let pointerIndex = null
   let pointerPhase = null
@@ -536,7 +733,7 @@ const advanceSelection = () => {
     }
   }
 
-  const next = nextListSelection({
+  return nextListSelection({
     selectedIndex: selectedIndex.value,
     selectedPhase: selectedPhase.value,
     pointerIndex,
@@ -546,8 +743,6 @@ const advanceSelection = () => {
     maxIndex: displayVerses.value.length - 1,
     scopeComplete: scopeComplete.value
   })
-  selectedIndex.value = next.index
-  selectedPhase.value = next.phase
 }
 
 // Clicking the card chrome selects that verse. The phase must move with the
@@ -556,6 +751,8 @@ const advanceSelection = () => {
 const selectVerse = (i) => {
   const verse = displayVerses.value[i]
   if (!verse) return
+  cancelHold()
+  anchored.value = true
   selectedIndex.value = i
   const rec = getVerseProgress(props.parasha, getVerseKey(verse))
   selectedPhase.value = !rec.hebrew1 ? 1 : !rec.hebrew2 ? 2 : 3
@@ -567,11 +764,13 @@ const selectVerse = (i) => {
 // completed) is left alone and Space simply advances, so Space can never
 // become a toggle loop.
 const toggleCurrentPhase = () => {
+  if (!canMarkNow()) return
   const verse = displayVerses.value[selectedIndex.value]
   if (!verse) return
   // No phase selected (everything in scope is read): nothing to mark, and
   // marking "the current phase" here would un-mark a completed reading.
   if (selectedPhase.value < 1 || selectedPhase.value > 3) return
+  anchored.value = true
 
   const verseKey = getVerseKey(verse)
   const phaseField = selectedPhase.value === 1 ? 'hebrew1' : selectedPhase.value === 2 ? 'hebrew2' : 'targum'
@@ -585,78 +784,74 @@ const toggleCurrentPhase = () => {
   advanceSelection()
 }
 
-// Keyboard navigation for list view - navigates by phase (section) within verses
+// Move the selection by hand (arrow keys within / across pesukim).
+const setSelectionByHand = (next) => {
+  cancelHold()
+  anchored.value = true
+  selectedIndex.value = next.index
+  selectedPhase.value = next.phase
+}
+
+// Keyboard navigation for list view - navigates by phase (section) within
+// verses. Which key does what is decided in src/lib/inputGuard.js
+// (listKeyAction); this only dispatches.
 const handleKeydown = (e) => {
-  // Don't handle if focus mode is active, settings open, or typing in inputs
+  // Don't handle if focus mode is active or settings open
   if (showFocusMode.value || showSettings.value) return
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return
-  // Never swallow browser/OS shortcuts (Alt/Cmd+Arrow = Back, Ctrl+Space, ...)
-  if (e.ctrlKey || e.metaKey || e.altKey) return
-  if (e.shiftKey && e.key === ' ') return
+
+  const { action, preventDefault } = listKeyAction({
+    key: e.key,
+    repeat: e.repeat,
+    ctrlKey: e.ctrlKey,
+    metaKey: e.metaKey,
+    altKey: e.altKey,
+    shiftKey: e.shiftKey,
+    targetTag: e.target?.tagName,
+    // Space / Enter on a focused button or link belong to that control
+    targetIsControl: !!e.target?.closest?.('button, a[href], [role="button"]')
+  })
+  if (preventDefault) e.preventDefault()
 
   const maxIndex = displayVerses.value.length - 1
 
-  switch (e.key) {
-    case 'ArrowDown':
-      e.preventDefault()
-      // Move to next phase, or next verse's phase 1 if at phase 3
-      if (selectedPhase.value < 3) {
-        selectedPhase.value++
-      } else if (selectedIndex.value < maxIndex) {
-        selectedIndex.value++
-        selectedPhase.value = 1
-      }
+  switch (action) {
+    case 'phase-down':
+      setSelectionByHand(listPhaseDown({ index: selectedIndex.value, phase: selectedPhase.value, maxIndex }))
       break
-    case 'ArrowUp':
-      e.preventDefault()
-      // Move to previous phase, or previous verse's phase 3 if at phase 1.
-      // From "no phase" (a finished scope) step into the last phase of the
-      // verse the selection is parked on.
-      if (selectedPhase.value === 0) {
-        selectedPhase.value = 3
-      } else if (selectedPhase.value > 1) {
-        selectedPhase.value--
-      } else if (selectedIndex.value > 0) {
-        selectedIndex.value--
-        selectedPhase.value = 3
-      }
+    case 'phase-up':
+      setSelectionByHand(listPhaseUp({ index: selectedIndex.value, phase: selectedPhase.value }))
       break
-    case 'ArrowRight':
-      e.preventDefault()
-      // RTL: right = backward (previous verse)
-      if (selectedIndex.value > 0) {
-        selectedIndex.value--
-      }
+    case 'next-verse':
+      stepVerse(1)
       break
-    case 'ArrowLeft':
-      e.preventDefault()
-      // RTL: left = forward (next verse)
-      if (selectedIndex.value < maxIndex) {
-        selectedIndex.value++
-      }
+    case 'previous-verse':
+      stepVerse(-1)
       break
-    case ' ':
-      e.preventDefault()
+    case 'mark':
       // Mark the current phase read (if unread) and always advance
       toggleCurrentPhase()
       break
-    case 'Enter':
-      e.preventDefault()
-      // Enter focus mode
+    case 'focus':
       enterFocusMode(selectedIndex.value)
       break
   }
 }
 
+const prefersReducedMotion = () =>
+  typeof window !== 'undefined' &&
+  !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+
 // Scroll the SELECTED PHASE into view, not just the verse: at large font sizes
 // a phase change alone can move the selection off-screen, and the arrow keys
-// have already cancelled the page's own scrolling.
+// have already cancelled the page's own scrolling. In one-pasuk mode a new
+// card is not in the page yet when the selection changes; onPasukEnter calls
+// this again once it is.
 const scrollToSelected = () => {
   nextTick(() => {
-    const verseEl = document.querySelector(`[data-verse-index="${selectedIndex.value}"]`)
+    const verseEl = document.querySelector(`.verse[data-verse-index="${selectedIndex.value}"]`)
     if (!verseEl) return
     const el = verseEl.querySelector('.phase-selected') || verseEl
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    el.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' })
   })
 }
 
@@ -673,8 +868,10 @@ watch([selectedIndex, selectedPhase], scrollToSelected)
 // silently un-marked the first reading of the first verse and persisted it.
 // Park at the end of what is on screen with no phase selected instead. Only
 // when nothing is derived yet (aliyot.json / the chumash still loading) is the
-// top of the list the right place to start.
+// top of the list the right place to start — and that placeholder is not
+// anchored, so it follows the pointer as soon as one can be derived.
 const seedSelectionFromPointer = () => {
+  cancelHold()
   const ptr = scopedPointer.value
   let pointerIndex = null
   let pointerPhase = null
@@ -692,29 +889,69 @@ const seedSelectionFromPointer = () => {
     scopeComplete: scopeComplete.value,
     maxIndex: displayVerses.value.length - 1
   })
+  anchored.value = pointerIndex !== null || !!scopeComplete.value
   selectedIndex.value = next.index
   selectedPhase.value = next.phase
 }
 
-// Re-seed when display mode / aliyah changes, or when the verse list is (re)loaded
-watch([() => settings.value.displayMode, () => settings.value.currentAliyah], seedSelectionFromPointer)
-watch(() => displayVerses.value.length, seedSelectionFromPointer)
-watch(aliyotEntry, seedSelectionFromPointer)
-watch(loading, (isLoading) => { if (!isLoading) seedSelectionFromPointer() })
-// Another tab (or a resume from the bfcache) changed progress under us: the
-// selection was seeded from the old pointer and Space would toggle a phase the
-// other tab just marked. Follow the new pointer instead.
-watch(externalRevision, seedSelectionFromPointer)
+// The displayed list changed (display mode, aliyah, a layer or aliyot.json
+// finished loading, a parsha loaded). Keep the selected pasuk when it is still
+// on screen — re-seeding unconditionally made the one-pasuk card jump to the
+// pointer whenever a setting changed — and re-seed only when it is gone or the
+// selection is still the unanchored placeholder.
+watch(displayVerses, (list, old) => {
+  const prev = old?.[selectedIndex.value]
+  const keptIndex = prev
+    ? list.findIndex(x => x.perekNum === prev.perekNum && x.pasukNum === prev.pasukNum)
+    : -1
+  const kept = selectionAfterViewChange({ keptIndex, phase: selectedPhase.value, anchored: anchored.value })
+  if (!kept) {
+    seedSelectionFromPointer()
+    return
+  }
+  if (kept.index !== selectedIndex.value) {
+    // A pending advance was computed in the old list's index space.
+    cancelHold()
+    selectedIndex.value = kept.index
+  }
+})
+// Another tab (or a resume from the bfcache) changed progress under us. The
+// reader's pasuk stays (Space never un-marks, so a phase the other tab marked
+// is simply stepped over); only an unanchored placeholder follows the pointer.
+watch(externalRevision, () => {
+  if (!anchored.value) seedSelectionFromPointer()
+})
+// A whole parsha was cleared or restored (start over, undo, new cycle): the
+// old selection no longer describes "the next thing to read".
+watch(bulkRevision, () => { seedSelectionFromPointer() })
 
 // A transient offline start leaves aliyot.json unloaded for the session
 const onOnline = () => { retryAliyot() }
 
+// The sticky header's height, published as --list-header-h so the
+// previous/next row can stick just below it instead of sliding underneath.
+const headerEl = ref(null)
+let headerObserver = null
+const publishHeaderHeight = () => {
+  const h = headerEl.value ? headerEl.value.offsetHeight : 0
+  document.documentElement.style.setProperty('--list-header-h', `${h}px`)
+}
+
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown)
   window.addEventListener('online', onOnline)
+  publishHeaderHeight()
+  if (typeof ResizeObserver !== 'undefined' && headerEl.value) {
+    headerObserver = new ResizeObserver(publishHeaderHeight)
+    headerObserver.observe(headerEl.value)
+  }
 })
 
 onUnmounted(() => {
+  cancelHold()
+  clearPasukGuardTimer()
+  if (headerObserver) headerObserver.disconnect()
+  document.documentElement.style.removeProperty('--list-header-h')
   document.removeEventListener('keydown', handleKeydown)
   window.removeEventListener('online', onOnline)
 })
@@ -722,8 +959,8 @@ onUnmounted(() => {
 
 <style scoped>
 .header {
-  background: white;
-  border-bottom: 1px solid #e0e0e0;
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border-soft);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -752,7 +989,7 @@ h1 {
 
 .aliyah-progress {
   font-size: 0.95rem;
-  color: #3b82f6;
+  color: var(--c-scope);
   font-weight: 500;
   margin: 0.5rem 0;
 }
@@ -763,20 +1000,20 @@ h1 {
 
 .progress-text {
   font-size: 0.85rem;
-  color: #666;
+  color: var(--c-muted);
   margin-bottom: 0.25rem;
 }
 
 .progress-track {
   height: 8px;
-  background: #e5e7eb;
+  background: var(--c-border-soft);
   border-radius: 4px;
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+  background: linear-gradient(90deg, var(--c-read-strong) 0%, var(--c-read-border) 100%);
   transition: width 0.5s ease;
   border-radius: 4px;
 }
@@ -789,12 +1026,15 @@ h1 {
 }
 
 .btn {
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-border);
   padding: 0.5rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background-color var(--motion-base) var(--ease-out),
+    border-color var(--motion-base) var(--ease-out),
+    transform var(--motion-base) var(--ease-out);
   font-size: 0.9rem;
   display: flex;
   align-items: center;
@@ -802,8 +1042,8 @@ h1 {
 }
 
 .btn:hover {
-  background: #e5e7eb;
-  border-color: #9ca3af;
+  background: var(--c-border-soft);
+  border-color: var(--c-faint);
   transform: translateY(-1px);
 }
 
@@ -816,7 +1056,7 @@ h1 {
 }
 
 .study-mode-btn.active {
-  background: #dcfce7;
+  background: var(--c-read-bg);
   border-color: #86efac;
   color: #166534;
 }
@@ -834,23 +1074,87 @@ h1 {
   font-size: 0.85rem;
 }
 
-@media (max-width: 640px) {
+/* Phone: the header was nearly half of a 375x812 screen. Title and the
+   settings / parsha picker share one row; the aliyah chips (AliyahBar) scroll
+   sideways in one row; the progress bar is thinner; padding is smaller. Every
+   element is still there, in the same order. `display: contents` lets the
+   title block's children join the container's grid. */
+@media (max-width: 600px) {
   .study-mode-btn .label {
     display: none;
   }
-  .container {
-    flex-direction: column;
-    align-items: stretch;
+
+  .header {
+    padding: 0.4rem 0.75rem 0.5rem;
   }
+
+  .container {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 0.5rem;
+    row-gap: 0.15rem;
+  }
+
+  .title-section {
+    display: contents;
+  }
+
+  .title-section > * {
+    grid-column: 1 / -1;
+    min-width: 0;
+  }
+
+  h1 {
+    grid-column: 1;
+    grid-row: 1;
+    font-size: 1.15rem;
+    margin-bottom: 0;
+  }
+
   .controls {
-    justify-content: space-between;
+    grid-column: 2;
+    grid-row: 1;
+    gap: 0.35rem;
+  }
+
+  .controls .btn {
+    padding: 0.3rem 0.6rem;
+  }
+
+  .parsha-select {
+    padding: 0.3rem;
+    max-width: 9.5rem;
+    font-size: 0.9rem;
+  }
+
+  .progress-bar {
+    margin-top: 0.2rem;
+  }
+
+  .progress-text {
+    font-size: 0.75rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .progress-track {
+    height: 4px;
+  }
+
+  .aliyah-selector {
+    margin: 0.2rem 0;
+  }
+
+  .content {
+    margin: 0.75rem auto;
+    padding: 0 0.5rem;
   }
 }
 
 .parsha-select {
   padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
   font-family: inherit;
 }
 
@@ -864,31 +1168,31 @@ h1 {
 
 .aliyah-label {
   font-size: 0.9rem;
-  color: #4b5563;
+  color: var(--c-text-2);
   font-weight: 500;
 }
 
 .aliyah-dropdown {
   padding: 0.4rem 0.75rem;
-  border: 2px solid #3b82f6;
-  border-radius: 6px;
+  border: 2px solid var(--c-scope);
+  border-radius: var(--radius-sm);
   font-family: inherit;
   font-size: 1rem;
   font-weight: 600;
-  color: #1e40af;
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  color: var(--c-scope-text);
+  background: linear-gradient(135deg, #eff6ff 0%, var(--c-scope-bg) 100%);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color var(--motion-base) var(--ease-out);
 }
 
 .aliyah-dropdown:hover {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  border-color: #2563eb;
+  background: linear-gradient(135deg, var(--c-scope-bg) 0%, #bfdbfe 100%);
+  border-color: var(--c-scope-strong);
 }
 
 .aliyah-dropdown:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 0 3px rgba(var(--c-scope-rgb), 0.3);
 }
 
 .loading, .error {
@@ -908,16 +1212,8 @@ h1 {
 }
 
 
-/* Crossfade between pasukim when the shown pasuk changes */
-.content .pasuk-fade-enter-active,
-.content .pasuk-fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-.content .pasuk-fade-enter-from,
-.content .pasuk-fade-leave-to {
-  /* allow-opacity: transient crossfade between pasukim, not a read-state style */
-  opacity: 0;
-}
+/* The one-pasuk card moves with the shared motion-forward / motion-back
+   classes in src/style.css. */
 
 /* Arrow row above the single card: previous on the right, next on the left */
 .pasuk-nav-row {
@@ -925,12 +1221,18 @@ h1 {
   display: flex;
   justify-content: space-between;
   margin: 0 0 0.5rem;
+  /* stays in reach just below the sticky header while the card scrolls */
+  position: sticky;
+  top: var(--list-header-h, 0px);
+  z-index: 5;
+  padding: 0.35rem 0;
+  background: var(--c-bg);
 }
 
 .mode-toggle {
-  background: white;
-  color: #059669;
-  border: 1px solid #a7f3d0;
+  background: var(--c-surface);
+  color: var(--c-read-strong);
+  border: 1px solid var(--c-read-soft);
   padding: 0.4rem 0.9rem;
   border-radius: 10px;
   font-size: 0.95rem;
@@ -938,7 +1240,7 @@ h1 {
 }
 
 .pasuk-nav {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, var(--c-read-border) 0%, var(--c-read-strong) 100%);
   color: white;
   border: none;
   padding: 0.4rem 1rem;
@@ -953,7 +1255,7 @@ h1 {
   /* allow-opacity: disabled side arrow at the first/last pasuk, not text */
   opacity: 0.3;
   cursor: not-allowed;
-  background: #d1d5db;
+  background: var(--c-border);
   box-shadow: none;
 }
 </style>

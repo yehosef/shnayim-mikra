@@ -170,6 +170,33 @@ export function isRouteComplete(progress, aliyotEntry) {
   return done >= total
 }
 
+/**
+ * How much of a parsha is read, from its stored progress and its aliyot entry
+ * alone (no chumash fetch): 'complete' when every verse is complete (same rule
+ * as isRouteComplete), 'partial' when at least one piece of any verse inside
+ * the aliyot ranges is marked, 'none' otherwise. null when the entry is
+ * missing or unusable ("unknown"). A display label for the parsha picker; it
+ * never hides or gates anything.
+ */
+export function routeProgressState(progress, aliyotEntry) {
+  const aliyot = aliyotEntry?.aliyot
+  if (!Array.isArray(aliyot) || aliyot.length === 0) return null
+  if (isRouteComplete(progress, aliyotEntry)) return 'complete'
+
+  for (const [key, rec] of Object.entries(progress || {})) {
+    if (!rec || !PHASES.some((phase) => rec[phase] === true)) continue
+    let perek
+    let pasuk
+    try {
+      ;[perek, pasuk] = parseKey(key)
+    } catch (e) {
+      continue
+    }
+    if (aliyot.some((a) => inAliyahRange(a, perek, pasuk))) return 'partial'
+  }
+  return 'none'
+}
+
 function isPhaseDone(progress, key, phase) {
   return progress?.[key]?.[phase] === true
 }
