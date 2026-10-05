@@ -115,6 +115,26 @@
           </button>
         </div>
 
+        <!-- Start the open parsha over: archives its marks (Undo restores them)
+             and clears them here and in overlapping combined/single parshiyot -->
+        <div v-if="currentParsha" class="offline-section">
+          <div class="offline-label">{{ isHebrew ? `פרשת ${currentParshaName}:` : `Parsha ${currentParshaName}:` }}</div>
+          <div v-if="confirmingStartOver" class="offline-core">
+            {{ isHebrew ? 'למחוק את כל הסימונים בפרשה זו? אפשר לבטל מיד אחר כך.' : 'Clear every mark in this parsha? You can undo right after.' }}
+            <button class="offline-btn" @click="confirmStartOver">{{ isHebrew ? 'כן, התחל מחדש' : 'Yes, start over' }}</button>
+            <button class="offline-btn" @click="confirmingStartOver = false">{{ isHebrew ? 'לא' : 'No' }}</button>
+          </div>
+          <button v-else class="offline-btn" :disabled="!canStartOver(currentParsha)" @click="confirmingStartOver = true">
+            {{ isHebrew ? 'התחל את הפרשה מחדש' : 'Start this parsha over' }}
+          </button>
+          <button v-if="archived" class="offline-btn" @click="confirmRestore">
+            {{ isHebrew ? 'שחזר סימונים שנשמרו בארכיון' : 'Restore archived marks' }}
+          </button>
+          <div v-if="startOverFailed" class="offline-error">
+            {{ isHebrew ? 'לא ניתן לשמור עותק של הסימונים, לכן לא נמחק דבר.' : 'Could not save a copy of the marks, so nothing was cleared.' }}
+          </div>
+        </div>
+
         <!-- Attribution -->
         <div class="credits">
           <span v-if="isHebrew">טקסטים באדיבות ספריא. ראו</span>
@@ -127,9 +147,11 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, inject, onMounted, onUnmounted, ref } from 'vue'
 import { useSettings } from '../composables/useSettings'
 import { useOffline } from '../composables/useOffline'
+import { useCycles } from '../composables/useCycles'
+import { parshiyotList } from '../data/parshiyot'
 
 const props = defineProps({
   focusMode: {
@@ -144,6 +166,32 @@ const { settings } = useSettings()
 const { offlineReady, needRefresh, updateApp } = useOffline()
 
 const isHebrew = computed(() => settings.value.interfaceLanguage === 'he')
+
+// "Start this parsha over" for the parsha App.vue has open.
+const currentParshaRef = inject('currentParsha', ref(''))
+const currentParsha = computed(() => currentParshaRef.value)
+const currentParshaName = computed(() =>
+  parshiyotList.find(p => p.route === currentParsha.value)?.he || currentParsha.value)
+const { canStartOver, startOver, archivedFor, restoreArchived, bulkRevision } = useCycles()
+const confirmingStartOver = ref(false)
+const startOverFailed = ref(false)
+
+// Marks moved aside by a new cycle or a start-over stay restorable from here
+// after the Undo notice is gone. Re-read whenever a bulk change happens.
+const archived = computed(() => {
+  bulkRevision.value
+  return currentParsha.value ? archivedFor(currentParsha.value) : null
+})
+
+const confirmRestore = () => {
+  if (restoreArchived(currentParsha.value)) emit('close')
+}
+
+const confirmStartOver = () => {
+  confirmingStartOver.value = false
+  startOverFailed.value = !startOver(currentParsha.value)
+  if (!startOverFailed.value) emit('close')
+}
 
 // Escape closes the modal. ParshaDisplay's key handler returns early while the
 // modal is open, so without this the modal is unclosable by keyboard in list
