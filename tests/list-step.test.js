@@ -6,7 +6,56 @@
  * sat still; the next Space then un-marked the reading just finished.
  */
 import { describe, it, expect } from 'vitest'
-import { nextListSelection, seedListSelection, keyboardMarkAction } from '../src/lib/listStep.js'
+import {
+  nextListSelection,
+  seedListSelection,
+  keyboardMarkAction,
+  listPhaseDown,
+  listPhaseUp,
+  selectionAfterViewChange,
+  pasukOrdinal
+} from '../src/lib/listStep.js'
+
+describe('listPhaseDown / listPhaseUp (ArrowDown / ArrowUp)', () => {
+  it('ArrowDown: next phase, then phase 1 of the next pasuk, stops at the end', () => {
+    expect(listPhaseDown({ index: 3, phase: 1, maxIndex: 9 })).toEqual({ index: 3, phase: 2 })
+    expect(listPhaseDown({ index: 3, phase: 3, maxIndex: 9 })).toEqual({ index: 4, phase: 1 })
+    expect(listPhaseDown({ index: 9, phase: 3, maxIndex: 9 })).toEqual({ index: 9, phase: 3 })
+    // parked (phase 0): step into the first phase
+    expect(listPhaseDown({ index: 9, phase: 0, maxIndex: 9 })).toEqual({ index: 9, phase: 1 })
+  })
+
+  it('ArrowUp: previous phase, then phase 3 of the previous pasuk; from parked into phase 3', () => {
+    expect(listPhaseUp({ index: 3, phase: 2 })).toEqual({ index: 3, phase: 1 })
+    expect(listPhaseUp({ index: 3, phase: 1 })).toEqual({ index: 2, phase: 3 })
+    expect(listPhaseUp({ index: 0, phase: 1 })).toEqual({ index: 0, phase: 1 })
+    expect(listPhaseUp({ index: 5, phase: 0 })).toEqual({ index: 5, phase: 3 })
+  })
+})
+
+describe('selectionAfterViewChange — the one-pasuk card must not jump', () => {
+  it('keeps the selected pasuk (at its new index) and phase when it is still shown', () => {
+    // e.g. Rashi toggled in Settings, another tab saved, aliyah view -> whole parsha
+    expect(selectionAfterViewChange({ keptIndex: 41, phase: 2, anchored: true })).toEqual({ index: 41, phase: 2 })
+  })
+
+  it('re-seeds when the selected pasuk is no longer in the view', () => {
+    expect(selectionAfterViewChange({ keptIndex: -1, phase: 2, anchored: true })).toBeNull()
+    expect(selectionAfterViewChange({ keptIndex: null, phase: 2, anchored: true })).toBeNull()
+  })
+
+  it('re-seeds a placeholder selection that was never anchored to the pointer or the reader', () => {
+    // seeded at the top while aliyot.json was loading: follow the pointer once it exists
+    expect(selectionAfterViewChange({ keptIndex: 0, phase: 1, anchored: false })).toBeNull()
+  })
+})
+
+describe('pasukOrdinal', () => {
+  it('orders pesukim across chapters regardless of the displayed list', () => {
+    expect(pasukOrdinal(2, 30)).toBeLessThan(pasukOrdinal(3, 0))
+    expect(pasukOrdinal(3, 4)).toBeLessThan(pasukOrdinal(3, 5))
+  })
+})
 
 describe('keyboardMarkAction', () => {
   it('writes only when the phase is unread', () => {

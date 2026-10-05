@@ -14,7 +14,7 @@
     @click="handleRootClick"
   >
     <!-- Verse Pointer (next unread step lives in this verse) -->
-    <div v-if="isPointer" class="verse-pointer" :title="pointerTitle">
+    <div v-if="isPointer" class="verse-pointer" :title="pointerTitle" role="img" :aria-label="pointerLabel">
       <span class="pointer-icon">▶</span>
     </div>
 
@@ -26,7 +26,8 @@
       role="button"
       tabindex="0"
       :aria-pressed="isCompleted"
-      :title="isCompleted ? 'בטל סימון הפסוק' : 'סמן את כל הפסוק כנקרא'"
+      :title="completeTitle"
+      :aria-label="completeTitle"
       @click.stop="emit('toggle-complete')"
       @keydown.enter.prevent.stop="emit('toggle-complete')"
       @keydown.space.prevent.stop="emit('toggle-complete')"
@@ -36,7 +37,7 @@
     </div>
 
     <!-- Focus Button -->
-    <button @click="$emit('focus', index)" class="focus-btn" title="התמקד בפסוק זה">🔍</button>
+    <button @click="$emit('focus', index)" class="focus-btn" :title="focusTitle" :aria-label="focusTitle">🔍</button>
 
     <!-- Aliya marker -->
     <span v-if="verse.aliya" class="aliya-marker">{{ verse.aliya }}</span>
@@ -174,12 +175,24 @@ const targumLayer = computed(() => {
   return 'onkelos'
 })
 
+// Interface language (settings.interfaceLanguage: 'en' default | 'he').
+const isHebrew = computed(() => props.settings.interfaceLanguage === 'he')
+const t = (he, en) => (isHebrew.value ? he : en)
+
+const completeTitle = computed(() =>
+  isCompleted.value
+    ? t('בטל סימון הפסוק', 'Clear this pasuk')
+    : t('סמן את כל הפסוק כנקרא', 'Mark the whole pasuk as read')
+)
+const focusTitle = computed(() => t('התמקד בפסוק זה', 'Focus on this pasuk'))
+
 const pointerTitle = computed(() => {
   const p = progress.value
-  if (!p.hebrew1) return 'קריאה ראשונה'
-  if (!p.hebrew2) return 'קריאה שנייה'
-  return 'תרגום'
+  if (!p.hebrew1) return t('קריאה ראשונה', 'First reading')
+  if (!p.hebrew2) return t('קריאה שנייה', 'Second reading')
+  return t('תרגום', 'Translation')
 })
+const pointerLabel = computed(() => `${t('כאן אתה נמצא', 'You are here')}: ${pointerTitle.value}`)
 
 // A pointer that moved more than this between down and up is a drag
 // (text selection / scroll), not a tap on a reading target.
@@ -235,12 +248,14 @@ const formattedTorahText = computed(() => {
 
 <style scoped>
 .verse {
-  background: white;
+  background: var(--c-surface);
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  transition: all 0.3s ease;
+  transition:
+    background-color var(--motion-base) var(--ease-out),
+    border-color var(--motion-base) var(--ease-out);
   position: relative;
 }
 
@@ -249,13 +264,13 @@ const formattedTorahText = computed(() => {
 }
 
 .verse {
-  border-right: 4px solid #10b981;
+  border-right: 4px solid var(--c-read-border);
   padding-right: 2.5rem;
 }
 
 .verse.completed {
-  background: linear-gradient(to left, #f0fdf4 0%, #ffffff 100%);
-  border-right-color: #059669;
+  background: linear-gradient(to left, var(--c-read-tint) 0%, var(--c-surface) 100%);
+  border-right-color: var(--c-read-strong);
 }
 
 .focus-btn {
@@ -265,18 +280,18 @@ const formattedTorahText = computed(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: #f3f4f6;
-  border: 1px solid #d1d5db;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-border);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color var(--motion-base) var(--ease-out), transform var(--motion-base) var(--ease-out);
   font-size: 1.2rem;
 }
 
 .focus-btn:hover {
-  background: #e5e7eb;
+  background: var(--c-border-soft);
   transform: scale(1.1);
 }
 
@@ -290,7 +305,7 @@ const formattedTorahText = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
+  transition: background-color var(--motion-base) var(--ease-out);
   cursor: pointer;
 }
 
@@ -298,11 +313,11 @@ const formattedTorahText = computed(() => {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: #d1d5db;
+  background: var(--c-border);
 }
 
 .completion-indicator.complete {
-  background: #059669;
+  background: var(--c-read-strong);
   animation: celebration 0.5s ease;
 }
 
@@ -320,12 +335,13 @@ const formattedTorahText = computed(() => {
 
 .aliya-marker {
   display: inline-block;
-  background: #e5e7eb;
+  background: var(--c-border-soft);
   padding: 0.3rem 0.6rem;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   font-weight: 600;
   margin-bottom: 0.75rem;
   font-size: 0.9em;
+  color: var(--c-text-2);
 }
 
 .verse-header {
@@ -336,36 +352,40 @@ const formattedTorahText = computed(() => {
   font-weight: 600;
   margin-left: 0.5rem;
   font-size: 1.1em;
-  color: #374151;
+  color: var(--c-text-2);
 }
 
 .pasuk {
   font-weight: 600;
   margin-left: 0.5rem;
   font-size: 0.9em;
-  color: #6b7280;
+  color: var(--c-muted);
 }
 
 .clickable-text {
   cursor: pointer;
   padding: 1rem;
   margin-bottom: 0.75rem;
-  border-radius: 8px;
-  border: 2px solid #d1d5db;
-  transition: all 0.2s ease;
-  background: white;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--c-border);
+  /* Green appears within --motion-colour; colours and the hover lift only. */
+  transition:
+    background-color var(--motion-colour) var(--ease-out),
+    border-color var(--motion-colour) var(--ease-out),
+    transform var(--motion-fast) var(--ease-out);
+  background: var(--c-surface);
 }
 
 .clickable-text:hover {
-  background: #f3f4f6;
-  border-color: #9ca3af;
+  background: var(--c-surface-2);
+  border-color: var(--c-faint);
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .clickable-text.reading-done {
-  background: #dcfce7;
-  border-color: #10b981;
+  background: var(--c-read-bg);
+  border-color: var(--c-read-border);
   border-width: 3px;
 }
 
@@ -375,48 +395,58 @@ const formattedTorahText = computed(() => {
 
 /* Phase selected (keyboard navigation) */
 .clickable-text.phase-selected {
-  border-color: #8b5cf6;
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 2px 8px rgba(139, 92, 246, 0.2);
+  border-color: var(--c-select);
+  background: linear-gradient(135deg, rgba(var(--c-select-rgb), 0.1) 0%, rgba(var(--c-select-rgb), 0.05) 100%);
+  box-shadow: 0 0 0 2px rgba(var(--c-select-rgb), 0.4), 0 2px 8px rgba(var(--c-select-rgb), 0.2);
 }
 
 .clickable-text.phase-selected:hover {
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.5), 0 4px 12px rgba(139, 92, 246, 0.25);
+  box-shadow: 0 0 0 2px rgba(var(--c-select-rgb), 0.5), 0 4px 12px rgba(var(--c-select-rgb), 0.25);
 }
 
 .clickable-text.phase-selected.reading-done {
-  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, #dcfce7 100%);
+  background: linear-gradient(135deg, rgba(var(--c-select-rgb), 0.15) 0%, var(--c-read-bg) 100%);
 }
 
 .torah {
-  font-size: 1.5em;
-  line-height: 1.8;
-  color: #1f2937;
+  font-size: var(--fs-hebrew);
+  line-height: var(--lh-hebrew);
+  color: var(--c-text);
 }
 
 .targum {
-  font-size: 1.1em;
-  color: #666;
-  line-height: 1.7;
+  font-size: var(--fs-translation);
+  color: var(--c-text-2);
+  line-height: var(--lh-translation);
   margin-bottom: 0.5rem;
 }
 
-.rashi {
-  font-size: 0.85em;
-  line-height: 1.6;
-  color: #444;
+/* Rashi / English: reference size and the darker translation grey. */
+.rashi,
+.english {
+  font-size: var(--fs-reference);
+  line-height: var(--lh-translation);
+  color: var(--c-text-2);
+}
+
+/* When one of them is the counted translation it is a piece box and takes the
+   translation size, like Onkelos and like the focus card. */
+.rashi.clickable-text,
+.english.clickable-text {
+  font-size: var(--fs-translation);
+}
+
+/* The rule above a reference block belongs to the NON-clickable variants only.
+   These rules used to apply to the piece box too and overrode its border and
+   padding, so a read Rashi/English box showed a thin grey top edge. */
+.rashi:not(.clickable-text),
+.english:not(.clickable-text) {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--c-border-soft);
 }
 
 .english {
-  font-size: 0.95em;
-  line-height: 1.6;
-  color: #555;
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid #e0e0e0;
   direction: ltr;
   text-align: left;
 }
@@ -434,7 +464,7 @@ const formattedTorahText = computed(() => {
 }
 
 .pointer-icon {
-  color: #d4a574;
+  color: var(--c-pointer);
   font-size: 1.5rem;
   font-weight: bold;
 }
@@ -459,7 +489,7 @@ const formattedTorahText = computed(() => {
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: #10b981;
+  background: var(--c-read-border);
   color: white;
   border-radius: 50%;
   font-size: 1.5rem;
@@ -474,7 +504,7 @@ const formattedTorahText = computed(() => {
     transform: scale(1);
   }
   50% {
-    background: #10b981;
+    background: var(--c-read-border);
   }
   100% {
     /* allow-opacity: fade-out of the checkmark badge, not text */
@@ -485,39 +515,89 @@ const formattedTorahText = computed(() => {
 
 /* Verse background when showing completion */
 .verse.showing-completion {
-  background: linear-gradient(to left, rgba(16, 185, 129, 0.1) 0%, #ffffff 100%);
+  background: linear-gradient(to left, rgba(16, 185, 129, 0.1) 0%, var(--c-surface) 100%);
 }
 
 /* Verses in the current aliyah - subtle highlighting */
 .verse.in-current-aliyah {
-  border-right-color: #3b82f6;
-  background: linear-gradient(to left, rgba(59, 130, 246, 0.03) 0%, #ffffff 100%);
+  border-right-color: var(--c-scope);
+  background: linear-gradient(to left, rgba(var(--c-scope-rgb), 0.03) 0%, var(--c-surface) 100%);
 }
 
 .verse.in-current-aliyah:hover {
-  background: linear-gradient(to left, rgba(59, 130, 246, 0.08) 0%, #ffffff 100%);
+  background: linear-gradient(to left, rgba(var(--c-scope-rgb), 0.08) 0%, var(--c-surface) 100%);
 }
 
 /* Current verse (holds the reading pointer) - stronger emphasis.
    Declared after .in-current-aliyah so it wins by source order. */
 .verse.current-verse {
-  border-right-color: #d4a574;
-  background: linear-gradient(to left, rgba(212, 165, 116, 0.1) 0%, #ffffff 100%);
-  box-shadow: 0 2px 8px rgba(212, 165, 116, 0.1);
+  border-right-color: var(--c-pointer);
+  background: linear-gradient(to left, rgba(var(--c-pointer-rgb), 0.1) 0%, var(--c-surface) 100%);
+  box-shadow: 0 2px 8px rgba(var(--c-pointer-rgb), 0.1);
 }
 
 .verse.current-verse:hover {
-  box-shadow: 0 4px 12px rgba(212, 165, 116, 0.15);
+  box-shadow: 0 4px 12px rgba(var(--c-pointer-rgb), 0.15);
 }
 
 /* Selected verse (keyboard navigation) */
 .verse.selected {
-  border-right-color: #8b5cf6;
-  background: linear-gradient(to left, rgba(139, 92, 246, 0.08) 0%, #ffffff 100%);
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3), 0 4px 12px rgba(139, 92, 246, 0.15);
+  border-right-color: var(--c-select);
+  background: linear-gradient(to left, rgba(var(--c-select-rgb), 0.08) 0%, var(--c-surface) 100%);
+  box-shadow: 0 0 0 2px rgba(var(--c-select-rgb), 0.3), 0 4px 12px rgba(var(--c-select-rgb), 0.15);
 }
 
 .verse.selected:hover {
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.4), 0 6px 16px rgba(139, 92, 246, 0.2);
+  box-shadow: 0 0 0 2px rgba(var(--c-select-rgb), 0.4), 0 6px 16px rgba(var(--c-select-rgb), 0.2);
+}
+
+/* Reduced motion: no pulsing pointer, no pop, no hover lift. The colours
+   (read, pointer, selection) are unchanged. */
+@media (prefers-reduced-motion: reduce) {
+  .verse-pointer,
+  .completion-indicator.complete,
+  .feedback-checkmark {
+    animation: none;
+  }
+
+  .clickable-text:hover,
+  .focus-btn:hover {
+    transform: none;
+  }
+}
+
+/* Phone: tighter card and piece boxes so the three pieces of a short pasuk
+   fit under the compact header. Spacing only; nothing is hidden. */
+@media (max-width: 600px) {
+  .verse {
+    padding: 0.75rem;
+    padding-right: 2.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .focus-btn {
+    top: 0.6rem;
+  }
+
+  .completion-indicator {
+    top: 0.6rem;
+  }
+
+  .aliya-marker {
+    margin-bottom: 0.4rem;
+  }
+
+  .verse-header {
+    margin-bottom: 0.4rem;
+  }
+
+  .clickable-text {
+    padding: 0.6rem 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .targum {
+    margin-bottom: 0.25rem;
+  }
 }
 </style>

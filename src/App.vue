@@ -1,21 +1,36 @@
 <template>
   <div dir="rtl" :style="{ fontSize: settings.fontSize + 'px' }">
+    <!-- First run: which schedule to follow. Inline, never blocking — the
+         parsha below renders and works whether or not this is answered. -->
+    <div v-if="!settings.locationChosen" class="app-notice" role="group" :dir="isHebrew ? 'rtl' : 'ltr'">
+      <span>{{ isHebrew ? 'באיזה לוח קריאה להשתמש?' : 'Which reading schedule do you follow?' }}</span>
+      <button type="button" class="btn" @click="chooseLocation('israel')">{{ isHebrew ? 'ישראל' : 'Israel' }}</button>
+      <button type="button" class="btn" @click="chooseLocation('chul')">{{ isHebrew ? 'חו"ל' : 'Diaspora' }}</button>
+    </div>
+    <!-- After a new cycle moved last year's marks aside, or after "start this
+         parsha over": say so and offer Undo. -->
+    <div v-if="cycleNotice" class="app-notice" role="status" :dir="isHebrew ? 'rtl' : 'ltr'">
+      <span>{{ cycleNoticeText }}</span>
+      <button type="button" class="btn" @click="undoCycleNotice">{{ isHebrew ? 'ביטול' : 'Undo' }}</button>
+      <button type="button" class="btn" :aria-label="isHebrew ? 'סגור' : 'Dismiss'" @click="dismissCycleNotice">&times;</button>
+    </div>
     <ParshaDisplay v-if="currentParsha" :parasha="currentParsha" :week="week" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, provide } from 'vue'
 import { useParsha } from './composables/useParsha'
 import { useSettings } from './composables/useSettings'
 import { useProgress } from './composables/useProgress'
 import { useAliyot } from './composables/useAliyot'
+import { useCycles } from './composables/useCycles'
 import { useNow } from './composables/useDailyGuide'
 import { isRouteComplete } from './lib/progressMath'
 import { hashRoute } from './lib/hashRoute'
 import ParshaDisplay from './components/ParshaDisplay.vue'
 
-const { getDefaultWeek, parshiyot } = useParsha()
+const { getDefaultWeek, parshiyot, parshiyotList } = useParsha()
 const { settings } = useSettings()
 const { progress } = useProgress()
 const { aliyotData, getAliyot, retryAliyot } = useAliyot()
@@ -24,6 +39,37 @@ const now = useNow()
 // Empty until the hash / weekly parsha is resolved, so we never fetch a
 // chumash we are not about to show.
 const currentParsha = ref('')
+
+// Provided to SettingsModal for "start this parsha over" without threading a
+// prop through ParshaDisplay / FocusMode.
+provide('currentParsha', currentParsha)
+
+const { cycleNotice, checkCycles, undoCycleNotice, dismissCycleNotice } = useCycles()
+
+const isHebrew = computed(() => settings.value.interfaceLanguage === 'he')
+const parshaName = (route) => parshiyotList.find(p => p.route === route)?.he || route
+
+const cycleNoticeText = computed(() => {
+  const n = cycleNotice.value
+  if (!n) return ''
+  if (n.kind === 'startOver') {
+    const name = parshaName(n.entries[0]?.route)
+    return isHebrew.value ? `פרשת ${name} התחילה מחדש.` : `Started ${name} over.`
+  }
+  const count = n.entries.length
+  return isHebrew.value
+    ? `התחיל מחזור קריאה חדש: סימוני השנה שעברה (${count} פרשיות) הועברו לארכיון.`
+    : `A new reading cycle began: last year's marks (${count} parshiyot) were moved aside.`
+})
+
+const chooseLocation = (location) => {
+  settings.value.location = location
+  settings.value.locationChosen = true
+}
+
+// Last cycle's marks move aside before anything reads progress (the default
+// week, the daily guide). Runs again on every day change (rollOver below).
+checkCycles()
 
 // Completeness without loading the chumash: the aliyot entry carries the
 // expected verse count (see progressMath.isRouteComplete). Before aliyot.json
@@ -95,7 +141,12 @@ const reresolveDefault = () => {
 // A late aliyot.json (a retry after a failed first fetch) changes the answer of
 // isRouteDone, so the default week is worth re-asking once.
 watch(aliyotData, (d) => { if (d) reresolveDefault() }, { once: true })
-watch(() => settings.value.location, reresolveDefault)
+watch(() => settings.value.location, () => {
+  // Picking a location in Settings answers the first-run question too.
+  settings.value.locationChosen = true
+  checkCycles()
+  reresolveDefault()
+})
 
 // Roll an open tab over at the civil-day boundary — but never under an active
 // reader. Changing the parsha closes focus mode and empties the verse list
@@ -116,6 +167,7 @@ const rollOver = () => {
     return
   }
   pendingRollover = false
+  checkCycles()
   reresolveDefault()
 }
 
@@ -174,7 +226,7 @@ onUnmounted(() => {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f5f5f5;
+  background: var(--c-bg);
 }
 
 @font-face {
@@ -195,5 +247,55 @@ body {
 
 .font-sbl {
   font-family: 'SBL Hebrew', serif;
+}
+</style>
+
+<style scoped>
+/* The two notices above the parsha (first-run schedule question, new-cycle /
+   start-over undo): banner layout like ParshaDisplay's `.error` / `.loading`
+   rows and the same light bordered button as its `.btn` (scoped there, so
+   repeated here with the shared variables). */
+.app-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  text-align: center;
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-border-soft);
+}
+
+.btn {
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-border);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-base) var(--ease-out),
+    border-color var(--motion-base) var(--ease-out),
+    transform var(--motion-base) var(--ease-out);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.btn:hover {
+  background: var(--c-border-soft);
+  border-color: var(--c-faint);
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 600px) {
+  .app-notice {
+    padding: 0.4rem 0.75rem;
+  }
 }
 </style>

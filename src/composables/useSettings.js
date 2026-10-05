@@ -14,6 +14,10 @@ const defaults = {
   showRashi: false,
   showTrop: false,
   location: 'israel',
+  // Has the reader answered "Israel or Diaspora?" (or picked a location in
+  // Settings)? Missing in settings saved before the question existed, so
+  // existing readers are asked once too. The question never gates anything.
+  locationChosen: false,
   fontSize: 20,
   fontRashi: true,
   targumType: 'onkelos', // onkelos | rashi | english

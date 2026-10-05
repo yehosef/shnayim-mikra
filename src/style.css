@@ -3,10 +3,110 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* One motion vocabulary for the focus view and the list view. The JS hold
+     after a mark (MARK_HOLD_MS) lives in src/lib/motion.js. Animate only
+     transform, opacity and colours with these. */
+  --motion-colour: 100ms;      /* read state turning green */
+  --motion-fast: 120ms;        /* a card leaving */
+  --motion-base: 200ms;        /* a card entering */
+  --motion-crossfade: 150ms;   /* next piece in the same pasuk (out + in) */
+  --motion-emphasis: 400ms;    /* aliyah label flash on a new aliyah */
+  --motion-distance: min(48px, 12vw);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+
+  /* One visual language for the list view and the focus view. Colour roles:
+     read (green), pointer (gold), in-scope aliyah (blue) and keyboard
+     selection (purple) are four separate channels; never reuse one for another.
+     The -rgb triples are for rgba() tints: rgba(var(--c-pointer-rgb), 0.1). */
+  --c-text: #1f2937;            /* Hebrew text, headings */
+  --c-text-2: #374151;          /* translation, labels, secondary text */
+  --c-muted: #6b7280;           /* pasuk number, captions */
+  --c-faint: #9ca3af;           /* hints, separators */
+  --c-border: #d1d5db;          /* piece boxes, inputs, light buttons */
+  --c-border-soft: #e5e7eb;     /* header rules, chips, dividers */
+  --c-bg: #f5f5f5;              /* page background */
+  --c-surface: #ffffff;         /* cards, headers */
+  --c-surface-2: #f3f4f6;       /* light button fill */
+  --c-read-bg: #dcfce7;
+  --c-read-tint: #f0fdf4;
+  --c-read-border: #10b981;
+  --c-read-strong: #059669;
+  --c-read-soft: #a7f3d0;
+  --c-pointer: #d4a574;
+  --c-pointer-rgb: 212, 165, 116;
+  --c-scope: #3b82f6;
+  --c-scope-rgb: 59, 130, 246;
+  --c-scope-bg: #dbeafe;
+  --c-scope-strong: #2563eb;
+  --c-scope-text: #1e40af;
+  --c-select: #8b5cf6;
+  --c-select-rgb: 139, 92, 246;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 999px;
+  --fs-hebrew: 1.5em;
+  --lh-hebrew: 1.9;
+  --fs-translation: 1.15em;     /* the counted translation, always below Hebrew */
+  --lh-translation: 1.8;
+  --fs-reference: 0.95em;       /* Rashi / English shown only as reference */
+}
+
+/* No movement: cards crossfade (100 ms at most in total), nothing slides,
+   pulses or pops. Colour cues and the hold stay. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 50ms;
+    --motion-base: 50ms;
+    --motion-crossfade: 100ms;
+    --motion-distance: 0px;
+  }
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+}
+
+/* Pasuk changes (Vue <Transition> names from src/lib/motion.js), used by both
+   views with mode="out-in". Forward: the old card leaves toward the right and
+   the new one enters from the left (Hebrew order: next is on the left). Back is
+   the mirror image. A leaving card never takes a tap. */
+.motion-forward-leave-active,
+.motion-back-leave-active {
+  transition: transform var(--motion-fast) var(--ease-in), opacity var(--motion-fast) var(--ease-in);
+  pointer-events: none;
+}
+.motion-forward-enter-active,
+.motion-back-enter-active {
+  transition: transform var(--motion-base) var(--ease-out), opacity var(--motion-base) var(--ease-out);
+}
+.motion-forward-leave-to,
+.motion-back-enter-from {
+  transform: translateX(var(--motion-distance));
+  /* allow-opacity: transient card motion between pesukim, not a read-state style */
+  opacity: 0;
+}
+.motion-forward-enter-from,
+.motion-back-leave-to {
+  transform: translateX(calc(-1 * var(--motion-distance)));
+  /* allow-opacity: transient card motion between pesukim, not a read-state style */
+  opacity: 0;
+}
+
+/* Next piece in the same pasuk: label and text crossfade in place. */
+.motion-fade-leave-active {
+  transition: opacity calc(var(--motion-crossfade) / 2) var(--ease-in);
+  pointer-events: none;
+}
+.motion-fade-enter-active {
+  transition: opacity calc(var(--motion-crossfade) / 2) var(--ease-out);
+}
+.motion-fade-enter-from,
+.motion-fade-leave-to {
+  /* allow-opacity: transient crossfade between pieces, not a read-state style */
+  opacity: 0;
 }

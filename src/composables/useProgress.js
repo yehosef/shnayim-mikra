@@ -1,5 +1,7 @@
 import { ref, watch } from 'vue'
 import { getItem, createPersister, onExternalWrite, onVisible } from '../lib/storage'
+import { routesForVerse, clearTargets, partialClearWrites } from '../lib/overlap'
+import { hasMarks } from '../lib/cycleStore'
 
 const KEY = 'shnayim-progress'
 
@@ -120,6 +122,42 @@ onExternalWrite(KEY, adoptExternal)
 // would be written on top of a map that is behind.
 onVisible(() => adoptExternal(getItem(KEY)))
 
+/** Write one field into one route and record it as changed here. */
+function writeField(route, verseKey, field, value) {
+  if (!progress.value[route]) progress.value[route] = {}
+  if (!progress.value[route][verseKey]) progress.value[route][verseKey] = emptyVerse()
+  progress.value[route][verseKey][field] = value
+  markDirty(route, verseKey, field)
+}
+
+/** Drop a whole route; the clear wins over this tab's unflushed changes in it. */
+function clearWholeRoute(route) {
+  if (!progress.value[route]) return
+  clearedRoutes.add(route)
+  dirtyFields.delete(route)
+  delete progress.value[route]
+}
+
+// Called with the routes that just received their first mark, so the cycle
+// bookkeeping (useCycles.js) can label them with the current cycle. Not set
+// until the one-time upgrade steps have run, so the fill-in they do is labelled
+// by the upgrade rule instead.
+let firstMarkHandler = null
+
+/** Register (or with null, remove) the first-mark callback. */
+export function setFirstMarkHandler(fn) {
+  firstMarkHandler = typeof fn === 'function' ? fn : null
+}
+
+/**
+ * Write the pending map to storage now instead of after the debounce, folding
+ * in what other tabs wrote. The cycle move needs this to keep its
+ * archive -> clear -> label order on disk.
+ */
+export function flushProgress() {
+  persister.flush()
+}
+
 export function useProgress() {
   const getVerseProgress = (parasha, verseKey) => {
     return progress.value[parasha]?.[verseKey] || {
@@ -129,15 +167,17 @@ export function useProgress() {
     }
   }
 
+  // A verse shared by a combined route and its singles (e.g. matot-masei and
+  // matot) is written to all of them, mark and un-mark alike, so reading it
+  // under one counts under the others. Each write is an ordinary dirty field,
+  // so the cross-tab merge treats it like any other change.
   const setVerseProgress = (parasha, verseKey, field, value) => {
-    if (!progress.value[parasha]) {
-      progress.value[parasha] = {}
-    }
-    if (!progress.value[parasha][verseKey]) {
-      progress.value[parasha][verseKey] = emptyVerse()
-    }
-    progress.value[parasha][verseKey][field] = value
-    markDirty(parasha, verseKey, field)
+    const routes = routesForVerse(parasha, verseKey)
+    const fresh = value === true && firstMarkHandler
+      ? routes.filter(r => !hasMarks(progress.value[r]))
+      : []
+    for (const route of routes) writeField(route, verseKey, field, value)
+    if (fresh.length) firstMarkHandler(fresh)
   }
 
   const getParshaStats = (parasha, totalVerses) => {
@@ -155,13 +195,18 @@ export function useProgress() {
     }
   }
 
+  // Clears `parasha` and the same verses in overlapping routes; otherwise the
+  // shared credit would bring them straight back. Routes lying entirely inside
+  // it (combined -> both singles) are cleared whole; a route that only partly
+  // overlaps (single -> the combined route) gets its shared verses written
+  // false field by field, so the merge keeps the rest of that route.
   const clearParshaProgress = (parasha) => {
-    if (progress.value[parasha]) {
-      clearedRoutes.add(parasha)
-      // The clear supersedes every unflushed field change in this parsha.
-      dirtyFields.delete(parasha)
-      delete progress.value[parasha]
+    // Pick up keys another tab wrote, so the partial clear covers them too.
+    adoptExternal(getItem(KEY))
+    for (const [route, verseKey, field] of partialClearWrites(progress.value, parasha)) {
+      writeField(route, verseKey, field, false)
     }
+    for (const route of clearTargets(parasha).whole) clearWholeRoute(route)
   }
 
   return {
