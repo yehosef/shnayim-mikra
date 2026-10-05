@@ -1,6 +1,10 @@
 <template>
   <div class="daily-guide">
-    <span class="guide-text">{{ guideText }}</span>
+    <span class="guide-text">
+      <!-- Each aliyah name isolated so it cannot reorder the separators -->
+      <template v-if="guide.aliyot.length">{{ isHebrew ? 'מומלץ להיום: ' : 'Suggested today: ' }}<template v-for="(n, i) in guide.aliyot" :key="n"><template v-if="i > 0">{{ isHebrew ? ' ו' : ', ' }}</template><bdi>{{ names[n - 1] }}</bdi></template></template>
+      <template v-else>{{ guideText }}</template>
+    </span>
     <span v-if="statusText" class="guide-status" :class="'status-' + status">{{ statusText }}</span>
     <span v-if="showNotice" class="guide-notice">
       {{ noticeText }}

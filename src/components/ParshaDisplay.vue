@@ -29,14 +29,14 @@
           <!-- Aliyah Selector (shown in aliyah mode) -->
           <div v-if="settings.displayMode === 'aliyah'" class="aliyah-selector">
             <span class="aliyah-label">{{ isHebrew ? 'עליה:' : 'Aliyah:' }}</span>
-            <select v-model="settings.currentAliyah" class="aliyah-dropdown" :aria-label="t('עליה', 'Aliyah')">
+            <select v-model="settings.currentAliyah" class="aliyah-dropdown" dir="rtl" lang="he" :aria-label="t('עליה', 'Aliyah')">
               <option v-for="n in aliyahCount" :key="n" :value="n">{{ aliyahNames[n - 1] }}</option>
             </select>
           </div>
           <!-- Progress Indicator -->
           <div v-if="displayVerses.length > 0" class="progress-bar">
             <div class="progress-text">
-              {{ isHebrew ? 'התקדמות:' : 'Progress:' }} {{ completedCount }}/{{ displayVerses.length }} ({{ progressPercent }}%)
+              {{ isHebrew ? 'התקדמות:' : 'Progress:' }} <bdi dir="ltr">{{ completedCount }}/{{ displayVerses.length }} ({{ progressPercent }}%)</bdi>
             </div>
             <div class="progress-track">
               <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
@@ -56,6 +56,8 @@
             v-model="selectedParsha"
             @change="navigateToParsha"
             class="parsha-select"
+            dir="rtl"
+            lang="he"
             :title="t('✓ הושלמה · ◐ בקריאה', '✓ finished · ◐ in progress')"
             :aria-label="t('בחירת פרשה', 'Choose a parsha')"
           >
@@ -361,7 +363,7 @@ const otherWeek = computed(() => {
 const otherWeekText = computed(() => {
   const o = otherWeek.value
   if (!o) return ''
-  const name = parshiyotList.find(p => p.route === o.route)?.he || o.route
+  const name = `\u2068${parshiyotList.find(p => p.route === o.route)?.he || o.route}\u2069`
   if (o.kind === 'next') return isHebrew.value ? `לשבוע הבא: ${name}` : `Coming week: ${name}`
   return isHebrew.value ? `לשבוע שעבר: ${name}` : `Last week: ${name}`
 })

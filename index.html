@@ -1,11 +1,24 @@
 <!doctype html>
-<html lang="he" dir="rtl" translate="no">
+<html lang="en" dir="ltr" translate="no">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="google" content="notranslate" />
     <title>שניים מקרא ואחד תרגום</title>
+    <script>
+      // Interface direction before the app mounts (no flash): App.vue keeps it
+      // in step with settings.interfaceLanguage afterwards.
+      (function () {
+        var he = false
+        try {
+          var s = JSON.parse(localStorage.getItem('shnayim-settings') || 'null')
+          he = !!s && s.interfaceLanguage === 'he'
+        } catch (e) { /* defaults: English */ }
+        document.documentElement.lang = he ? 'he' : 'en'
+        document.documentElement.dir = he ? 'rtl' : 'ltr'
+      })()
+    </script>
   </head>
   <body>
     <div id="app"></div>

@@ -1,5 +1,5 @@
 <template>
-  <div class="aliyah-bar" role="list" :aria-label="isHebrew ? 'עליות' : 'Aliyot'">
+  <div class="aliyah-bar" dir="rtl" lang="he" role="list" :aria-label="isHebrew ? 'עליות' : 'Aliyot'">
     <button
       v-for="a in stats"
       :key="a.n"
@@ -17,7 +17,7 @@
       @click="$emit('select', a.n)"
     >
       <span class="chip-name">{{ names[a.n - 1] }}</span>
-      <span class="chip-count">{{ a.complete }}/{{ a.total }}</span>
+      <span class="chip-count"><bdi dir="ltr">{{ a.complete }}/{{ a.total }}</bdi></span>
       <span v-if="a.n === currentN" class="chip-pointer" role="img" :aria-label="isHebrew ? 'כאן אתה נמצא' : 'You are here'">▶</span>
     </button>
   </div>
@@ -41,7 +41,7 @@ defineEmits(['select'])
 const names = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שביעי']
 
 const chipTitle = (a) => {
-  const parts = [`${names[a.n - 1]}: ${a.complete}/${a.total}`]
+  const parts = [`\u2068${names[a.n - 1]}\u2069: ${a.complete}/${a.total}`]
   if (props.guideAliyot.includes(a.n)) parts.push(props.isHebrew ? 'מומלץ להיום' : 'suggested for today')
   if (a.n === props.currentN) parts.push(props.isHebrew ? 'כאן אתה נמצא' : 'you are here')
   return parts.join(' · ')

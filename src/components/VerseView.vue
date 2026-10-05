@@ -1,6 +1,8 @@
 <template>
   <div
     class="verse"
+    dir="rtl"
+    lang="he"
     :class="{
       'completed': isCompleted,
       'current-verse': isPointer,
@@ -88,6 +90,7 @@
     <div
       v-if="targumLayer === 'english'"
       class="english clickable-text"
+      lang="en"
       :class="{ 'reading-done': progress.targum, 'phase-selected': selectedPhase === 3 }"
       @click="handlePhaseClick(3, 'targum', $event)"
       v-html="verse.english"
@@ -97,6 +100,7 @@
     <div
       v-if="settings.showEnglish && settings.targumType !== 'english' && verse.english"
       class="english"
+      lang="en"
       v-html="verse.english"
     ></div>
 

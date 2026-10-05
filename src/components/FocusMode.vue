@@ -137,6 +137,8 @@
                 v-if="currentStep === 1 || currentStep === 2"
                 :key="`hebrew${currentStep}`"
                 class="torah font-sbl"
+                dir="rtl"
+                lang="he"
               >{{ formattedTorahText }}</div>
 
               <!-- Targum (Step 3) -->
@@ -144,6 +146,8 @@
                 v-else-if="targumLayer === 'onkelos'"
                 key="targum-onkelos"
                 class="targum font-sbl"
+                dir="rtl"
+                lang="he"
                 v-html="currentVerse.targum"
               ></div>
 
@@ -151,6 +155,8 @@
                 v-else-if="targumLayer === 'rashi'"
                 key="targum-rashi"
                 class="targum"
+                dir="rtl"
+                lang="he"
                 :class="{ 'font-rashi': settings.fontRashi }"
                 v-html="currentVerse.rashi.join('  ')"
               ></div>
@@ -159,6 +165,8 @@
                 v-else
                 key="targum-english"
                 class="targum english-targum"
+                dir="ltr"
+                lang="en"
                 v-html="currentVerse.english || t('אין תרגום לאנגלית', 'No English translation available')"
               ></div>
             </Transition>
@@ -175,12 +183,12 @@
       </div>
 
       <!-- Additional Reference Texts (always visible if enabled) -->
-      <div v-if="settings.showEnglish && settings.targumType !== 'english' && shownVerse.english" class="reference-section">
+      <div v-if="settings.showEnglish && settings.targumType !== 'english' && shownVerse.english" class="reference-section" dir="ltr">
         <div class="reference-label">{{ t('אנגלית', 'English') }}</div>
         <div class="english reference-text" v-html="shownVerse.english"></div>
       </div>
 
-      <div v-if="shownVerse.rashi?.length && settings.showRashi && settings.targumType !== 'rashi'" class="reference-section">
+      <div v-if="shownVerse.rashi?.length && settings.showRashi && settings.targumType !== 'rashi'" class="reference-section" dir="rtl" lang="he">
         <div class="reference-label">רש"י</div>
         <div class="rashi reference-text" :class="{ 'font-rashi': settings.fontRashi }" v-html="shownVerse.rashi.join('  ')"></div>
       </div>
@@ -210,7 +218,7 @@
     <!-- Progress Footer -->
     <div class="focus-footer">
       <div class="progress-indicator">
-        {{ t('פסוק', 'Pasuk') }} {{ shown.index + 1 }} / {{ totalVerses }}
+        {{ t('פסוק', 'Pasuk') }} <bdi dir="ltr">{{ shown.index + 1 }} / {{ totalVerses }}</bdi>
       </div>
     </div>
   </div>

@@ -43,6 +43,8 @@
   --c-scope-text: #1e40af;
   --c-select: #8b5cf6;
   --c-select-rgb: 139, 92, 246;
+  --c-danger: #dc2626;          /* destructive actions and error text (4.8:1 on white) */
+  --c-danger-bg: #fef2f2;       /* hover fill of a destructive button */
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;

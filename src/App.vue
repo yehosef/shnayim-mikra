@@ -1,23 +1,23 @@
 <template>
-  <div dir="rtl" :style="{ fontSize: settings.fontSize + 'px' }">
+  <div :dir="isHebrew ? 'rtl' : 'ltr'" :lang="isHebrew ? 'he' : 'en'" :style="{ fontSize: settings.fontSize + 'px' }">
     <!-- First run: which schedule to follow. Inline, never blocking — the
          parsha below renders and works whether or not this is answered. -->
-    <div v-if="!settings.locationChosen" class="app-notice" role="group" :dir="isHebrew ? 'rtl' : 'ltr'">
+    <div v-if="!settings.locationChosen" class="app-notice" role="group">
       <span>{{ isHebrew ? 'באיזה לוח קריאה להשתמש?' : 'Which reading schedule do you follow?' }}</span>
       <button type="button" class="btn" @click="chooseLocation('israel')">{{ isHebrew ? 'ישראל' : 'Israel' }}</button>
       <button type="button" class="btn" @click="chooseLocation('chul')">{{ isHebrew ? 'חו"ל' : 'Diaspora' }}</button>
     </div>
     <!-- After a new cycle moved last year's marks aside, or after "start this
          parsha over": say so and offer Undo. -->
-    <div v-if="cycleNotice" class="app-notice" role="status" :dir="isHebrew ? 'rtl' : 'ltr'">
+    <div v-if="cycleNotice" class="app-notice" role="status">
       <span>{{ cycleNoticeText }}</span>
       <button type="button" class="btn" @click="undoCycleNotice">{{ isHebrew ? 'ביטול' : 'Undo' }}</button>
       <button type="button" class="btn" :aria-label="isHebrew ? 'סגור' : 'Dismiss'" @click="dismissCycleNotice">&times;</button>
     </div>
     <!-- On the old Vercel address: the app has moved (see src/lib/movedNotice.js). -->
-    <div v-if="movedNoticeShown" class="app-notice" role="note" :dir="isHebrew ? 'rtl' : 'ltr'">
+    <div v-if="movedNoticeShown" class="app-notice" role="note">
       <span v-if="isHebrew">
-        האפליקציה עברה ל-<a :href="NEW_URL">{{ NEW_URL }}</a>.
+        האפליקציה עברה ל-<a :href="NEW_URL"><bdi dir="ltr">{{ NEW_URL }}</bdi></a>.
         כדי להעביר את הסימונים, התחברו פעם אחת כאן (בהגדרות) ואחר כך שם.
       </span>
       <span v-else>
@@ -31,7 +31,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, provide } from 'vue'
+import { ref, computed, watch, watchEffect, onMounted, onUnmounted, provide } from 'vue'
 import { useParsha } from './composables/useParsha'
 import { useSettings } from './composables/useSettings'
 import { useProgress } from './composables/useProgress'
@@ -62,13 +62,23 @@ provide('currentParsha', currentParsha)
 const { cycleNotice, checkCycles, undoCycleNotice, dismissCycleNotice } = useCycles()
 
 const isHebrew = computed(() => settings.value.interfaceLanguage === 'he')
+// Interface chrome follows the interface language; Torah, Targum and Rashi
+// blocks pin dir="rtl" themselves. index.html sets the first value.
+watchEffect(() => {
+  if (typeof document === 'undefined') return
+  document.documentElement.dir = isHebrew.value ? 'rtl' : 'ltr'
+  document.documentElement.lang = isHebrew.value ? 'he' : 'en'
+})
+// Directional isolates (U+2068 / U+2069) around a Hebrew name inside an
+// interface sentence, so it cannot reorder the punctuation around it.
+const isolate = (s) => `\u2068${s}\u2069`
 const parshaName = (route) => parshiyotList.find(p => p.route === route)?.he || route
 
 const cycleNoticeText = computed(() => {
   const n = cycleNotice.value
   if (!n) return ''
   if (n.kind === 'startOver') {
-    const name = parshaName(n.entries[0]?.route)
+    const name = isolate(parshaName(n.entries[0]?.route))
     return isHebrew.value ? `פרשת ${name} התחילה מחדש.` : `Started ${name} over.`
   }
   const count = n.entries.length
