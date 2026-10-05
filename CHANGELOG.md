@@ -2,6 +2,25 @@
 
 Each entry says what changed for someone using the app, and where it was deployed.
 
+## 1.3.0 — 2026-10-06
+
+Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.3.0`. The old Vercel address
+stays on 1.1.0.
+
+- Settings is redesigned: grouped sections, labels and controls on one grid, buttons instead of
+  dropdowns for two- and three-way choices, a live sample line for text size, plainer wording
+  ("Counted translation" instead of "Targum Type for Tracking"), and clearing a parsha set
+  apart as a red, lower section. On a phone it fills the screen.
+- The page now follows the interface language's direction: left-to-right in English,
+  right-to-left in Hebrew, so colons, periods and counts land where they belong. Torah, Targum
+  and Rashi text stay right-to-left, and next is still on the left. In English the reading
+  screens' headers run left-to-right (title on the left, settings and parsha picker on the
+  right).
+- Options that would have no effect are greyed out, for example "Also show Rashi" when Rashi is
+  the counted translation.
+- Keyboard: focus stays inside Settings while it is open; after closing, Space marks the next
+  reading as before.
+
 ## 1.2.1 — 2026-10-05
 
 Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.2.1`. The old Vercel address
