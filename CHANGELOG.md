@@ -2,6 +2,14 @@
 
 Each entry says what changed for someone using the app, and where it was deployed.
 
+## 1.2.1 — 2026-10-05
+
+Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.2.1`. The old Vercel address
+stays on 1.1.0.
+
+- The front page is no longer kept by browsers for an hour after a new release, so a first-time
+  visitor right after an update cannot get a page that points at files that no longer exist.
+
 ## 1.2.0 — 2026-10-05
 
 Deployed to Firebase Hosting at the app's new address, https://shnayim.web.app (project
