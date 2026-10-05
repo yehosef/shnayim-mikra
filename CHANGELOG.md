@@ -2,6 +2,23 @@
 
 Each entry says what changed for someone using the app, and where it was deployed.
 
+## 1.2.0 — 2026-10-05
+
+Deployed to Firebase Hosting at the app's new address, https://shnayim.web.app (project
+Torah-io, site `shnayim`), from the branch `firebase-sync`, tag `v1.2.0`. Not yet on the old
+Vercel address, which stays on 1.1.0 until sign-in has been tried on the new one.
+
+- New address: https://shnayim.web.app.
+- Optional sign-in with Google (Settings → Account). Signed in, reading marks are backed up and
+  follow you to your other devices, including un-marks and "start this parsha over". Each
+  reading year is kept separately.
+- Nothing changes without sign-in: the app works fully offline and stores marks on the device
+  as before.
+- Two Google accounts on one device never see each other's marks; signing out keeps the marks
+  on the device.
+- Marks made on the old address do not move by themselves. Sign in once on the old address
+  (after it is updated), then on the new one.
+
 ## 1.1.0 — 2026-10-05
 
 Deployed to Vercel production (https://shnayim-mikra.vercel.app) from `master`, tag `v1.1.0`.
