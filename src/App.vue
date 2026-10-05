@@ -14,6 +14,18 @@
       <button type="button" class="btn" @click="undoCycleNotice">{{ isHebrew ? 'ביטול' : 'Undo' }}</button>
       <button type="button" class="btn" :aria-label="isHebrew ? 'סגור' : 'Dismiss'" @click="dismissCycleNotice">&times;</button>
     </div>
+    <!-- On the old Vercel address: the app has moved (see src/lib/movedNotice.js). -->
+    <div v-if="movedNoticeShown" class="app-notice" role="note" :dir="isHebrew ? 'rtl' : 'ltr'">
+      <span v-if="isHebrew">
+        האפליקציה עברה ל-<a :href="NEW_URL">{{ NEW_URL }}</a>.
+        כדי להעביר את הסימונים, התחברו פעם אחת כאן (בהגדרות) ואחר כך שם.
+      </span>
+      <span v-else>
+        This app has moved to <a :href="NEW_URL">{{ NEW_URL }}</a>.
+        To carry your marks over, sign in once here (Settings) and then there.
+      </span>
+      <button type="button" class="btn" :aria-label="isHebrew ? 'סגור' : 'Dismiss'" @click="dismissMovedNotice">&times;</button>
+    </div>
     <ParshaDisplay v-if="currentParsha" :parasha="currentParsha" :week="week" />
   </div>
 </template>
@@ -28,6 +40,9 @@ import { useCycles } from './composables/useCycles'
 import { useNow } from './composables/useDailyGuide'
 import { isRouteComplete } from './lib/progressMath'
 import { hashRoute } from './lib/hashRoute'
+import { startSync } from './composables/useSync'
+import { showMovedNotice, NEW_URL, MOVED_DISMISSED_KEY } from './lib/movedNotice'
+import { getItem, setItem } from './lib/storage'
 import ParshaDisplay from './components/ParshaDisplay.vue'
 
 const { getDefaultWeek, parshiyot, parshiyotList } = useParsha()
@@ -70,6 +85,17 @@ const chooseLocation = (location) => {
 // Last cycle's marks move aside before anything reads progress (the default
 // week, the daily guide). Runs again on every day change (rollOver below).
 checkCycles()
+// Sign-in sync: loads the Firebase client only if this device was signed in
+// before, and only after the cycle check above.
+startSync()
+
+const movedNoticeShown = ref(showMovedNotice(
+  typeof location !== 'undefined' ? location.hostname : '',
+  !!getItem(MOVED_DISMISSED_KEY)))
+const dismissMovedNotice = () => {
+  movedNoticeShown.value = false
+  setItem(MOVED_DISMISSED_KEY, '1')
+}
 
 // Completeness without loading the chumash: the aliyot entry carries the
 // expected verse count (see progressMath.isRouteComplete). Before aliyot.json

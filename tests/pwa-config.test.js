@@ -94,6 +94,25 @@ describe('PWA precache manifest', () => {
   })
 })
 
+describe('PWA navigation fallback', () => {
+  const denied = (path) => pwaOptions.workbox.navigateFallbackDenylist.some((re) => re.test(path))
+
+  it('never answers Firebase sign-in helper pages with the app shell', () => {
+    // Firebase serves /__/auth/handler and /__/auth/iframe from the app's own
+    // address; the service worker must let those navigations reach the network.
+    expect(denied('/__/auth/handler')).toBe(true)
+    expect(denied('/__/auth/iframe')).toBe(true)
+    expect(denied('/__/firebase/init.json')).toBe(true)
+  })
+
+  it('still serves the app shell for app routes and keeps data files out', () => {
+    expect(pwaOptions.workbox.navigateFallback).toBe('/index.html')
+    expect(denied('/')).toBe(false)
+    expect(denied('/bereshit')).toBe(false)
+    expect(denied('/data/torah/bereishit.json')).toBe(true)
+  })
+})
+
 describe('PWA runtime caching', () => {
   it('routes the optional layers to the torah-data cache', () => {
     const route = pwaOptions.workbox.runtimeCaching.find(

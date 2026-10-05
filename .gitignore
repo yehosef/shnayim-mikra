@@ -27,3 +27,8 @@ logs
 scripts/out
 scripts/.cache
 .claude/worktrees/
+
+# Firebase CLI
+.firebase/
+firebase-debug.log
+firestore-debug.log

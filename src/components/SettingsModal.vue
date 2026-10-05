@@ -115,6 +115,51 @@
           </button>
         </div>
 
+        <!-- Account: opt-in Google sign-in that syncs marks between devices.
+             Nothing else in the app depends on it or is hidden without it. -->
+        <div class="offline-section">
+          <div class="offline-label">{{ isHebrew ? 'חשבון:' : 'Account:' }}</div>
+          <template v-if="sync.user">
+            <div class="offline-core">
+              {{ sync.user.name }}<template v-if="sync.user.email"> ({{ sync.user.email }})</template>
+            </div>
+            <div v-if="sync.status === 'error'" class="offline-error">
+              {{ syncStatusText }}
+              <button class="offline-btn" @click="retrySync">{{ isHebrew ? 'נסה שוב' : 'Retry' }}</button>
+            </div>
+            <div v-else class="offline-core">{{ syncStatusText }}</div>
+            <div v-if="confirmingSignOut" class="offline-core">
+              {{ signOutWarning }}
+              <button class="offline-btn" @click="confirmSignOut">{{ isHebrew ? 'כן, להתנתק' : 'Yes, sign out' }}</button>
+              <button class="offline-btn" @click="confirmingSignOut = false">{{ isHebrew ? 'לא' : 'No' }}</button>
+            </div>
+            <button v-else class="offline-btn" @click="askSignOut">{{ isHebrew ? 'התנתקות' : 'Sign out' }}</button>
+          </template>
+          <template v-else>
+            <div class="offline-core">
+              {{ isHebrew
+                ? 'התחברות שומרת את הסימונים שלך בענן ומסנכרנת אותם בין המכשירים שלך. הכול עובד גם בלי להתחבר.'
+                : 'Signing in backs up your marks and keeps them in sync across your devices. Everything works without it.' }}
+            </div>
+            <button class="offline-btn" :disabled="!sync.ready" @click="startSignIn">
+              <template v-if="sync.ready">{{ isHebrew ? 'התחברות עם Google' : 'Sign in with Google' }}</template>
+              <template v-else>{{ isHebrew ? 'טוען התחברות...' : 'Loading sign-in...' }}</template>
+            </button>
+            <div v-if="sync.loadFailed" class="offline-error">
+              {{ isHebrew ? 'לא ניתן לטעון את ההתחברות. בדקו את החיבור.' : 'Sign-in could not load. Check the connection.' }}
+              <button class="offline-btn" @click="preload">{{ isHebrew ? 'נסה שוב' : 'Retry' }}</button>
+            </div>
+          </template>
+          <div v-if="sync.signInError" class="offline-error">
+            {{ isHebrew ? 'ההתחברות נכשלה' : 'Sign-in failed' }} ({{ sync.signInError }})
+          </div>
+          <div class="offline-core">
+            {{ isHebrew
+              ? 'בענן נשמרים שם חשבון Google והאימייל שלך, ואילו פסוקים סימנת.'
+              : 'The cloud stores your Google account name and email and which pesukim you marked.' }}
+          </div>
+        </div>
+
         <!-- Start the open parsha over: archives its marks (Undo restores them)
              and clears them here and in overlapping combined/single parshiyot -->
         <div v-if="currentParsha" class="offline-section">
@@ -151,6 +196,7 @@ import { computed, inject, onMounted, onUnmounted, ref } from 'vue'
 import { useSettings } from '../composables/useSettings'
 import { useOffline } from '../composables/useOffline'
 import { useCycles } from '../composables/useCycles'
+import { useSync, preload } from '../composables/useSync'
 import { parshiyotList } from '../data/parshiyot'
 
 const props = defineProps({
@@ -203,7 +249,57 @@ const handleKeydown = (e) => {
   emit('close')
 }
 
-onMounted(() => document.addEventListener('keydown', handleKeydown))
+onMounted(() => {
+  document.addEventListener('keydown', handleKeydown)
+  // Fetch the sign-in client now, so the button's popup can open straight
+  // from the click (Safari blocks popups opened after an await).
+  preload()
+})
+
+// Account (sign-in sync)
+const { sync, signIn, signOut, retry: retrySync } = useSync()
+const confirmingSignOut = ref(false)
+
+const changesText = (n) => isHebrew.value
+  ? (n === 1 ? 'שינוי אחד' : `${n} שינויים`)
+  : (n === 1 ? '1 change' : `${n} changes`)
+
+const syncStatusText = computed(() => {
+  const n = sync.pending
+  const he = isHebrew.value
+  const waiting = !n ? ''
+    : he ? ` — ${changesText(n)} ${n === 1 ? 'ממתין' : 'ממתינים'} להעלאה` : ` — ${changesText(n)} waiting`
+  switch (sync.status) {
+    case 'syncing': return he ? 'מסנכרן...' : 'Syncing...'
+    case 'offline': return (he ? 'אין חיבור' : 'Offline') + waiting
+    case 'error': return (he ? 'הסנכרון נכשל' : 'Sync failed') + waiting
+    case 'synced': {
+      const t = sync.lastSyncedAt
+      const when = !t || Date.now() - t < 60 * 1000
+        ? (he ? 'מסונכרן כעת' : 'Synced just now')
+        : (he ? 'סונכרן בשעה ' : 'Synced at ') + new Date(t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      return when + waiting
+    }
+    default: return ''
+  }
+})
+
+const signOutWarning = computed(() => isHebrew.value
+  ? `${changesText(sync.pending)} עדיין לא ${sync.pending === 1 ? 'הועלה' : 'הועלו'}. להתנתק בכל זאת? הסימונים יישארו במכשיר הזה.`
+  : `${changesText(sync.pending)} not uploaded yet. Sign out anyway? They stay on this device.`)
+
+// Must stay synchronous: signIn opens the popup inside this click.
+const startSignIn = () => { signIn() }
+
+const askSignOut = () => {
+  if (sync.pending > 0) confirmingSignOut.value = true
+  else signOut()
+}
+
+const confirmSignOut = () => {
+  confirmingSignOut.value = false
+  signOut()
+}
 onUnmounted(() => document.removeEventListener('keydown', handleKeydown))
 
 // Offline download state

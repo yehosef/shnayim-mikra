@@ -35,7 +35,9 @@ export const pwaOptions = {
     maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
     cleanupOutdatedCaches: true,
     navigateFallback: '/index.html',
-    navigateFallbackDenylist: [/^\/data\//],
+    // /__/ holds Firebase's sign-in helper pages (/__/auth/handler and the
+    // like); answering them with the app shell would break sign-in.
+    navigateFallbackDenylist: [/^\/data\//, /^\/__\//],
     runtimeCaching: [
       {
         urlPattern: /\/data\/(english|rashi)\/.*\.json$/,
@@ -91,6 +93,8 @@ export default defineConfig({
     VitePWA(pwaOptions)
   ],
   test: {
-    environment: 'node'
+    environment: 'node',
+    // tests/rules/ needs the Firestore emulator: `npm run test:rules`.
+    exclude: ['**/node_modules/**', '**/.git/**', 'tests/rules/**']
   }
 })
