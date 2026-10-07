@@ -3,80 +3,117 @@
     <!-- Header -->
     <div ref="headerEl" class="header">
       <div class="container">
-        <div class="title-section">
-          <h1>פרשת {{ parashaHe }}</h1>
-          <!-- aliyot.json failed to load: the aliyah bar and the pointer are
-               missing until it succeeds, so say so and offer a retry -->
-          <p v-if="aliyotError && !aliyotData">
-            <span>{{ isHebrew ? 'לא ניתן לטעון את גבולות העליות.' : 'Could not load aliyah boundaries.' }}</span>
-            <button type="button" class="btn" @click="retryAliyot">{{ isHebrew ? 'נסה שוב' : 'Retry' }}</button>
-          </p>
-          <AliyahBar
-            v-if="aliyotEntry"
-            :stats="aliyahStatsList"
-            :currentN="currentAliyahN"
-            :selectedN="settings.displayMode === 'aliyah' ? settings.currentAliyah : null"
-            :guideAliyot="todayAliyot"
-            :isHebrew="isHebrew"
-            @select="selectAliyah"
-          />
-          <!-- Aliyah Selector (shown in aliyah mode) -->
-          <div v-if="settings.displayMode === 'aliyah'" class="aliyah-selector">
-            <span class="aliyah-label">{{ isHebrew ? 'עלייה:' : 'Aliyah:' }}</span>
-            <select v-model="settings.currentAliyah" class="aliyah-dropdown" dir="rtl" lang="he" :aria-label="t('עלייה', 'Aliyah')">
-              <option v-for="n in aliyahCount" :key="n" :value="n">{{ aliyahNames[n - 1] }}</option>
+        <!-- Title row, the same at every width: the title is the parsha
+             picker (a native select laid over it, so phones keep their own
+             picker) and the gear and the sync icon sit at its end. -->
+        <div class="title-row">
+          <div class="parsha-picker">
+            <h1>פרשת {{ parashaHe }}<span class="picker-caret" aria-hidden="true">▾</span></h1>
+            <!-- ✓ every piece of the parsha is read, ◐ partly read (derived from
+                 progress, see parshaMarks); the disabled first option is the legend -->
+            <select
+              v-model="selectedParsha"
+              @change="navigateToParsha"
+              class="parsha-select"
+              dir="rtl"
+              lang="he"
+              :title="t('✓ הושלמה · ◐ בקריאה', '✓ finished · ◐ in progress')"
+              :aria-label="t('בחירת פרשה', 'Choose a parsha')"
+            >
+              <option disabled value="">{{ t('✓ הושלמה · ◐ בקריאה', '✓ finished · ◐ in progress') }}</option>
+              <optgroup v-for="g in parshaGroups" :key="g.chumash" :label="g.label">
+                <option v-for="p in g.items" :key="p.route" :value="p.route">{{ p.he }}{{ parshaMarks[p.route] }}</option>
+              </optgroup>
             </select>
           </div>
-          <!-- Progress Indicator. Its caption row also carries the advisory
-               status pill (Shabbat / after Shabbat only) and the link to the
-               other week, so neither needs a header line of its own. -->
-          <div v-if="displayVerses.length > 0 || otherWeek" class="progress-bar">
-            <div class="progress-row">
-              <div v-if="displayVerses.length > 0" class="progress-text">
-                {{ isHebrew ? 'התקדמות:' : 'Progress:' }} <bdi dir="ltr" class="progress-num">{{ completedCount }}/{{ displayVerses.length }} ({{ progressPercent }}%)</bdi>
-              </div>
-              <DailyGuide v-if="aliyotEntry" :status="status" :complete="viewedComplete" :isHebrew="isHebrew" />
-              <!-- The coming week is always one click away from any other
-                   parsha; last week only while it is started and unfinished -->
-              <a v-if="otherWeek" class="other-week-link" :href="`#${otherWeek.route}`">{{ otherWeekText }}</a>
-            </div>
-            <div v-if="displayVerses.length > 0" class="progress-track">
-              <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
-            </div>
+          <div class="controls">
+            <button
+              @click="openSettings()"
+              class="btn"
+              :title="t('הגדרות', 'Settings')"
+              :aria-label="t('הגדרות', 'Settings')"
+            >⚙️</button>
+            <!-- Sync state at a glance; opens Settings at the account section -->
+            <button
+              type="button"
+              class="btn sync-btn"
+              :class="`sync-${syncIcon}`"
+              :title="syncLabel"
+              :aria-label="syncLabel"
+              @click="openSettings('account')"
+            >
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                <path
+                  d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.6 9.2 4.7 4.7 0 0 0 7 18.5z"
+                  :fill="syncIcon === 'synced' ? 'currentColor' : 'none'"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linejoin="round"
+                />
+                <circle v-if="syncIcon === 'pending'" cx="12" cy="13.5" r="2.2" fill="currentColor" />
+                <line v-if="syncIcon === 'off'" x1="3.5" y1="3.5" x2="20.5" y2="20.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+              </svg>
+            </button>
           </div>
         </div>
-        <div class="controls">
-          <button
-            @click="showSettings = !showSettings"
-            class="btn"
-            :title="t('הגדרות', 'Settings')"
-            :aria-label="t('הגדרות', 'Settings')"
-          >⚙️</button>
-          <!-- ✓ every piece of the parsha is read, ◐ partly read (derived from
-               progress, see parshaMarks) -->
-          <select
-            v-model="selectedParsha"
-            @change="navigateToParsha"
-            class="parsha-select"
-            dir="rtl"
-            lang="he"
-            :title="t('✓ הושלמה · ◐ בקריאה', '✓ finished · ◐ in progress')"
-            :aria-label="t('בחירת פרשה', 'Choose a parsha')"
-          >
-            <option v-for="p in parshiyotList" :key="p.route" :value="p.route">{{ p.he }}{{ parshaMarks[p.route] }}</option>
-          </select>
+        <!-- aliyot.json failed to load: the aliyah bar and the pointer are
+             missing until it succeeds, so say so and offer a retry -->
+        <p v-if="aliyotError && !aliyotData">
+          <span>{{ isHebrew ? 'לא ניתן לטעון את גבולות העליות.' : 'Could not load aliyah boundaries.' }}</span>
+          <button type="button" class="btn" @click="retryAliyot">{{ isHebrew ? 'נסה שוב' : 'Retry' }}</button>
+        </p>
+        <!-- A chip tap selects that aliyah (selectAliyah); the chips replace the
+             old "Aliyah:" dropdown of the aliyah view. -->
+        <AliyahBar
+          v-if="aliyotEntry"
+          :stats="aliyahStatsList"
+          :currentN="currentAliyahN"
+          :selectedN="settings.displayMode === 'aliyah' ? settings.currentAliyah : null"
+          :guideAliyot="todayAliyot"
+          :isHebrew="isHebrew"
+          @select="selectAliyah"
+        />
+        <!-- Progress Indicator. Its caption row also carries the advisory
+             status pill (Shabbat / after Shabbat only) and the link to the
+             other week, so neither needs a header line of its own. -->
+        <div v-if="displayVerses.length > 0 || otherWeek" class="progress-bar">
+          <div class="progress-row">
+            <div v-if="displayVerses.length > 0" class="progress-text">
+              {{ isHebrew ? 'התקדמות:' : 'Progress:' }} <bdi dir="ltr" class="progress-num">{{ completedCount }}/{{ displayVerses.length }} ({{ progressPercent }}%)</bdi>
+            </div>
+            <span v-if="viewedComplete" class="complete-note">{{ t('הושלמה ✓', 'Complete ✓') }}</span>
+            <DailyGuide v-if="aliyotEntry" :status="status" :complete="viewedComplete" :isHebrew="isHebrew" />
+            <!-- The coming week is always one click away from any other
+                 parsha; last week only while it is started and unfinished -->
+            <a v-if="otherWeek" class="other-week-link" :href="`#${otherWeek.route}`">{{ otherWeekText }}</a>
+          </div>
+          <div v-if="displayVerses.length > 0" class="progress-track">
+            <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Settings Modal -->
-    <SettingsModal v-if="showSettings" @close="showSettings = false" />
+    <!-- initialSection: 'account' when opened from the sync icon (SettingsModal
+         ignores it if it does not know the prop) -->
+    <SettingsModal v-if="showSettings" :initial-section="settingsSection" @close="showSettings = false" />
 
     <!-- Loading -->
     <div v-if="loading" class="loading">{{ isHebrew ? 'טוען...' : 'Loading...' }}</div>
 
-    <!-- Error -->
-    <div v-if="error" class="error">{{ isHebrew ? 'שגיאה:' : 'Error:' }} {{ error }}</div>
+    <!-- The Torah text could not be loaded: a sentence and a retry; the raw
+         error only for whoever opens the details. -->
+    <div v-if="error" class="error load-error" role="alert">
+      <p>
+        <span>{{ t('לא ניתן לטעון את הטקסט.', 'Could not load the text.') }}</span>
+        <button type="button" class="btn retry-btn" @click="reloadParsha">{{ t('נסה שוב', 'Retry') }}</button>
+      </p>
+      <details class="error-details">
+        <summary>{{ t('פרטים', 'Details') }}</summary>
+        <bdi dir="ltr">{{ error }}</bdi>
+      </details>
+    </div>
     <!-- The store rejected the last write (quota, blocked storage): marks made in
          this session will not survive a reload. Advisory only — nothing is hidden. -->
     <div v-if="persistFailed" class="error" role="alert">
@@ -102,10 +139,24 @@
       :pointerAt="isPointer"
       :inScopeAt="inCurrentAliyah"
       @exit="exitFocusMode"
+      @complete="onFocusComplete"
     />
 
     <!-- Content -->
     <div v-if="!loading && !error && !showFocusMode" class="content">
+      <!-- The whole parsha was just finished. Advisory: it hides nothing. -->
+      <div v-if="showCompletion && viewedComplete" class="completion-card" role="status">
+        <p class="completion-text">
+          <template v-if="isHebrew">פרשת {{ parashaHe }} הושלמה: שתי הקריאות והתרגום.</template>
+          <template v-else>Parashat <bdi lang="he">{{ parashaHe }}</bdi> complete: both readings and the translation.</template>
+        </p>
+        <div class="completion-actions">
+          <button v-if="otherWeek" type="button" class="btn" @click="goToOtherWeek">
+            {{ otherWeek.kind === 'next' ? t('לשבוע הבא', 'Coming week') : t('לשבוע שעבר', 'Last week') }}
+          </button>
+          <button type="button" class="btn" @click="showCompletion = false">{{ t('חזרה לרשימה', 'Back to list') }}</button>
+        </div>
+      </div>
       <!-- One pasuk at a time. A pasuk change uses the shared motion
            (src/lib/motion.js, motion-* classes in src/style.css): forward
            enters from the left, backward from the right. -->
@@ -132,6 +183,7 @@
             :aria-label="t('פסוק הבא', 'Next pasuk')"
           >←</button>
         </div>
+        <p class="keyboard-hint">{{ keyboardHint }}</p>
         <!-- The wrapper carries the motion classes: VerseView's own scoped
              `transition` would otherwise override them. -->
         <Transition
@@ -158,6 +210,7 @@
             {{ isHebrew ? 'פסוק אחד בכל פעם' : 'One pasuk at a time' }}
           </button>
         </div>
+        <p class="keyboard-hint">{{ keyboardHint }}</p>
         <VerseView
           v-for="item in visibleVerses"
           :key="`${item.verse.perekNum}-${item.verse.pasukNum}`"
@@ -178,6 +231,8 @@ import { useCycles } from '../composables/useCycles'
 import { useAliyot } from '../composables/useAliyot'
 import { useReadingState } from '../composables/useReadingState'
 import { useDailyGuide, useNow } from '../composables/useDailyGuide'
+import { useSync } from '../composables/useSync'
+import parshiyotData from '../data/parshiyot'
 import { parseKey, routeProgressState, catchUpPending } from '../lib/progressMath'
 import {
   nextListSelection,
@@ -225,10 +280,20 @@ const { progress, externalRevision, persistFailed, setVerseProgress, getVersePro
 const { bulkRevision } = useCycles()
 const { getAliyot, aliyotData, aliyotError, retryAliyot, verseInAliyah, aliyahFor } = useAliyot()
 const now = useNow()
+const { sync } = useSync()
 
 const showSettings = ref(false)
+// Which Settings section to open at ('account' from the sync icon), or null.
+const settingsSection = ref(null)
+const openSettings = (section = null) => {
+  settingsSection.value = section
+  showSettings.value = true
+}
 const selectedParsha = ref(props.parasha)
 const showFocusMode = ref(false)
+// The completion card: shown when focus mode or a mark in the list finishes
+// the parsha; dismissed by its buttons or a parsha change.
+const showCompletion = ref(false)
 const focusIndex = ref(0)
 const selectedIndex = ref(0) // Which verse is selected
 // Which phase within the verse: 1=hebrew1, 2=hebrew2, 3=targum, and 0 = none,
@@ -270,6 +335,12 @@ const enterFocusMode = (index) => {
   showFocusMode.value = true
 }
 
+// Focus mode found nothing left to read in its view. The card only appears
+// when that means the whole parsha (in the aliyah view it may be one aliyah).
+const onFocusComplete = () => {
+  if (viewedComplete.value) showCompletion.value = true
+}
+
 const exitFocusMode = () => {
   showFocusMode.value = false
   // Reading ahead in focus mode moved the pointer; without re-seeding, the
@@ -284,6 +355,59 @@ const parashaHe = computed(() => {
 
 const isHebrew = computed(() => settings.value.interfaceLanguage === 'he')
 const t = (he, en) => (isHebrew.value ? he : en)
+
+// The picker's options grouped by chumash (parshiyot.js carries `chumash`).
+const chumashLabels = {
+  bereishit: 'ספר בראשית',
+  shmot: 'ספר שמות',
+  vayikra: 'ספר ויקרא',
+  bamidbar: 'ספר במדבר',
+  dvarim: 'ספר דברים'
+}
+const parshaGroups = (() => {
+  const groups = []
+  for (const p of parshiyotList) {
+    const chumash = parshiyotData[p.route]?.chumash || ''
+    let g = groups[groups.length - 1]
+    if (!g || g.chumash !== chumash) {
+      g = { chumash, label: chumashLabels[chumash] || chumash, items: [] }
+      groups.push(g)
+    }
+    g.items.push(p)
+  }
+  return groups
+})()
+
+// The sync icon beside the gear: three looks (off / synced / pending), with a
+// label per state. Offline and error share the pending look: marks are
+// waiting to go up.
+const syncIcon = computed(() => {
+  const s = sync.status
+  if (s === 'signed-out') return 'off'
+  if (s === 'synced' && !sync.pending) return 'synced'
+  return 'pending'
+})
+const syncLabel = computed(() => {
+  switch (sync.status) {
+    case 'signed-out':
+      return t('לא מחובר: הסימונים נשמרים רק במכשיר הזה', 'Not signed in: marks stay on this device')
+    case 'offline':
+      return t('לא מקוון: הסימונים יסונכרנו כשהחיבור יחזור', 'Offline: marks will sync when the connection returns')
+    case 'error':
+      return t('בעיה בסנכרון: פתחו את ההגדרות', 'Sync problem: open Settings')
+    case 'synced':
+      if (!sync.pending) return t('מסונכרן', 'Synced')
+      return t('מסנכרן…', 'Syncing…')
+    default:
+      return t('מסנכרן…', 'Syncing…')
+  }
+})
+
+// One quiet line under the arrow row, shown only to keyboard-and-mouse
+// devices (CSS: hover + fine pointer).
+const keyboardHint = computed(() =>
+  t('רווח מסמן וממשיך · ← → מעבר בין פסוקים', 'Space marks and moves on · ← → change pasuk')
+)
 
 // Aliyah boundaries come from the generated aliyot.json (never from parshiyot.js)
 const aliyotEntry = computed(() => (aliyotData.value ? getAliyot(props.parasha) : null))
@@ -420,9 +544,36 @@ const aliyahLabelFor = (perek, pasuk) => {
   return a ? aliyahNames[a.n - 1] : null
 }
 
-const selectAliyah = (n) => {
+// A chip tap. In one-pasuk mode the mode stays and the single card moves to
+// that aliyah's first unread pasuk (its first pasuk when all are read). In
+// the other modes the aliyah view opens on that aliyah; the selection then
+// re-seeds at its next unread piece (displayVerses watcher), and a fully read
+// aliyah opens at its top.
+const selectAliyah = async (n) => {
+  if (pasukMode.value) {
+    const aliyah = aliyotEntry.value?.aliyot[n - 1]
+    if (!aliyah) return
+    let first = -1
+    let firstUnread = -1
+    displayVerses.value.forEach((v, i) => {
+      if (firstUnread >= 0 || !verseInAliyah(aliyah, v.perekNum, v.pasukNum)) return
+      if (first < 0) first = i
+      const rec = getVerseProgress(props.parasha, getVerseKey(v))
+      if (!(rec.hebrew1 && rec.hebrew2 && rec.targum)) firstUnread = i
+    })
+    const i = firstUnread >= 0 ? firstUnread : first
+    if (i >= 0) selectVerse(i)
+    return
+  }
+  const changed = settings.value.displayMode !== 'aliyah' || settings.value.currentAliyah !== n
   settings.value.displayMode = 'aliyah'
   settings.value.currentAliyah = n
+  if (!changed) return
+  await nextTick()
+  if (scopeComplete.value) {
+    await nextTick()
+    window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+  }
 }
 
 // Filter verses based on display mode, and label the first verse of each aliyah
@@ -616,6 +767,7 @@ watch(aliyahCount, (count) => {
 // Load data when parasha changes
 watch(() => props.parasha, async (newParasha) => {
   selectedParsha.value = newParasha
+  showCompletion.value = false
   cancelHold()
   // Focus mode holds its own index into the old verse list, and the old verses
   // would be rendered while progress is written under the new route.
@@ -645,6 +797,25 @@ const navigateToParsha = () => {
   window.location.hash = selectedParsha.value
 }
 
+// The Retry of the "could not load the text" message.
+const reloadParsha = () =>
+  loadParsha(props.parasha, {
+    showRashi: settings.value.showRashi,
+    targumType: settings.value.targumType
+  })
+
+const goToOtherWeek = () => {
+  const o = otherWeek.value
+  showCompletion.value = false
+  if (o) window.location.hash = o.route
+}
+// Run a mark and show the card if it is the one that finished the parsha.
+const noteCompletion = (mark) => {
+  const before = viewedComplete.value
+  mark()
+  if (!before && viewedComplete.value) showCompletion.value = true
+}
+
 // Get verse key for progress tracking
 const getVerseKey = (verse) => `${verse.perekNum}:${verse.pasukNum}`
 
@@ -667,7 +838,7 @@ const handlePhaseClick = (verseIndex, { phase, field, wasRead }) => {
   const verseKey = getVerseKey(verse)
 
   // Toggle the value
-  setVerseProgress(props.parasha, verseKey, field, !wasRead)
+  noteCompletion(() => setVerseProgress(props.parasha, verseKey, field, !wasRead))
 
   // Only auto-advance if we just marked it as read (was unread before)
   if (!wasRead) advanceSelection()
@@ -685,9 +856,11 @@ const toggleVerseComplete = (verseIndex) => {
   const verseKey = getVerseKey(verse)
   const rec = getVerseProgress(props.parasha, verseKey)
   const complete = !!(rec.hebrew1 && rec.hebrew2 && rec.targum)
-  for (const field of ['hebrew1', 'hebrew2', 'targum']) {
-    setVerseProgress(props.parasha, verseKey, field, !complete)
-  }
+  noteCompletion(() => {
+    for (const field of ['hebrew1', 'hebrew2', 'targum']) {
+      setVerseProgress(props.parasha, verseKey, field, !complete)
+    }
+  })
   selectedIndex.value = verseIndex
   if (complete) {
     selectedPhase.value = 1
@@ -801,7 +974,7 @@ const toggleCurrentPhase = () => {
   const wasRead = currentProgress[phaseField]
 
   if (keyboardMarkAction({ wasRead })) {
-    setVerseProgress(props.parasha, verseKey, phaseField, true)
+    noteCompletion(() => setVerseProgress(props.parasha, verseKey, phaseField, true))
   }
   advanceSelection()
 }
@@ -868,12 +1041,53 @@ const prefersReducedMotion = () =>
 // have already cancelled the page's own scrolling. In one-pasuk mode a new
 // card is not in the page yet when the selection changes; onPasukEnter calls
 // this again once it is.
+//
+// The free area is the window below whatever sticks at the top: the header
+// (not sticky on short screens) and the arrow row, measured now. In one-pasuk
+// mode the card's top (pasuk number, pointer) is put just below that, unless
+// it is already in view with the selected piece visible. Only a selected
+// piece that would start in the lower part of the screen with the card's top
+// in place (the second reading or the translation of a long pasuk at a large
+// size) gets its own top there instead.
+// In the list, a piece taller than the free area is aligned by its top and a
+// shorter one is centred in the free area.
+const SCROLL_GAP = 8
+const stickyTopOffset = () => {
+  let offset = 0
+  const header = headerEl.value
+  if (header && getComputedStyle(header).position === 'sticky') offset += header.offsetHeight
+  const row = document.querySelector('.content .pasuk-nav-row')
+  if (row && getComputedStyle(row).position === 'sticky') offset += row.offsetHeight
+  return offset
+}
+
 const scrollToSelected = () => {
   nextTick(() => {
     const verseEl = document.querySelector(`.verse[data-verse-index="${selectedIndex.value}"]`)
     if (!verseEl) return
     const el = verseEl.querySelector('.phase-selected') || verseEl
-    el.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' })
+    const offset = stickyTopOffset()
+    const vh = window.innerHeight
+    const free = vh - offset
+    const p = el.getBoundingClientRect()
+    let delta
+    if (pasukMode.value) {
+      const card = verseEl.closest('.pasuk-card') || verseEl
+      const cardTop = card.getBoundingClientRect().top - offset - SCROLL_GAP
+      // Where the selected piece's top would sit with the card's top in place
+      if (p.top - cardTop > vh * 0.6) delta = p.top - offset - SCROLL_GAP
+      else if (cardTop >= 0 && p.bottom <= vh - SCROLL_GAP) delta = 0
+      else delta = cardTop
+    } else if (p.height > free - 2 * SCROLL_GAP) {
+      delta = p.top - offset - SCROLL_GAP
+    } else {
+      delta = p.top - offset - (free - p.height) / 2
+    }
+    if (Math.abs(delta) < 1) return
+    window.scrollTo({
+      top: Math.max(0, window.scrollY + delta),
+      behavior: prefersReducedMotion() ? 'auto' : 'smooth'
+    })
   })
 }
 
@@ -954,14 +1168,18 @@ const onOnline = () => { retryAliyot() }
 // previous/next row can stick just below it instead of sliding underneath.
 const headerEl = ref(null)
 let headerObserver = null
+// On short screens the header is not sticky, so the row sticks at the top.
 const publishHeaderHeight = () => {
-  const h = headerEl.value ? headerEl.value.offsetHeight : 0
+  const el = headerEl.value
+  const h = el && getComputedStyle(el).position === 'sticky' ? el.offsetHeight : 0
   document.documentElement.style.setProperty('--list-header-h', `${h}px`)
 }
 
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown)
   window.addEventListener('online', onOnline)
+  // A rotation can switch the header between sticky and not
+  window.addEventListener('resize', publishHeaderHeight)
   publishHeaderHeight()
   if (typeof ResizeObserver !== 'undefined' && headerEl.value) {
     headerObserver = new ResizeObserver(publishHeaderHeight)
@@ -976,6 +1194,7 @@ onUnmounted(() => {
   document.documentElement.style.removeProperty('--list-header-h')
   document.removeEventListener('keydown', handleKeydown)
   window.removeEventListener('online', onOnline)
+  window.removeEventListener('resize', publishHeaderHeight)
 })
 </script>
 
@@ -996,20 +1215,63 @@ onUnmounted(() => {
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
 }
 
-.title-section {
-  flex: 1;
+/* Title (the parsha picker) at the start, gear and sync icon at the end */
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.parsha-picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
 }
 
 h1 {
   font-size: 1.5rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin: 0;
+}
+
+.picker-caret {
+  font-size: 0.7em;
+  color: var(--c-muted);
+  margin-inline-start: 0.35em;
+}
+
+.parsha-picker:hover .picker-caret {
+  color: var(--c-text-2);
+}
+
+/* The native select covers the whole title: tapping the title opens the
+   phone's own picker, and keyboard focus lands on the select. */
+.parsha-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  /* allow-opacity: invisible select laid over the title; a control, not text */
+  opacity: 0;
+}
+
+.parsha-picker:focus-within {
+  outline: 2px solid var(--c-scope);
+  outline-offset: 2px;
 }
 
 .aliyah-progress {
@@ -1038,6 +1300,12 @@ h1 {
 
 .progress-num {
   color: var(--c-text-2);
+}
+
+.complete-note {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--c-read-strong);
 }
 
 /* The other week: small and quiet, at the inline end of the caption row. */
@@ -1071,7 +1339,8 @@ h1 {
 .controls {
   display: flex;
   gap: 0.5rem;
-  align-items: center;
+  /* gear and sync icon the same height */
+  align-items: stretch;
   flex-shrink: 0;
 }
 
@@ -1101,6 +1370,15 @@ h1 {
   transform: translateY(0);
 }
 
+.sync-btn {
+  color: var(--c-text-2);
+  padding-inline: 0.7rem;
+}
+
+.sync-btn svg {
+  display: block;
+}
+
 .study-mode-btn {
   font-weight: 500;
 }
@@ -1124,47 +1402,31 @@ h1 {
   font-size: 0.85rem;
 }
 
-/* Phone: the header was nearly half of a 375x812 screen. Title and the
-   settings / parsha picker share one row; the aliyah chips (AliyahBar) scroll
-   sideways in one row; the progress bar is thinner; padding is smaller. Every
-   element is still there, in the same order. `display: contents` lets the
-   title block's children join the container's grid. */
-@media (max-width: 600px) {
+/* Phone, and any short screen (a phone in landscape): smaller padding and
+   title, the aliyah chips (AliyahBar) in one sideways-scrolling row, a
+   thinner progress bar. */
+@media (max-width: 600px), (max-height: 500px) {
   .study-mode-btn .label {
     display: none;
   }
 
   .header {
-    padding: 0.4rem 0.75rem 0.5rem;
+    padding: 0.25rem 0.75rem 0.4rem;
   }
 
-  .container {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    column-gap: 0.5rem;
-    row-gap: 0.15rem;
+  .title-row {
+    gap: 0.5rem;
   }
 
-  .title-section {
-    display: contents;
-  }
-
-  .title-section > * {
-    grid-column: 1 / -1;
-    min-width: 0;
+  .parsha-picker {
+    min-height: 40px;
   }
 
   h1 {
-    grid-column: 1;
-    grid-row: 1;
     font-size: 1.15rem;
-    margin-bottom: 0;
   }
 
   .controls {
-    grid-column: 2;
-    grid-row: 1;
     gap: 0.35rem;
   }
 
@@ -1172,14 +1434,8 @@ h1 {
     padding: 0.3rem 0.6rem;
   }
 
-  .parsha-select {
-    padding: 0.3rem;
-    max-width: 9.5rem;
-    font-size: 0.9rem;
-  }
-
   .progress-bar {
-    margin-top: 0.2rem;
+    margin-top: 0.1rem;
   }
 
   .progress-row {
@@ -1194,58 +1450,18 @@ h1 {
     height: 4px;
   }
 
-  .aliyah-selector {
-    margin: 0.2rem 0;
-  }
-
   .content {
     margin: 0.75rem auto;
     padding: 0 0.5rem;
   }
 }
 
-.parsha-select {
-  padding: 0.5rem;
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius-sm);
-  font-family: inherit;
-}
-
-/* Aliyah Selector */
-.aliyah-selector {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.5rem 0;
-}
-
-.aliyah-label {
-  font-size: 0.9rem;
-  color: var(--c-text-2);
-  font-weight: 500;
-}
-
-.aliyah-dropdown {
-  padding: 0.4rem 0.75rem;
-  border: 2px solid var(--c-scope);
-  border-radius: var(--radius-sm);
-  font-family: inherit;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--c-scope-text);
-  background: linear-gradient(135deg, #eff6ff 0%, var(--c-scope-bg) 100%);
-  cursor: pointer;
-  transition: border-color var(--motion-base) var(--ease-out);
-}
-
-.aliyah-dropdown:hover {
-  background: linear-gradient(135deg, var(--c-scope-bg) 0%, #bfdbfe 100%);
-  border-color: var(--c-scope-strong);
-}
-
-.aliyah-dropdown:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(var(--c-scope-rgb), 0.3);
+/* Short screens: a sticky header would leave no room for the text. The arrow
+   row still sticks (at the top, see publishHeaderHeight). */
+@media (max-height: 500px) {
+  .header {
+    position: static;
+  }
 }
 
 .loading, .error {
@@ -1258,10 +1474,80 @@ h1 {
   color: #d32f2f;
 }
 
+.load-error p {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.load-error .retry-btn {
+  color: var(--c-text);
+}
+
+.error-details {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--c-muted);
+}
+
+.error-details summary {
+  cursor: pointer;
+}
+
+/* Finished the parsha: advisory, dismissible, hides nothing */
+.completion-card {
+  background: var(--c-read-tint);
+  border: 1px solid var(--c-read-border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.completion-text {
+  margin: 0 0 0.5rem;
+  color: var(--c-text);
+  font-weight: 500;
+}
+
+.completion-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.completion-actions .btn {
+  min-height: 44px;
+}
+
+/* Keyboard hint: only where there is a keyboard and a mouse */
+.keyboard-hint {
+  display: none;
+  margin: -0.25rem 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--c-muted);
+  text-align: center;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .keyboard-hint {
+    display: block;
+  }
+}
+
 .content {
   max-width: 1200px;
   margin: 2rem auto;
   padding: 0 1rem;
+}
+
+/* Scrolling to the card leaves its top row below the sticky header and
+   arrow row (scrollToSelected measures them; this is the CSS fallback). */
+.pasuk-card {
+  scroll-margin-top: calc(var(--list-header-h, 0px) + 3.5rem);
 }
 
 
@@ -1293,22 +1579,31 @@ h1 {
 }
 
 .pasuk-nav {
-  background: linear-gradient(135deg, var(--c-read-border) 0%, var(--c-read-strong) 100%);
-  color: white;
-  border: none;
-  padding: 0.4rem 1rem;
+  /* Neutral: green is kept for "read" */
+  background: var(--c-surface-2);
+  color: var(--c-text-2);
+  border: 1px solid var(--c-border);
+  padding: calc(0.4rem - 1px) calc(1rem - 1px);
   border-radius: 10px;
   font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
-  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
+  transition:
+    background-color var(--motion-base) var(--ease-out),
+    border-color var(--motion-base) var(--ease-out);
 }
 
+.pasuk-nav:hover:not(:disabled) {
+  background: var(--c-border-soft);
+  border-color: var(--c-faint);
+  color: var(--c-text);
+}
+
+/* Disabled at the first / last pasuk: faint by colour, same shape */
 .pasuk-nav:disabled {
-  /* allow-opacity: disabled side arrow at the first/last pasuk, not text */
-  opacity: 0.3;
   cursor: not-allowed;
-  background: var(--c-border);
-  box-shadow: none;
+  background: var(--c-bg);
+  border-color: var(--c-border-soft);
+  color: var(--c-border);
 }
 </style>

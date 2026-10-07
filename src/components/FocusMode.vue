@@ -329,7 +329,9 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['exit'])
+// 'complete': nothing is left to read in this view (fired just before that
+// 'exit'); the parent decides whether that finished the whole parsha.
+const emit = defineEmits(['exit', 'complete'])
 
 const { getVerseProgress, setVerseProgress } = useProgress()
 
@@ -694,6 +696,7 @@ const advanceStep = () => {
     holding.value = false
     // null = nothing left to read anywhere in this view.
     if (!next) {
+      emit('complete')
       emit('exit')
       return
     }

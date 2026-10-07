@@ -218,11 +218,11 @@ watch(
   font-size: 0.8em;
 }
 
-/* Phone: one horizontally scrollable row instead of wrapping onto several
-   lines. The padding keeps the pointer ring from being clipped by the scroll
+/* Phone, and any short screen (phone landscape): one horizontally scrollable
+   row instead of wrapping onto several lines. The padding keeps the pointer ring from being clipped by the scroll
    box. The edge with more chips beyond it fades out. The bar is pinned
    dir="rtl" (chips in Hebrew order), but both directions are handled. */
-@media (max-width: 600px) {
+@media (max-width: 600px), (max-height: 500px) {
   .aliyah-bar {
     flex-wrap: nowrap;
     overflow-x: auto;
