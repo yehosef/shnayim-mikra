@@ -5,12 +5,6 @@
       <div class="container">
         <div class="title-section">
           <h1>פרשת {{ parashaHe }}</h1>
-          <DailyGuide v-if="aliyotEntry" :guide="guide" :status="status" :isHebrew="isHebrew" />
-          <!-- The other week is always one click away (coming week, or the one
-               we are still finishing during the lenient Sunday-Tuesday window) -->
-          <p v-if="otherWeek">
-            <a :href="`#${otherWeek.route}`">{{ otherWeekText }}</a>
-          </p>
           <!-- aliyot.json failed to load: the aliyah bar and the pointer are
                missing until it succeeds, so say so and offer a retry -->
           <p v-if="aliyotError && !aliyotData">
@@ -22,23 +16,31 @@
             :stats="aliyahStatsList"
             :currentN="currentAliyahN"
             :selectedN="settings.displayMode === 'aliyah' ? settings.currentAliyah : null"
-            :guideAliyot="guide.aliyot"
+            :guideAliyot="todayAliyot"
             :isHebrew="isHebrew"
             @select="selectAliyah"
           />
           <!-- Aliyah Selector (shown in aliyah mode) -->
           <div v-if="settings.displayMode === 'aliyah'" class="aliyah-selector">
-            <span class="aliyah-label">{{ isHebrew ? 'עליה:' : 'Aliyah:' }}</span>
-            <select v-model="settings.currentAliyah" class="aliyah-dropdown" dir="rtl" lang="he" :aria-label="t('עליה', 'Aliyah')">
+            <span class="aliyah-label">{{ isHebrew ? 'עלייה:' : 'Aliyah:' }}</span>
+            <select v-model="settings.currentAliyah" class="aliyah-dropdown" dir="rtl" lang="he" :aria-label="t('עלייה', 'Aliyah')">
               <option v-for="n in aliyahCount" :key="n" :value="n">{{ aliyahNames[n - 1] }}</option>
             </select>
           </div>
-          <!-- Progress Indicator -->
-          <div v-if="displayVerses.length > 0" class="progress-bar">
-            <div class="progress-text">
-              {{ isHebrew ? 'התקדמות:' : 'Progress:' }} <bdi dir="ltr">{{ completedCount }}/{{ displayVerses.length }} ({{ progressPercent }}%)</bdi>
+          <!-- Progress Indicator. Its caption row also carries the advisory
+               status pill (Shabbat / after Shabbat only) and the link to the
+               other week, so neither needs a header line of its own. -->
+          <div v-if="displayVerses.length > 0 || otherWeek" class="progress-bar">
+            <div class="progress-row">
+              <div v-if="displayVerses.length > 0" class="progress-text">
+                {{ isHebrew ? 'התקדמות:' : 'Progress:' }} <bdi dir="ltr" class="progress-num">{{ completedCount }}/{{ displayVerses.length }} ({{ progressPercent }}%)</bdi>
+              </div>
+              <DailyGuide v-if="aliyotEntry" :status="status" :complete="viewedComplete" :isHebrew="isHebrew" />
+              <!-- The coming week is always one click away from any other
+                   parsha; last week only while it is started and unfinished -->
+              <a v-if="otherWeek" class="other-week-link" :href="`#${otherWeek.route}`">{{ otherWeekText }}</a>
             </div>
-            <div class="progress-track">
+            <div v-if="displayVerses.length > 0" class="progress-track">
               <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
             </div>
           </div>
@@ -176,7 +178,7 @@ import { useCycles } from '../composables/useCycles'
 import { useAliyot } from '../composables/useAliyot'
 import { useReadingState } from '../composables/useReadingState'
 import { useDailyGuide, useNow } from '../composables/useDailyGuide'
-import { parseKey, isRouteComplete, routeProgressState } from '../lib/progressMath'
+import { parseKey, routeProgressState, catchUpPending } from '../lib/progressMath'
 import {
   nextListSelection,
   seedListSelection,
@@ -309,11 +311,11 @@ const {
 })
 
 // Which week the app considers current. App.vue passes it in; the fallback
-// keeps this component usable on its own.
+// keeps this component usable on its own. Same rule as App.vue: only a parsha
+// that was started and not finished keeps the reader on last week.
 const isRouteDone = (route) => {
   const entry = aliyotData.value ? getAliyot(route) : null
-  if (!entry) return true
-  return isRouteComplete(progress.value[route] || {}, entry)
+  return !catchUpPending(progress.value[route] || {}, entry)
 }
 // Mark per parsha for the picker: ✓ when every piece is read, ◐ when partly
 // read, nothing otherwise. Judged from stored progress and the aliyot entry's
@@ -348,14 +350,18 @@ const viewedShabbat = computed(() => {
   return null
 })
 
-// A link to the other week is always available: the coming week from anywhere
-// else, and last week's while the coming week is what we are showing.
+// The link to the other week: the coming week from any other parsha (the way
+// back), and last week's from the coming week only while last week is started
+// and unfinished. A reader who never began it, or finished it, has no reason
+// to go back.
 const otherWeek = computed(() => {
   const w = week.value
   if (!w?.next?.route) return null
   if (props.parasha !== w.next.route) return { route: w.next.route, kind: 'next' }
-  if (w.previous?.route && w.previous.route !== w.next.route) {
-    return { route: w.previous.route, kind: 'previous' }
+  const prev = w.previous?.route
+  if (prev && prev !== w.next.route && aliyotData.value &&
+      catchUpPending(progress.value[prev] || {}, getAliyot(prev))) {
+    return { route: prev, kind: 'previous' }
   }
   return null
 })
@@ -392,6 +398,20 @@ const viewingLateWeek = computed(() => {
 // variant instead — still advisory, still nothing hidden or gated.
 const guide = computed(() =>
   viewingLateWeek.value ? { aliyot: [], review: true } : weekGuide.value
+)
+
+// Today's aliyot for the chips' "today" tag: only on the coming week's parsha
+// (the schedule belongs to the coming Shabbat). AliyahBar drops the tag from
+// an aliyah once it is fully read. Advisory only.
+const todayAliyot = computed(() =>
+  week.value?.next?.route === props.parasha ? guide.value.aliyot : []
+)
+
+// The parsha on screen is fully read: the status pill has nothing to urge.
+const viewedComplete = computed(() =>
+  aliyotEntry.value
+    ? routeProgressState(progress.value[props.parasha] || {}, aliyotEntry.value) === 'complete'
+    : false
 )
 
 // Hebrew label of the aliyah containing a verse (for markers and focus header)
@@ -968,6 +988,9 @@ onUnmounted(() => {
   z-index: 10;
   padding: 1rem;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  /* Header text is sized in rem, reading text in em: nothing up here grows
+     with the reading text-size setting (App.vue sets that on the root). */
+  font-size: 1rem;
 }
 
 .container {
@@ -1000,10 +1023,35 @@ h1 {
   margin-top: 0.5rem;
 }
 
+.progress-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
 .progress-text {
   font-size: 0.85rem;
   color: var(--c-muted);
-  margin-bottom: 0.25rem;
+}
+
+.progress-num {
+  color: var(--c-text-2);
+}
+
+/* The other week: small and quiet, at the inline end of the caption row. */
+.other-week-link {
+  font-size: 0.85rem;
+  color: var(--c-muted);
+  text-decoration: none;
+  margin-inline-start: auto;
+}
+
+.other-week-link:hover,
+.other-week-link:focus-visible {
+  text-decoration: underline;
+  color: var(--c-text-2);
 }
 
 .progress-track {
@@ -1134,9 +1182,12 @@ h1 {
     margin-top: 0.2rem;
   }
 
-  .progress-text {
-    font-size: 0.75rem;
+  .progress-row {
     margin-bottom: 0.15rem;
+  }
+
+  .progress-text {
+    font-size: 0.95rem;
   }
 
   .progress-track {

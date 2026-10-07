@@ -197,6 +197,16 @@ export function routeProgressState(progress, aliyotEntry) {
   return 'none'
 }
 
+/**
+ * True when a parsha was started and not finished ('partial'). This is the
+ * Sunday-Tuesday catch-up test: a parsha with no marks at all is not "behind"
+ * (a new reader never started it), and an unknown entry is not either, so
+ * neither keeps the reader on last week. Advisory input only.
+ */
+export function catchUpPending(progress, aliyotEntry) {
+  return routeProgressState(progress, aliyotEntry) === 'partial'
+}
+
 function isPhaseDone(progress, key, phase) {
   return progress?.[key]?.[phase] === true
 }

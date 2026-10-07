@@ -26,6 +26,15 @@
       </span>
       <button type="button" class="btn" :aria-label="isHebrew ? 'סגור' : 'Dismiss'" @click="dismissMovedNotice">&times;</button>
     </div>
+    <!-- One-time: aliyah boundaries were corrected, so groupings shift by one
+         aliyah compared with older releases. Readers with no earlier marks
+         never see it (see aliyotNoticeShown). -->
+    <div v-if="aliyotNoticeShown" class="app-notice" role="note">
+      <span>{{ isHebrew
+        ? 'גבולות העליות תוקנו: ראשון מתחיל עכשיו בתחילת הפרשה.'
+        : 'Aliyah boundaries corrected: Rishon now starts at the beginning of the parsha.' }}</span>
+      <button type="button" class="btn" :aria-label="isHebrew ? 'סגור' : 'Dismiss'" @click="dismissAliyotNotice">&times;</button>
+    </div>
     <ParshaDisplay v-if="currentParsha" :parasha="currentParsha" :week="week" />
   </div>
 </template>
@@ -38,7 +47,7 @@ import { useProgress } from './composables/useProgress'
 import { useAliyot } from './composables/useAliyot'
 import { useCycles } from './composables/useCycles'
 import { useNow } from './composables/useDailyGuide'
-import { isRouteComplete } from './lib/progressMath'
+import { catchUpPending } from './lib/progressMath'
 import { hashRoute } from './lib/hashRoute'
 import { startSync } from './composables/useSync'
 import { showMovedNotice, NEW_URL, MOVED_DISMISSED_KEY } from './lib/movedNotice'
@@ -107,19 +116,46 @@ const dismissMovedNotice = () => {
   setItem(MOVED_DISMISSED_KEY, '1')
 }
 
-// Completeness without loading the chumash: the aliyot entry carries the
-// expected verse count (see progressMath.isRouteComplete). Before aliyot.json
-// has loaded we simply cannot tell, and "unknown" must not pin the user to last
-// week, so it counts as done; the first resolution waits for it (see onMounted).
-const isRouteDone = (route) => {
-  const entry = getAliyot(route)
-  if (!entry) return true
-  return isRouteComplete(progress.value[route] || {}, entry)
+// One-time notice that the aliyah boundaries were corrected (moved here from
+// the sticky header). Same key and rule as before: a device with no stored
+// progress has nothing to correct, so its dismissal is seeded and it never
+// shows. Read after checkCycles(), as it was when it lived in DailyGuide.
+const ALIYOT_NOTICE_KEY = 'shnayim-notice-aliyot-v1'
+const hasStoredProgress = () => {
+  try {
+    const raw = getItem('shnayim-progress')
+    if (!raw) return false
+    const parsed = JSON.parse(raw)
+    return parsed !== null && typeof parsed === 'object' && Object.keys(parsed).length > 0
+  } catch (e) {
+    return false
+  }
+}
+const readAliyotNotice = () => {
+  if (!hasStoredProgress()) {
+    setItem(ALIYOT_NOTICE_KEY, 'dismissed')
+    return false
+  }
+  return getItem(ALIYOT_NOTICE_KEY) !== 'dismissed'
+}
+const aliyotNoticeShown = ref(readAliyotNotice())
+const dismissAliyotNotice = () => {
+  aliyotNoticeShown.value = false
+  setItem(ALIYOT_NOTICE_KEY, 'dismissed')
 }
 
-// Sunday through Tuesday this stays on last week's parsha while it is
-// unfinished (so its 'late' status is reachable); otherwise it is the coming
-// week. `now` ticks, so a tab left open across Shabbat can roll over.
+// "Done" for the catch-up window means "not started-and-unfinished", judged
+// without loading the chumash (see progressMath.catchUpPending). A parsha with
+// no marks at all counts as done: a new reader never started last week and
+// must land on the coming one. Before aliyot.json has loaded we simply cannot
+// tell, and "unknown" must not pin the user to last week, so it counts as done
+// too; the first resolution waits for it (see onMounted).
+const isRouteDone = (route) =>
+  !catchUpPending(progress.value[route] || {}, getAliyot(route))
+
+// Sunday through Tuesday this stays on last week's parsha while it is started
+// but unfinished (so its 'late' status is reachable); otherwise it is the
+// coming week. `now` ticks, so a tab left open across Shabbat can roll over.
 const week = computed(() => {
   void now.value
   return getDefaultWeek(settings.value.location, isRouteDone)
@@ -301,6 +337,8 @@ body {
   text-align: center;
   background: var(--c-surface);
   border-bottom: 1px solid var(--c-border-soft);
+  /* Interface text: rem, not the reading text size set on the root div. */
+  font-size: 1rem;
 }
 
 .btn {
