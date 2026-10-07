@@ -2,6 +2,61 @@
 
 Each entry says what changed for someone using the app, and where it was deployed.
 
+## 1.4.0 — 2026-10-07
+
+Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.4.0`. Follows the UI/UX review of
+2026-10-06 (`.claude/notes/ux-review-2026-10-06.md`). The old Vercel address stays on 1.1.0.
+
+**Focus mode (one phrase at a time)**
+- A long pasuk, or one with Rashi or English shown, now opens at its first word. Before, the top of
+  the text sat above the screen where no scrolling could reach it.
+- The header no longer grows with the text size, so the ✕, gear and ? stay on a phone screen at
+  every size; on narrow phones the reference reads "א:יג".
+- On tablets the side buttons no longer cover the card. The buttons are grey, like the list arrows.
+- Phones read "Tap the text to continue" instead of a Space hint. The ? opens a "How it works"
+  sheet: touch first, a colour key, then the keyboard table.
+- The three reading dots are tappable buttons (current = gold, read = green, unread = ring).
+- The pasuk is the same size as in the list view (phones no longer shrink it); larger on wide
+  screens. Each Rashi comment is its own paragraph.
+- After each mark a short "Marked · Undo" bar appears. When Rashi or English is missing on a pasuk
+  a line says Onkelos is shown instead. Finishing the parsha shows a completion card.
+- Android Back closes the help sheet; Tab no longer reaches the hidden list behind focus mode.
+
+**Header and list view**
+- The parsha title is the parsha picker: tap "פרשת בראשית ▾" to choose another. The separate
+  dropdown and the second "Aliyah:" dropdown are gone; the gear and a sync icon sit on the title
+  row at every width, and tablet aliyah chips fit on one row.
+- The "Suggested today" line and the status pills are gone; today's aliyah has a small "today"
+  tag on its chip, and a pill appears only on Shabbat and after Shabbat.
+- "Last week: …" is small and grey, and shows only while last week's parsha is started but
+  unfinished. A brand-new visitor on Sunday–Tuesday opens on the coming week.
+- The phone header is about 120px instead of 170–220px. In phone landscape it scrolls away so
+  the text is visible on first load. After advancing, the pasuk number is never hidden under
+  the arrow row.
+- The gold "you are here" ▶ sits inside the card and is darker; the next piece to read has a gold
+  outline. The purple keyboard highlight appears only after a key is pressed.
+- Tapping an aliyah chip in one-pasuk mode keeps that mode and jumps to the aliyah's first unread
+  pasuk. Chips scroll into view and the row fades at the edge where more chips are hidden.
+- The sof pasuk (׃) and paseq stay when trop is hidden. Navigation arrows are grey, so green only
+  means "read". Clearing a whole pasuk with the corner dot offers Undo.
+- Loading failures show a plain sentence with Retry.
+
+**First visit, sign-in and Settings**
+- First-time visitors see one inline welcome card: language, Israel/Diaspora, "tap each text",
+  and "marks are saved on this device only — sign in with Google to keep them", with a colour key.
+  Hebrew browsers start in Hebrew.
+- A cloud icon beside the gear shows sign-in / sync state and opens Settings at Account, which is
+  now the second section with plainer wording.
+- Android Back closes Settings instead of changing the parsha. The "New version ready" bar also
+  shows on the main screen. Credits are shown inline as "Sources and licences".
+- Settings tidy-up: reading order and view sit together with helper lines; Rashi-script row only
+  when Rashi is on screen; one confirmation pattern; offline status says when the browser cannot
+  save for offline.
+
+**Appearance and copy**
+- Dark theme follows the system setting. The installed app no longer flashes navy on launch.
+- Hebrew interface text addresses the reader in the plural throughout; "עלייה" spelled consistently.
+
 ## 1.3.0 — 2026-10-06
 
 Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.3.0`. The old Vercel address
