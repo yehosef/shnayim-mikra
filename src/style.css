@@ -1,4 +1,7 @@
 :root {
+  /* Native controls (select menus, checkboxes, scrollbars) follow the system
+     theme; the dark token set is the media block below. */
+  color-scheme: light dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -46,6 +49,23 @@
   --c-select-rgb: 139, 92, 246;
   --c-danger: #dc2626;          /* destructive actions and error text (4.8:1 on white) */
   --c-danger-bg: #fef2f2;       /* hover fill of a destructive button */
+  --c-error: #d32f2f;           /* the list view's load / save error block */
+  --c-on-accent: #ffffff;       /* text and glyphs on a filled blue or green button */
+  --c-read-rgb: 16, 185, 129;   /* green glows and tints */
+  --c-read-hover: #bbf7d0;      /* hover fill of a read piece box */
+  --c-read-edge: #86efac;       /* border of an active green toggle */
+  --c-read-edge-hover: #4ade80;
+  --c-read-text: #166534;       /* text on --c-read-bg */
+  --c-due-bg: #fef3c7;          /* daily guide: due today (amber) */
+  --c-due-border: #f59e0b;
+  --c-due-text: #92400e;
+  --c-late-bg: #fee2e2;         /* daily guide: late (red) */
+  --c-late-border: #ef4444;
+  --c-late-text: #991b1b;
+  --c-shadow-rgb: 0, 0, 0;      /* drop shadows: rgba(var(--c-shadow-rgb), 0.1) */
+  --c-overlay: rgba(0, 0, 0, 0.5);         /* backdrop behind the Settings dialog */
+  --c-overlay-strong: rgba(0, 0, 0, 0.6);  /* backdrop behind the focus-mode help */
+  --c-inverse-hover: rgba(255, 255, 255, 0.1); /* hover on the inverted Undo bar */
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;
@@ -55,6 +75,67 @@
   --fs-translation: 1.15em;     /* the counted translation, always below Hebrew */
   --lh-translation: 1.8;
   --fs-reference: 0.95em;       /* Rashi / English shown only as reference */
+}
+
+/* Dark theme: follows the system setting only (no app setting). Same token
+   names, same four channels. Accent text colours are lighter here so they
+   keep their contrast on the dark surface, and filled accent buttons carry
+   dark text (--c-on-accent). Checked against --c-surface #1f2937: muted 5.8:1,
+   read border 5.8:1, pointer glyph 8:1, danger 5:1. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-text: #f3f4f6;
+    --c-text-2: #d1d5db;
+    --c-muted: #9ca3af;
+    --c-faint: #6b7280;
+    --c-border: #4b5563;
+    --c-border-soft: #374151;
+    --c-bg: #111827;
+    --c-surface: #1f2937;
+    --c-surface-2: #2b3544;
+    --c-read-bg: #134232;
+    --c-read-tint: #183a31;
+    --c-read-border: #10b981;
+    --c-read-strong: #34d399;
+    --c-read-soft: #065f46;
+    --c-pointer: #ddb07f;
+    --c-pointer-rgb: 221, 176, 127;
+    --c-pointer-strong: #f5b94e;
+    --c-scope: #60a5fa;
+    --c-scope-rgb: 96, 165, 250;
+    --c-scope-bg: #1e3a5f;
+    --c-scope-strong: #93c5fd;
+    --c-scope-text: #bfdbfe;
+    --c-select: #a78bfa;
+    --c-select-rgb: 167, 139, 250;
+    --c-danger: #f87171;
+    --c-danger-bg: #3b1f24;
+    --c-error: #f87171;
+    --c-on-accent: #0b1220;
+    --c-read-rgb: 16, 185, 129;
+    --c-read-hover: #1a5a40;
+    --c-read-edge: #047857;
+    --c-read-edge-hover: #10b981;
+    --c-read-text: #6ee7b7;
+    --c-due-bg: #3d2e0f;
+    --c-due-border: #d97706;
+    --c-due-text: #fcd34d;
+    --c-late-bg: #451a1a;
+    --c-late-border: #ef4444;
+    --c-late-text: #fca5a5;
+    --c-shadow-rgb: 0, 0, 0;
+    --c-overlay: rgba(0, 0, 0, 0.6);
+    --c-overlay-strong: rgba(0, 0, 0, 0.7);
+    --c-inverse-hover: rgba(0, 0, 0, 0.08);
+  }
+
+  /* Text and buttons with no colour of their own (notices, plain buttons)
+     would otherwise take the browser's default. Light mode keeps the
+     browser default as before. */
+  body,
+  button {
+    color: var(--c-text);
+  }
 }
 
 /* No movement: cards crossfade (100 ms at most in total), nothing slides,

@@ -64,7 +64,12 @@
           class="settings-btn"
           :title="t('הגדרות', 'Settings')"
           :aria-label="t('הגדרות', 'Settings')"
-        >⚙️</button>
+        >
+          <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+        </button>
         <button
           @click="$emit('exit')"
           class="exit-btn"
@@ -870,7 +875,7 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(var(--c-shadow-rgb), 0.05);
 }
 
 .verse-info {
@@ -1047,6 +1052,13 @@ onUnmounted(() => {
   border-color: var(--c-faint);
 }
 
+/* Outline gear in the text colour. 21px wide plus 3.5px above and below:
+   the button keeps the box the emoji gave it (21 x 28 content). */
+.settings-btn svg {
+  display: block;
+  margin-block: 3.5px;
+}
+
 /* Help Overlay */
 .help-overlay {
   position: fixed;
@@ -1054,7 +1066,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--c-overlay-strong);
   z-index: 102;
   display: flex;
   align-items: center;
@@ -1065,7 +1077,7 @@ onUnmounted(() => {
 .help-panel {
   background: var(--c-surface);
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(var(--c-shadow-rgb), 0.3);
   max-width: 450px;
   width: 90%;
   max-height: calc(100vh - 2rem);
@@ -1190,7 +1202,7 @@ onUnmounted(() => {
   width: 100%;
   padding: 0.75rem;
   background: var(--c-scope);
-  color: white;
+  color: var(--c-on-accent);
   border: none;
   border-radius: var(--radius-md);
   font-size: 1rem;
@@ -1263,7 +1275,7 @@ onUnmounted(() => {
   padding: calc(2.5rem + 1px);
   background: var(--c-surface);
   border-radius: var(--radius-md);
-  box-shadow: inset -6px 0 0 var(--cue), 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: inset -6px 0 0 var(--cue), 0 4px 12px rgba(var(--c-shadow-rgb), 0.08);
   text-align: center;
   /* Green appears within --motion-colour; colours and the hover lift only. */
   transition:
@@ -1293,7 +1305,7 @@ onUnmounted(() => {
 }
 
 .text-display:hover {
-  box-shadow: inset -6px 0 0 var(--cue), 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: inset -6px 0 0 var(--cue), 0 8px 24px rgba(var(--c-shadow-rgb), 0.12);
   transform: translateY(-2px);
 }
 
@@ -1310,7 +1322,7 @@ onUnmounted(() => {
   padding: 2.5rem;
   border-color: var(--c-read-border);
   background: var(--c-read-bg);
-  box-shadow: inset -6px 0 0 var(--cue), 0 4px 16px rgba(16, 185, 129, 0.35);
+  box-shadow: inset -6px 0 0 var(--cue), 0 4px 16px rgba(var(--c-read-rgb), 0.35);
 }
 
 .torah {
@@ -1390,7 +1402,7 @@ onUnmounted(() => {
   top: 50%;
   transform: translateY(-50%);
   background: linear-gradient(135deg, var(--c-read-border) 0%, var(--c-read-strong) 100%);
-  color: white;
+  color: var(--c-on-accent);
   border: none;
   width: var(--nav-w);
   padding: 1.5rem 0;
@@ -1399,7 +1411,7 @@ onUnmounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: transform var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out);
-  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 4px 8px rgba(var(--c-read-rgb), 0.3);
   z-index: 50;
 }
 
@@ -1413,7 +1425,7 @@ onUnmounted(() => {
 
 .nav-btn:hover:not(:disabled) {
   transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 6px 12px rgba(var(--c-read-rgb), 0.4);
 }
 
 .nav-btn:disabled {
@@ -1432,7 +1444,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 -2px 4px rgba(var(--c-shadow-rgb), 0.05);
 }
 
 .progress-indicator {
@@ -1456,7 +1468,7 @@ onUnmounted(() => {
   background: var(--c-text);
   color: var(--c-surface);
   border-radius: 999px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(var(--c-shadow-rgb), 0.2);
   font-size: 1rem;
   white-space: nowrap;
 }
@@ -1474,7 +1486,7 @@ onUnmounted(() => {
 }
 
 .undo-bar-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--c-inverse-hover);
 }
 
 /* Larger screens: a bigger pasuk (and translation, keeping the ratio). */

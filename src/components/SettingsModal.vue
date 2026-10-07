@@ -682,7 +682,7 @@ const onCreditsToggle = async (e) => {
 .settings-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--c-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -701,7 +701,7 @@ const onCreditsToggle = async (e) => {
   overflow: hidden;
   background: var(--c-surface);
   border-radius: var(--radius-lg);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(var(--c-shadow-rgb), 0.3);
   color: var(--c-text);
 }
 
@@ -1033,7 +1033,7 @@ const onCreditsToggle = async (e) => {
 .btn-primary {
   background: var(--c-scope-strong);
   border-color: var(--c-scope-strong);
-  color: #fff;
+  color: var(--c-on-accent);
 }
 
 .btn-primary:hover {

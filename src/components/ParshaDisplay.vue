@@ -29,10 +29,15 @@
           <div class="controls">
             <button
               @click="openSettings()"
-              class="btn"
+              class="btn gear-btn"
               :title="t('הגדרות', 'Settings')"
               :aria-label="t('הגדרות', 'Settings')"
-            >⚙️</button>
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </button>
             <!-- Sync state at a glance; opens Settings at the account section -->
             <button
               type="button"
@@ -1206,7 +1211,7 @@ onUnmounted(() => {
   top: 0;
   z-index: 10;
   padding: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 4px rgba(var(--c-shadow-rgb), 0.05);
   /* Header text is sized in rem, reading text in em: nothing up here grows
      with the reading text-size setting (App.vue sets that on the root). */
   font-size: 1rem;
@@ -1379,19 +1384,31 @@ h1 {
   display: block;
 }
 
+/* Outline gear in the text colour (it was an emoji that differed per OS and
+   ignored the dark theme). 18px wide plus 3px above and below: the button
+   keeps the box the emoji gave it (18 x 24 content). */
+.gear-btn {
+  color: var(--c-text-2);
+}
+
+.gear-btn svg {
+  display: block;
+  margin-block: 3px;
+}
+
 .study-mode-btn {
   font-weight: 500;
 }
 
 .study-mode-btn.active {
   background: var(--c-read-bg);
-  border-color: #86efac;
-  color: #166534;
+  border-color: var(--c-read-edge);
+  color: var(--c-read-text);
 }
 
 .study-mode-btn.active:hover {
-  background: #bbf7d0;
-  border-color: #4ade80;
+  background: var(--c-read-hover);
+  border-color: var(--c-read-edge-hover);
 }
 
 .study-mode-btn .icon {
@@ -1471,7 +1488,7 @@ h1 {
 }
 
 .error {
-  color: #d32f2f;
+  color: var(--c-error);
 }
 
 .load-error p {

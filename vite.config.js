@@ -59,8 +59,10 @@ export const pwaOptions = {
     name: '\u05E9\u05E0\u05D9\u05D9\u05DD \u05DE\u05E7\u05E8\u05D0 \u05D5\u05D0\u05D7\u05D3 \u05EA\u05E8\u05D2\u05D5\u05DD',
     short_name: '\u05E9\u05E0\u05D9\u05D9\u05DD \u05DE\u05E7\u05E8\u05D0',
     description: '\u05E9\u05E0\u05D9\u05D9\u05DD \u05DE\u05E7\u05E8\u05D0 \u05D5\u05D0\u05D7\u05D3 \u05EA\u05E8\u05D2\u05D5\u05DD',
-    theme_color: '#1a1a2e',
-    background_color: '#1a1a2e',
+    // The light page background (--c-bg in src/style.css). The manifest cannot
+    // vary by colour scheme; index.html carries a dark theme-color meta.
+    theme_color: '#f5f5f5',
+    background_color: '#f5f5f5',
     display: 'standalone',
     orientation: 'any',
     start_url: '/',

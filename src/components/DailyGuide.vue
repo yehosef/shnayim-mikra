@@ -41,14 +41,14 @@ const statusText = computed(() => {
 }
 
 .status-due {
-  background: #fef3c7;
-  border-color: #f59e0b;
-  color: #92400e;
+  background: var(--c-due-bg);
+  border-color: var(--c-due-border);
+  color: var(--c-due-text);
 }
 
 .status-late {
-  background: #fee2e2;
-  border-color: #ef4444;
-  color: #991b1b;
+  background: var(--c-late-bg);
+  border-color: var(--c-late-border);
+  color: var(--c-late-text);
 }
 </style>

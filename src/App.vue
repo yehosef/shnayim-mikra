@@ -548,7 +548,7 @@ body {
   flex-grow: 2;
   background: var(--c-scope-strong);
   border-color: var(--c-scope-strong);
-  color: #fff;
+  color: var(--c-on-accent);
 }
 
 .btn-signin:hover {

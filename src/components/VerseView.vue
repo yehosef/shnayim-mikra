@@ -34,7 +34,12 @@
     </div>
 
     <!-- Focus Button -->
-    <button @click="$emit('focus', index)" class="focus-btn" :title="focusTitle" :aria-label="focusTitle">🔍</button>
+    <button @click="$emit('focus', index)" class="focus-btn" :title="focusTitle" :aria-label="focusTitle">
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true" focusable="false">
+        <circle cx="10.5" cy="10.5" r="6.5" />
+        <line x1="15.5" y1="15.5" x2="21" y2="21" />
+      </svg>
+    </button>
 
     <!-- Aliya marker -->
     <span v-if="verse.aliya" class="aliya-marker">{{ verse.aliya }}</span>
@@ -334,7 +339,7 @@ const formattedTorahText = computed(() => {
   padding: 1.5rem;
   margin-bottom: 1.5rem;
   border-radius: var(--radius-lg);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 3px rgba(var(--c-shadow-rgb), 0.08);
   transition:
     background-color var(--motion-base) var(--ease-out),
     border-color var(--motion-base) var(--ease-out);
@@ -345,7 +350,7 @@ const formattedTorahText = computed(() => {
    would leave them stuck on. */
 @media (hover: hover) {
   .verse:hover {
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 6px rgba(var(--c-shadow-rgb), 0.1);
   }
 }
 
@@ -374,6 +379,8 @@ const formattedTorahText = computed(() => {
   cursor: pointer;
   transition: background-color var(--motion-base) var(--ease-out), transform var(--motion-base) var(--ease-out);
   font-size: 1.2rem;
+  /* the outline magnifier is drawn in the text colour */
+  color: var(--c-text-2);
 }
 
 @media (hover: hover) {
@@ -422,7 +429,7 @@ const formattedTorahText = computed(() => {
 }
 
 .completion-checkmark {
-  color: white;
+  color: var(--c-on-accent);
   font-size: 14px;
   font-weight: bold;
 }
@@ -518,7 +525,7 @@ const formattedTorahText = computed(() => {
     background: var(--c-surface-2);
     border-color: var(--c-faint);
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(var(--c-shadow-rgb), 0.1);
   }
 }
 
@@ -530,7 +537,7 @@ const formattedTorahText = computed(() => {
 
 @media (hover: hover) {
   .clickable-text.reading-done:hover {
-    background: #bbf7d0;
+    background: var(--c-read-hover);
   }
 }
 
@@ -666,7 +673,7 @@ const formattedTorahText = computed(() => {
   width: 40px;
   height: 40px;
   background: var(--c-read-border);
-  color: white;
+  color: var(--c-on-accent);
   border-radius: 50%;
   font-size: 1.5rem;
   font-weight: bold;
@@ -691,7 +698,7 @@ const formattedTorahText = computed(() => {
 
 /* Verse background when showing completion */
 .verse.showing-completion {
-  background: linear-gradient(to left, rgba(16, 185, 129, 0.1) 0%, var(--c-surface) 100%);
+  background: linear-gradient(to left, rgba(var(--c-read-rgb), 0.1) 0%, var(--c-surface) 100%);
 }
 
 /* Verses in the current aliyah - subtle highlighting */
