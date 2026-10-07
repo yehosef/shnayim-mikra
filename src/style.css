@@ -31,11 +31,12 @@
   --c-surface-2: #f3f4f6;       /* light button fill */
   --c-read-bg: #dcfce7;
   --c-read-tint: #f0fdf4;
-  --c-read-border: #10b981;
+  --c-read-border: #0e9f6e;     /* read-box outline, 3.4:1 on white (was #10b981, 2.5:1) */
   --c-read-strong: #059669;
   --c-read-soft: #a7f3d0;
   --c-pointer: #d4a574;
   --c-pointer-rgb: 212, 165, 116;
+  --c-pointer-strong: #b7791f;  /* pointer glyph ▶ and the pointer card's stripe and piece edge (3.6:1 on white) */
   --c-scope: #3b82f6;
   --c-scope-rgb: 59, 130, 246;
   --c-scope-bg: #dbeafe;

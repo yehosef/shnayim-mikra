@@ -8,14 +8,15 @@
  * - U+0591 to U+05AF (Hebrew accents)
  * - U+05BD (meteg)
  * - U+05BF (rafe)
- * - U+05C0 (paseq)
- * - U+05C3 (sof pasuq)
+ *
+ * Kept on purpose: U+05C3 (sof pasuq, ׃) and U+05C0 (paseq, ׀). They are
+ * reading punctuation, not cantillation; the colon marks where a pasuk that
+ * wraps over many lines ends (owner decision, 2026-10-07).
  */
 export function removeTrop(text) {
   if (!text) return text
 
-  // Remove all Hebrew cantillation marks
-  return text.replace(/[\u0591-\u05AF\u05BD\u05BF\u05C0\u05C3]/g, '')
+  return text.replace(/[\u0591-\u05AF\u05BD\u05BF]/g, '')
 }
 
 /**

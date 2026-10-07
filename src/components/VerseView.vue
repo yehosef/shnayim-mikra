@@ -7,7 +7,7 @@
       'completed': isCompleted,
       'current-verse': isPointer,
       'in-current-aliyah': inCurrentAliyah,
-      'selected': isSelected
+      'selected': showSelected
     }"
     :data-perek="verse.perekNum"
     :data-pasuk="verse.pasukNum"
@@ -15,11 +15,6 @@
     @pointerdown="handlePointerDown"
     @click="handleRootClick"
   >
-    <!-- Verse Pointer (next unread step lives in this verse) -->
-    <div v-if="isPointer" class="verse-pointer" :title="pointerTitle" role="img" :aria-label="pointerLabel">
-      <span class="pointer-icon">▶</span>
-    </div>
-
     <!-- Completion Indicator — also a toggle for the whole pasuk: marks all
          three readings when incomplete, clears all three when complete. -->
     <div
@@ -30,9 +25,9 @@
       :aria-pressed="isCompleted"
       :title="completeTitle"
       :aria-label="completeTitle"
-      @click.stop="emit('toggle-complete')"
-      @keydown.enter.prevent.stop="emit('toggle-complete')"
-      @keydown.space.prevent.stop="emit('toggle-complete')"
+      @click.stop="toggleComplete"
+      @keydown.enter.prevent.stop="toggleComplete"
+      @keydown.space.prevent.stop="toggleComplete"
     >
       <span v-if="isCompleted" class="completion-checkmark">✓</span>
       <span v-else class="completion-dot"></span>
@@ -48,12 +43,29 @@
     <div class="verse-header font-sbl">
       <span v-if="verse.perek" class="perek">{{ verse.perek }}</span>
       <span class="pasuk">{{ verse.pasuk }}</span>
+      <!-- Verse Pointer (next unread step lives in this verse): inside the
+           card, after the numbers, pointing at them. -->
+      <span v-if="isPointer" class="verse-pointer" :title="pointerTitle" role="img" :aria-label="pointerLabel">
+        <span class="pointer-icon">▶</span>
+      </span>
+      <!-- After the corner dot cleared a whole pasuk: a short-lived way back. -->
+      <span
+        v-if="undoRecord"
+        class="undo-chip"
+        role="status"
+        :dir="isHebrew ? 'rtl' : 'ltr'"
+        :lang="isHebrew ? 'he' : 'en'"
+      >
+        <span class="undo-label">{{ t('נוקה', 'Cleared') }}</span>
+        <span class="undo-sep" aria-hidden="true">·</span>
+        <button type="button" class="undo-btn" @click.stop="undoClear">{{ t('ביטול', 'Undo') }}</button>
+      </span>
     </div>
 
     <!-- Hebrew Text - First Reading -->
     <div
       class="torah font-sbl clickable-text"
-      :class="{ 'reading-done': progress.hebrew1, 'phase-selected': selectedPhase === 1 }"
+      :class="{ 'reading-done': progress.hebrew1, 'phase-selected': showPhase(1), 'phase-pointer': pointerPhase === 1 }"
       @click="handlePhaseClick(1, 'hebrew1', $event)"
     >
       {{ formattedTorahText }}
@@ -62,7 +74,7 @@
     <!-- Hebrew Text - Second Reading -->
     <div
       class="torah font-sbl clickable-text"
-      :class="{ 'reading-done': progress.hebrew2, 'phase-selected': selectedPhase === 2 }"
+      :class="{ 'reading-done': progress.hebrew2, 'phase-selected': showPhase(2), 'phase-pointer': pointerPhase === 2 }"
       @click="handlePhaseClick(2, 'hebrew2', $event)"
     >
       {{ formattedTorahText }}
@@ -72,7 +84,7 @@
     <div
       v-if="targumLayer === 'onkelos'"
       class="targum font-sbl clickable-text"
-      :class="{ 'reading-done': progress.targum, 'phase-selected': selectedPhase === 3 }"
+      :class="{ 'reading-done': progress.targum, 'phase-selected': showPhase(3), 'phase-pointer': pointerPhase === 3 }"
       @click="handlePhaseClick(3, 'targum', $event)"
       v-html="verse.targum"
     ></div>
@@ -81,17 +93,19 @@
     <div
       v-if="targumLayer === 'rashi'"
       class="rashi clickable-text"
-      :class="{ 'reading-done': progress.targum, 'font-rashi': settings.fontRashi, 'phase-selected': selectedPhase === 3 }"
+      :class="{ 'reading-done': progress.targum, 'font-rashi': settings.fontRashi, 'phase-selected': showPhase(3), 'phase-pointer': pointerPhase === 3 }"
       @click="handlePhaseClick(3, 'targum', $event)"
-      v-html="verse.rashi.join('  ')"
-    ></div>
+    >
+      <!-- One block per comment; the whole box stays one tap target. -->
+      <div v-for="(comment, ci) in verse.rashi" :key="ci" class="rashi-comment" v-html="comment"></div>
+    </div>
 
     <!-- English - Clickable (shown if selected as targum type) -->
     <div
       v-if="targumLayer === 'english'"
       class="english clickable-text"
       lang="en"
-      :class="{ 'reading-done': progress.targum, 'phase-selected': selectedPhase === 3 }"
+      :class="{ 'reading-done': progress.targum, 'phase-selected': showPhase(3), 'phase-pointer': pointerPhase === 3 }"
       @click="handlePhaseClick(3, 'targum', $event)"
       v-html="verse.english"
     ></div>
@@ -109,14 +123,16 @@
       v-if="verse.rashi?.length && settings.showRashi && settings.targumType !== 'rashi'"
       class="rashi"
       :class="{ 'font-rashi': settings.fontRashi }"
-      v-html="verse.rashi.join('  ')"
-    ></div>
+    >
+      <div v-for="(comment, ci) in verse.rashi" :key="ci" class="rashi-comment" v-html="comment"></div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { useProgress } from '../composables/useProgress'
+import { useInputMethod } from '../composables/useInputMethod'
 import { formatHebrewText } from '../utils/hebrewUtils'
 
 const props = defineProps({
@@ -160,7 +176,10 @@ const props = defineProps({
 // listener fired after the phase click and reverted the advanced selection).
 const emit = defineEmits(['focus', 'phase-click', 'click', 'toggle-complete'])
 
-const { getVerseProgress } = useProgress()
+const { getVerseProgress, setVerseProgress } = useProgress()
+// Purple (keyboard selection) is drawn only once a navigation key was pressed;
+// on touch the gold pointer is the only "where am I" mark.
+const { keyboardUsed } = useInputMethod()
 
 const verseKey = computed(() => `${props.verse.perekNum}:${props.verse.pasukNum}`)
 const progress = computed(() => getVerseProgress(props.parasha, verseKey.value))
@@ -196,6 +215,65 @@ const pointerTitle = computed(() => {
   if (!p.hebrew2) return t('קריאה שנייה', 'Second reading')
   return t('תרגום', 'Translation')
 })
+// The piece the pointer is on: the first unread reading of the pointer pasuk
+// (the same rule as pointerTitle). 0 when this pasuk does not hold the pointer.
+const pointerPhase = computed(() => {
+  if (!props.isPointer) return 0
+  const p = progress.value
+  if (!p.hebrew1) return 1
+  if (!p.hebrew2) return 2
+  return 3
+})
+
+// The parent's selection is shown in purple only after a key press, and the
+// gold pointer wins where the two coincide.
+const showSelected = computed(() => keyboardUsed.value && props.isSelected && !props.isPointer)
+const showPhase = (phase) =>
+  keyboardUsed.value && props.selectedPhase === phase && phase !== pointerPhase.value
+
+// Clearing a whole pasuk with the corner dot keeps the previous record for a
+// few seconds so it can be put back.
+const UNDO_MS = 4000
+const undoRecord = ref(null)
+let undoTimer = null
+const dropUndo = () => {
+  clearTimeout(undoTimer)
+  undoTimer = null
+  undoRecord.value = null
+}
+
+const toggleComplete = () => {
+  const before = { ...progress.value }
+  const wasComplete = isCompleted.value
+  emit('toggle-complete')
+  // The parent may refuse the toggle (a card still moving); only offer the
+  // undo when the pasuk really went from complete to cleared.
+  if (wasComplete && !isCompleted.value) {
+    dropUndo()
+    undoRecord.value = {
+      hebrew1: !!before.hebrew1,
+      hebrew2: !!before.hebrew2,
+      targum: !!before.targum
+    }
+    undoTimer = setTimeout(dropUndo, UNDO_MS)
+  } else {
+    dropUndo()
+  }
+}
+
+const undoClear = () => {
+  const rec = undoRecord.value
+  dropUndo()
+  if (!rec) return
+  for (const field of ['hebrew1', 'hebrew2', 'targum']) {
+    setVerseProgress(props.parasha, verseKey.value, field, rec[field])
+  }
+}
+
+// Marked again some other way: the undo has nothing left to do.
+watch(isCompleted, (done) => { if (done) dropUndo() })
+onBeforeUnmount(dropUndo)
+
 const pointerLabel = computed(() => `${t('כאן אתה נמצא', 'You are here')}: ${pointerTitle.value}`)
 
 // A pointer that moved more than this between down and up is a drag
@@ -241,7 +319,7 @@ const handlePhaseClick = (phase, field, event) => {
 // Only the non-text chrome of the card selects the verse; clicks on a reading
 // target or the focus button are handled by their own handlers.
 const handleRootClick = (e) => {
-  if (e.target?.closest?.('.clickable-text, .focus-btn, .completion-indicator')) return
+  if (e.target?.closest?.('.clickable-text, .focus-btn, .completion-indicator, .undo-chip')) return
   emit('click', e)
 }
 
@@ -263,8 +341,12 @@ const formattedTorahText = computed(() => {
   position: relative;
 }
 
-.verse:hover {
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+/* Hover effects only where a pointer can hover: on a touch screen a tap
+   would leave them stuck on. */
+@media (hover: hover) {
+  .verse:hover {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
 }
 
 .verse {
@@ -294,9 +376,11 @@ const formattedTorahText = computed(() => {
   font-size: 1.2rem;
 }
 
-.focus-btn:hover {
-  background: var(--c-border-soft);
-  transform: scale(1.1);
+@media (hover: hover) {
+  .focus-btn:hover {
+    background: var(--c-border-soft);
+    transform: scale(1.1);
+  }
 }
 
 .completion-indicator {
@@ -311,6 +395,18 @@ const formattedTorahText = computed(() => {
   justify-content: center;
   transition: background-color var(--motion-base) var(--ease-out);
   cursor: pointer;
+}
+
+/* A 44px hit area around the 24px dot, grown toward the card's corner so it
+   reaches into the text as little as possible (the header row reserves the
+   rest, see .verse-header). The visual dot is unchanged. */
+.completion-indicator::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  bottom: -10px;
+  right: -12px;
+  left: -8px;
 }
 
 .completion-dot {
@@ -339,6 +435,8 @@ const formattedTorahText = computed(() => {
 
 .aliya-marker {
   display: inline-block;
+  /* Keep clear of the corner dot's hit area and the ✓ badge. */
+  margin-inline-start: 0.5rem;
   background: var(--c-border-soft);
   padding: 0.3rem 0.6rem;
   border-radius: var(--radius-sm);
@@ -350,6 +448,41 @@ const formattedTorahText = computed(() => {
 
 .verse-header {
   margin-bottom: 0.75rem;
+  /* The ✓ badge (and its pop) and the dot's hit area sit at the start corner;
+     the numbers start after them. */
+  margin-inline-start: 0.5rem;
+}
+
+/* Undo after the corner dot cleared a whole pasuk. */
+.undo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-inline-start: 0.75rem;
+  padding: 0.1rem 0.25rem 0.1rem 0.6rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-pill);
+  background: var(--c-surface-2);
+  color: var(--c-text-2);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 0.85rem;
+  vertical-align: middle;
+}
+
+.undo-chip[dir="rtl"] {
+  padding: 0.1rem 0.6rem 0.1rem 0.25rem;
+}
+
+.undo-btn {
+  min-height: 2rem;
+  padding: 0 0.6rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .perek {
@@ -380,11 +513,13 @@ const formattedTorahText = computed(() => {
   background: var(--c-surface);
 }
 
-.clickable-text:hover {
-  background: var(--c-surface-2);
-  border-color: var(--c-faint);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+@media (hover: hover) {
+  .clickable-text:hover {
+    background: var(--c-surface-2);
+    border-color: var(--c-faint);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
 }
 
 .clickable-text.reading-done {
@@ -393,19 +528,30 @@ const formattedTorahText = computed(() => {
   border-width: 3px;
 }
 
-.clickable-text.reading-done:hover {
-  background: #bbf7d0;
+@media (hover: hover) {
+  .clickable-text.reading-done:hover {
+    background: #bbf7d0;
+  }
 }
 
-/* Phase selected (keyboard navigation) */
+/* The piece the reading pointer is on: a gold edge, the same channel as the
+   card's pointer stripe. Keyboard selection (below) is declared later and
+   wins when it sits on a different piece of the pointer pasuk. */
+.clickable-text.phase-pointer {
+  border-color: var(--c-pointer-strong);
+}
+
+/* Phase selected (keyboard navigation; only after a key press) */
 .clickable-text.phase-selected {
   border-color: var(--c-select);
   background: linear-gradient(135deg, rgba(var(--c-select-rgb), 0.1) 0%, rgba(var(--c-select-rgb), 0.05) 100%);
   box-shadow: 0 0 0 2px rgba(var(--c-select-rgb), 0.4), 0 2px 8px rgba(var(--c-select-rgb), 0.2);
 }
 
-.clickable-text.phase-selected:hover {
-  box-shadow: 0 0 0 2px rgba(var(--c-select-rgb), 0.5), 0 4px 12px rgba(var(--c-select-rgb), 0.25);
+@media (hover: hover) {
+  .clickable-text.phase-selected:hover {
+    box-shadow: 0 0 0 2px rgba(var(--c-select-rgb), 0.5), 0 4px 12px rgba(var(--c-select-rgb), 0.25);
+  }
 }
 
 .clickable-text.phase-selected.reading-done {
@@ -416,6 +562,7 @@ const formattedTorahText = computed(() => {
   font-size: var(--fs-hebrew);
   line-height: var(--lh-hebrew);
   color: var(--c-text);
+  text-wrap: pretty;
 }
 
 .targum {
@@ -423,6 +570,22 @@ const formattedTorahText = computed(() => {
   color: var(--c-text-2);
   line-height: var(--lh-translation);
   margin-bottom: 0.5rem;
+}
+
+/* Comfortable line length on wide screens: the translation, English and Rashi
+   blocks are capped and centred in the card; the Hebrew pasuk keeps the full
+   card width. */
+/* In em, so the cap follows the reading-size setting: about 65 characters of
+   English and 75 of Aramaic / Rashi per line. */
+.targum,
+.rashi {
+  max-inline-size: 36em;
+  margin-inline: auto;
+}
+
+.english {
+  max-inline-size: 32em;
+  margin-inline: auto;
 }
 
 /* Rashi / English: reference size and the darker translation grey. */
@@ -453,29 +616,38 @@ const formattedTorahText = computed(() => {
 .english {
   direction: ltr;
   text-align: left;
+  line-height: 1.6;
+}
+
+/* Rashi: each comment is its own block. */
+.rashi-comment + .rashi-comment {
+  margin-top: 0.6em;
 }
 
 .font-rashi {
   font-family: 'Rashi', serif;
 }
 
-/* Current Verse Indicator */
+/* Current Verse Indicator: in the number row, inside the card (a mark outside
+   the card was half cut off by the phone gutter). Pulses by movement only. */
 .verse-pointer {
-  position: absolute;
-  left: -12px;
-  top: 1.5rem;
+  display: inline-block;
+  margin-inline-start: 0.15rem;
+  vertical-align: middle;
+  line-height: 1;
   animation: pointerPulse 1.5s ease-in-out infinite;
 }
 
 .pointer-icon {
-  color: var(--c-pointer);
-  font-size: 1.5rem;
+  color: var(--c-pointer-strong);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 1.15rem;
   font-weight: bold;
 }
 
 @keyframes pointerPulse {
-  0%, 100% { opacity: 1; transform: translateX(0); } /* allow-opacity: decorative non-text pointer icon pulse */
-  50% { opacity: 0.6; transform: translateX(-4px); } /* allow-opacity: decorative non-text pointer icon pulse */
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
 }
 
 /* Completion Feedback Animation */
@@ -528,31 +700,38 @@ const formattedTorahText = computed(() => {
   background: linear-gradient(to left, rgba(var(--c-scope-rgb), 0.03) 0%, var(--c-surface) 100%);
 }
 
-.verse.in-current-aliyah:hover {
-  background: linear-gradient(to left, rgba(var(--c-scope-rgb), 0.08) 0%, var(--c-surface) 100%);
+@media (hover: hover) {
+  .verse.in-current-aliyah:hover {
+    background: linear-gradient(to left, rgba(var(--c-scope-rgb), 0.08) 0%, var(--c-surface) 100%);
+  }
 }
 
 /* Current verse (holds the reading pointer) - stronger emphasis.
    Declared after .in-current-aliyah so it wins by source order. */
 .verse.current-verse {
-  border-right-color: var(--c-pointer);
+  border-right-color: var(--c-pointer-strong);
   background: linear-gradient(to left, rgba(var(--c-pointer-rgb), 0.1) 0%, var(--c-surface) 100%);
   box-shadow: 0 2px 8px rgba(var(--c-pointer-rgb), 0.1);
 }
 
-.verse.current-verse:hover {
-  box-shadow: 0 4px 12px rgba(var(--c-pointer-rgb), 0.15);
+@media (hover: hover) {
+  .verse.current-verse:hover {
+    box-shadow: 0 4px 12px rgba(var(--c-pointer-rgb), 0.15);
+  }
 }
 
-/* Selected verse (keyboard navigation) */
+/* Selected verse (keyboard navigation; only after a key press, and never on
+   the pasuk holding the pointer, which stays gold) */
 .verse.selected {
   border-right-color: var(--c-select);
   background: linear-gradient(to left, rgba(var(--c-select-rgb), 0.08) 0%, var(--c-surface) 100%);
   box-shadow: 0 0 0 2px rgba(var(--c-select-rgb), 0.3), 0 4px 12px rgba(var(--c-select-rgb), 0.15);
 }
 
-.verse.selected:hover {
-  box-shadow: 0 0 0 2px rgba(var(--c-select-rgb), 0.4), 0 6px 16px rgba(var(--c-select-rgb), 0.2);
+@media (hover: hover) {
+  .verse.selected:hover {
+    box-shadow: 0 0 0 2px rgba(var(--c-select-rgb), 0.4), 0 6px 16px rgba(var(--c-select-rgb), 0.2);
+  }
 }
 
 /* Reduced motion: no pulsing pointer, no pop, no hover lift. The colours
