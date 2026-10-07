@@ -209,10 +209,10 @@ const t = (he, en) => (isHebrew.value ? he : en)
 
 const completeTitle = computed(() =>
   isCompleted.value
-    ? t('בטל סימון הפסוק', 'Clear this pasuk')
-    : t('סמן את כל הפסוק כנקרא', 'Mark the whole pasuk as read')
+    ? t('בטלו את סימון הפסוק', 'Clear this pasuk')
+    : t('סמנו את כל הפסוק כנקרא', 'Mark the whole pasuk as read')
 )
-const focusTitle = computed(() => t('התמקד בפסוק זה', 'Focus on this pasuk'))
+const focusTitle = computed(() => t('התמקדו בפסוק זה', 'Focus on this pasuk'))
 
 const pointerTitle = computed(() => {
   const p = progress.value
@@ -279,7 +279,7 @@ const undoClear = () => {
 watch(isCompleted, (done) => { if (done) dropUndo() })
 onBeforeUnmount(dropUndo)
 
-const pointerLabel = computed(() => `${t('כאן אתה נמצא', 'You are here')}: ${pointerTitle.value}`)
+const pointerLabel = computed(() => `${t('כאן אתם נמצאים', 'You are here')}: ${pointerTitle.value}`)
 
 // A pointer that moved more than this between down and up is a drag
 // (text selection / scroll), not a tap on a reading target.

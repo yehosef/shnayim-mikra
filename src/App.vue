@@ -58,14 +58,14 @@
     <div v-if="needRefresh && !updateBarDismissed" class="app-notice" role="status">
       <span>{{ isHebrew ? 'גרסה חדשה מוכנה' : 'New version ready' }}</span>
       <button type="button" class="btn" @click="updateApp">{{ isHebrew ? 'טעינה מחדש' : 'Reload' }}</button>
-      <button type="button" class="btn" :aria-label="isHebrew ? 'סגור' : 'Dismiss'" @click="updateBarDismissed = true">&times;</button>
+      <button type="button" class="btn notice-close" :aria-label="isHebrew ? 'סגירה' : 'Dismiss'" @click="updateBarDismissed = true">&times;</button>
     </div>
     <!-- After a new cycle moved last year's marks aside, or after "start this
          parsha over": say so and offer Undo. -->
     <div v-if="cycleNotice" class="app-notice" role="status">
       <span>{{ cycleNoticeText }}</span>
       <button type="button" class="btn" @click="undoCycleNotice">{{ isHebrew ? 'ביטול' : 'Undo' }}</button>
-      <button type="button" class="btn" :aria-label="isHebrew ? 'סגור' : 'Dismiss'" @click="dismissCycleNotice">&times;</button>
+      <button type="button" class="btn notice-close" :aria-label="isHebrew ? 'סגירה' : 'Dismiss'" @click="dismissCycleNotice">&times;</button>
     </div>
     <!-- On the old Vercel address: the app has moved (see src/lib/movedNotice.js). -->
     <div v-if="movedNoticeShown" class="app-notice" role="note">
@@ -82,7 +82,7 @@
       <button v-if="!sync.user" type="button" class="btn" :disabled="!sync.ready && !sync.loadFailed" @click="startSignIn">
         {{ isHebrew ? 'התחברו כאן' : 'Sign in here' }}
       </button>
-      <button type="button" class="btn" :aria-label="isHebrew ? 'סגור' : 'Dismiss'" @click="dismissMovedNotice">&times;</button>
+      <button type="button" class="btn notice-close" :aria-label="isHebrew ? 'סגירה' : 'Dismiss'" @click="dismissMovedNotice">&times;</button>
     </div>
     <!-- One-time: aliyah boundaries were corrected, so groupings shift by one
          aliyah compared with older releases. Readers with no earlier marks
@@ -91,7 +91,7 @@
       <span>{{ isHebrew
         ? 'גבולות העליות תוקנו: ראשון מתחיל עכשיו בתחילת הפרשה.'
         : 'Aliyah boundaries corrected: Rishon now starts at the beginning of the parsha.' }}</span>
-      <button type="button" class="btn" :aria-label="isHebrew ? 'סגור' : 'Dismiss'" @click="dismissAliyotNotice">&times;</button>
+      <button type="button" class="btn notice-close" :aria-label="isHebrew ? 'סגירה' : 'Dismiss'" @click="dismissAliyotNotice">&times;</button>
     </div>
     <ParshaDisplay v-if="currentParsha" :parasha="currentParsha" :week="week" />
   </div>
@@ -484,16 +484,28 @@ body {
   transform: translateY(0);
 }
 
+/* Notice buttons are full touch targets; the ✕ is a 44px square. */
+.app-notice .btn {
+  min-height: 44px;
+}
+
+.notice-close {
+  min-width: 44px;
+  justify-content: center;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
 /* First-run welcome card: an inline block above the header, never an
    overlay. Buttons are grouped under their question at 44px. */
 .welcome {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
   padding: 0.75rem 1rem;
   background: var(--c-surface);
   border-bottom: 1px solid var(--c-border-soft);
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--c-text);
 }
 
@@ -510,7 +522,7 @@ body {
 
 .welcome-line {
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .welcome-q {
@@ -533,7 +545,7 @@ body {
   justify-content: center;
   min-height: 44px;
   min-width: 7rem;
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--c-text);
 }
 
@@ -565,19 +577,21 @@ body {
   transform: none;
 }
 
+/* One line on a phone where it fits; wraps only when it must. */
 .welcome-key {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.25rem 1rem;
+  gap: 0.15rem 0.6rem;
   list-style: none;
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: var(--c-text-2);
 }
 
 .welcome-key li {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.3rem;
+  white-space: nowrap;
 }
 
 .key-swatch {
@@ -616,7 +630,7 @@ body {
   }
 
   .welcome {
-    padding: 0.6rem 0.75rem;
+    padding: 0.5rem 0.75rem;
   }
 }
 </style>

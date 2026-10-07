@@ -32,7 +32,7 @@
         <span class="chip-name">{{ names[a.n - 1] }}</span>
         <span class="chip-count"><bdi dir="ltr">{{ a.complete }}/{{ a.total }}</bdi></span>
         <span v-if="isToday(a)" class="chip-today" :lang="isHebrew ? 'he' : 'en'">{{ isHebrew ? 'היום' : 'today' }}</span>
-        <span v-if="a.n === currentN" class="chip-pointer" role="img" :aria-label="isHebrew ? 'כאן אתה נמצא' : 'You are here'">▶</span>
+        <span v-if="a.n === currentN" class="chip-pointer" role="img" :aria-label="isHebrew ? 'כאן אתם נמצאים' : 'You are here'">▶</span>
       </span>
     </button>
   </div>
@@ -64,7 +64,7 @@ const isToday = (a) => props.guideAliyot.includes(a.n) && !isComplete(a)
 const chipTitle = (a) => {
   const parts = [`⁨${names[a.n - 1]}⁩: ${a.complete}/${a.total}`]
   if (isToday(a)) parts.push(props.isHebrew ? 'מומלץ להיום' : 'suggested for today')
-  if (a.n === props.currentN) parts.push(props.isHebrew ? 'כאן אתה נמצא' : 'you are here')
+  if (a.n === props.currentN) parts.push(props.isHebrew ? 'כאן אתם נמצאים' : 'you are here')
   return parts.join(' · ')
 }
 

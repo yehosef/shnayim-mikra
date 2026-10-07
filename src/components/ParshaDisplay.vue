@@ -1,7 +1,7 @@
 <template>
   <div>
-    <!-- Header -->
-    <div ref="headerEl" class="header">
+    <!-- Header. Inert while focus mode covers it, so Tab stays in focus mode. -->
+    <div ref="headerEl" class="header" :inert="showFocusMode">
       <div class="container">
         <!-- Title row, the same at every width: the title is the parsha
              picker (a native select laid over it, so phones keep their own
@@ -65,7 +65,7 @@
              missing until it succeeds, so say so and offer a retry -->
         <p v-if="aliyotError && !aliyotData">
           <span>{{ isHebrew ? 'לא ניתן לטעון את גבולות העליות.' : 'Could not load aliyah boundaries.' }}</span>
-          <button type="button" class="btn" @click="retryAliyot">{{ isHebrew ? 'נסה שוב' : 'Retry' }}</button>
+          <button type="button" class="btn" @click="retryAliyot">{{ isHebrew ? 'נסו שוב' : 'Retry' }}</button>
         </p>
         <!-- A chip tap selects that aliyah (selectAliyah); the chips replace the
              old "Aliyah:" dropdown of the aliyah view. -->
@@ -112,7 +112,7 @@
     <div v-if="error" class="error load-error" role="alert">
       <p>
         <span>{{ t('לא ניתן לטעון את הטקסט.', 'Could not load the text.') }}</span>
-        <button type="button" class="btn retry-btn" @click="reloadParsha">{{ t('נסה שוב', 'Retry') }}</button>
+        <button type="button" class="btn retry-btn" @click="reloadParsha">{{ t('נסו שוב', 'Retry') }}</button>
       </p>
       <details class="error-details">
         <summary>{{ t('פרטים', 'Details') }}</summary>
@@ -148,7 +148,7 @@
     />
 
     <!-- Content -->
-    <div v-if="!loading && !error && !showFocusMode" class="content">
+    <div v-if="!loading && !error && !showFocusMode" class="content" :inert="showFocusMode">
       <!-- The whole parsha was just finished. Advisory: it hides nothing. -->
       <div v-if="showCompletion && viewedComplete" class="completion-card" role="status">
         <p class="completion-text">
@@ -178,7 +178,7 @@
           <!-- Disabled until the aliyah boundaries have loaded: before that the
                aliyah filter cannot apply and the whole parsha would show. -->
           <button class="mode-toggle" :disabled="!aliyotEntry" @click.stop="switchDisplayMode('aliyah')">
-            {{ isHebrew ? 'הצג את העלייה' : 'Show the aliyah' }}
+            {{ isHebrew ? 'הציגו את העלייה' : 'Show the aliyah' }}
           </button>
           <button
             class="pasuk-nav"

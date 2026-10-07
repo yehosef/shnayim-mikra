@@ -17,8 +17,8 @@
             v-if="shownIsPointer"
             class="pointer-mark"
             role="img"
-            :title="t('כאן אתה נמצא', 'You are here')"
-            :aria-label="t('כאן אתה נמצא', 'You are here')"
+            :title="t('כאן אתם נמצאים', 'You are here')"
+            :aria-label="t('כאן אתם נמצאים', 'You are here')"
           >▶</span>
           <!-- Full reference; under 400px the compact "א:יג" replaces it
                (CSS), keeping the full wording as its label. -->
@@ -107,7 +107,7 @@
         <section class="help-section">
           <h4>{{ t('מקלדת', 'Keyboard') }}</h4>
           <div class="shortcuts-grid">
-            <div class="shortcut"><span class="keys"><kbd>Space</kbd><kbd>Enter</kbd></span> <span>{{ t('המשך לשלב הבא', 'Continue to the next step') }}</span></div>
+            <div class="shortcut"><span class="keys"><kbd>Space</kbd><kbd>Enter</kbd></span> <span>{{ t('המשיכו לשלב הבא', 'Continue to the next step') }}</span></div>
             <div class="shortcut"><kbd>←</kbd> <span>{{ t('פסוק הבא', 'Next pasuk') }}</span></div>
             <div class="shortcut"><kbd>→</kbd> <span>{{ t('פסוק קודם', 'Previous pasuk') }}</span></div>
             <div class="shortcut"><kbd>↑</kbd> <span>{{ t('שלב קודם', 'Previous step') }}</span></div>
@@ -115,15 +115,15 @@
             <div class="shortcut"><kbd>1</kbd> <span>{{ t('קריאה ראשונה', 'First reading') }}</span></div>
             <div class="shortcut"><kbd>2</kbd> <span>{{ t('קריאה שנייה', 'Second reading') }}</span></div>
             <div class="shortcut"><kbd>3</kbd> <span>{{ t('תרגום', 'Translation') }}</span></div>
-            <div class="shortcut"><kbd>M</kbd> <span>{{ t('סמן כנקרא', 'Mark as read') }}</span></div>
-            <div class="shortcut"><kbd>U</kbd> <span>{{ t('בטל סימון', 'Undo the mark') }}</span></div>
+            <div class="shortcut"><kbd>M</kbd> <span>{{ t('סמנו כנקרא', 'Mark as read') }}</span></div>
+            <div class="shortcut"><kbd>U</kbd> <span>{{ t('בטלו את הסימון', 'Undo the mark') }}</span></div>
             <div class="shortcut"><kbd>?</kbd> <span>{{ t('עזרה זו', 'This help') }}</span></div>
             <div class="shortcut"><kbd>Esc</kbd> <span>{{ t('חזרה לרשימה', 'Back to the list') }}</span></div>
           </div>
         </section>
 
         <div class="help-actions">
-          <button @click="showHelp = false" class="close-help-btn">{{ t('סגור', 'Close') }}</button>
+          <button @click="showHelp = false" class="close-help-btn">{{ t('סגירה', 'Close') }}</button>
         </div>
       </div>
     </div>
@@ -202,8 +202,9 @@
                   dir="rtl"
                   lang="he"
                   :class="{ 'font-rashi': settings.fontRashi }"
-                  v-html="currentVerse.rashi.join('  ')"
-                ></div>
+                >
+                  <div v-for="(comment, ci) in currentVerse.rashi" :key="ci" class="rashi-comment" v-html="comment"></div>
+                </div>
 
                 <div
                   v-else
@@ -232,7 +233,9 @@
 
         <div v-if="shownVerse.rashi?.length && settings.showRashi && settings.targumType !== 'rashi'" class="reference-section" dir="rtl" lang="he">
           <div class="reference-label">רש"י</div>
-          <div class="rashi reference-text" :class="{ 'font-rashi': settings.fontRashi }" v-html="shownVerse.rashi.join('  ')"></div>
+          <div class="rashi reference-text" :class="{ 'font-rashi': settings.fontRashi }">
+            <div v-for="(comment, ci) in shownVerse.rashi" :key="ci" class="rashi-comment" v-html="comment"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -504,15 +507,15 @@ const fallbackNote = computed(() => {
 const hint = computed(() => {
   const s = shown.value
   if (s.step < 3) {
-    return { touch: t('הקישו על הטקסט להמשך', 'Tap the text to continue'), keys: t('לחצו או [Space] להמשך', 'Tap or press [Space] to continue') }
+    return { touch: t('הקישו על הטקסט להמשך', 'Tap the text to continue'), keys: t('לחצו על הטקסט או על [Space] להמשך', 'Click the text or press [Space] to continue') }
   }
   if (s.index < totalVerses.value - 1) {
-    return { touch: t('הקישו על הטקסט לפסוק הבא', 'Tap the text for the next pasuk'), keys: t('לחצו או [Space] לפסוק הבא', 'Tap or press [Space] for the next pasuk') }
+    return { touch: t('הקישו על הטקסט לפסוק הבא', 'Tap the text for the next pasuk'), keys: t('לחצו על הטקסט או על [Space] לפסוק הבא', 'Click the text or press [Space] for the next pasuk') }
   }
   if (pointerElsewhere.value) {
-    return { touch: t('הקישו על הטקסט להשלמת מה שנותר', 'Tap the text to finish what is left'), keys: t('לחצו או [Space] להשלמת מה שנותר', 'Tap or press [Space] to finish what is left') }
+    return { touch: t('הקישו על הטקסט להשלמת מה שנותר', 'Tap the text to finish what is left'), keys: t('לחצו על הטקסט או על [Space] להשלמת מה שנותר', 'Click the text or press [Space] to finish what is left') }
   }
-  return { touch: t('הקישו על הטקסט לסיום', 'Tap the text to finish'), keys: t('לחצו או [Space] לסיום', 'Tap or press [Space] to finish') }
+  return { touch: t('הקישו על הטקסט לסיום', 'Tap the text to finish'), keys: t('לחצו על הטקסט או על [Space] לסיום', 'Click the text or press [Space] to finish') }
 })
 
 // The piece to open a pasuk on: the pointer's phase when the pointer is on
@@ -837,12 +840,62 @@ const handleKeydown = (e) => {
   }
 }
 
+// Back button closes the help sheet, the same way it closes Settings
+// (SettingsModal.vue): opening pushes one same-URL history entry, Back pops it
+// and closes; closing any other way goes back over that entry if it is still
+// on top. An entry left over from a reload is reused rather than stacked.
+const HELP_HISTORY_MARK = 'focus-help'
+const isHelpEntry = () => {
+  try {
+    return window.history.state?.modal === HELP_HISTORY_MARK
+  } catch (e) {
+    return false
+  }
+}
+let helpOwnsEntry = false
+let helpClosedByBack = false
+
+const onHelpPopState = () => {
+  if (isHelpEntry()) return
+  helpClosedByBack = true
+  showHelp.value = false
+}
+
+const pushHelpEntry = () => {
+  helpClosedByBack = false
+  try {
+    if (!isHelpEntry()) {
+      window.history.pushState({ ...(window.history.state || {}), modal: HELP_HISTORY_MARK }, '')
+    }
+    helpOwnsEntry = true
+    window.addEventListener('popstate', onHelpPopState)
+  } catch (e) {
+    // No history API: the sheet still closes with its button and Escape.
+  }
+}
+
+const releaseHelpEntry = () => {
+  window.removeEventListener('popstate', onHelpPopState)
+  if (helpOwnsEntry && !helpClosedByBack && isHelpEntry()) {
+    try {
+      window.history.back()
+    } catch (e) { /* the extra entry is harmless */ }
+  }
+  helpOwnsEntry = false
+}
+
+watch(showHelp, (open) => {
+  if (open) pushHelpEntry()
+  else releaseHelpEntry()
+})
+
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown)
 })
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
+  if (showHelp.value) releaseHelpEntry()
 })
 </script>
 
@@ -1396,22 +1449,31 @@ onUnmounted(() => {
   font-family: 'Rashi', serif;
 }
 
+/* Rashi: each comment is its own block, as in the list view. */
+.rashi-comment + .rashi-comment {
+  margin-top: 0.6em;
+}
+
 /* Navigation Buttons */
 .nav-btn {
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
-  background: linear-gradient(135deg, var(--c-read-border) 0%, var(--c-read-strong) 100%);
-  color: var(--c-on-accent);
-  border: none;
+  /* Neutral like the list-view arrows: green is kept for "read" */
+  background: var(--c-surface-2);
+  color: var(--c-text-2);
+  border: 1px solid var(--c-border);
   width: var(--nav-w);
   padding: 1.5rem 0;
   border-radius: var(--radius-lg);
   font-size: 2rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out);
-  box-shadow: 0 4px 8px rgba(var(--c-read-rgb), 0.3);
+  transition:
+    transform var(--motion-base) var(--ease-out),
+    background-color var(--motion-base) var(--ease-out),
+    border-color var(--motion-base) var(--ease-out);
+  box-shadow: 0 2px 6px rgba(var(--c-shadow-rgb), 0.12);
   z-index: 50;
 }
 
@@ -1425,14 +1487,17 @@ onUnmounted(() => {
 
 .nav-btn:hover:not(:disabled) {
   transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 6px 12px rgba(var(--c-read-rgb), 0.4);
+  background: var(--c-border-soft);
+  border-color: var(--c-faint);
+  color: var(--c-text);
 }
 
+/* Disabled at the first / last pasuk: faint by colour, same shape */
 .nav-btn:disabled {
-  /* allow-opacity: disabled side button at the first/last verse, not text */
-  opacity: 0.3;
   cursor: not-allowed;
-  background: var(--c-border);
+  background: var(--c-bg);
+  border-color: var(--c-border-soft);
+  color: var(--c-border);
   box-shadow: none;
 }
 
