@@ -3,6 +3,13 @@
 Vue 3 + Vite 7 + vite-plugin-pwa. Deployed on Vercel (auto-deploys `master`).
 Static Sefaria JSON under `public/data/`. No backend. All state in `localStorage`.
 
+## Deploying
+
+Production is Firebase Hosting (https://shnayim.web.app, project `shining-fire-3750`, site
+`shnayim`): `npm run build && firebase deploy --only hosting`, then tag `vX.Y.Z`. The owner said on
+2026-10-07 that this is a demo/test app and Firebase deploys (hosting and Firestore) may be run
+without asking first. Bump the version and add a CHANGELOG entry before deploying.
+
 ## Commands
 
 ```

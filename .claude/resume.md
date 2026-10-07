@@ -6,8 +6,9 @@ The UI/UX plan from the review of 2026-10-06 is fully implemented on branch `fir
 (8 commits after version 1.3.0) and bumped to **1.4.0** with a changelog entry. Tests (437),
 `npm run validate` and `npm run build` pass; a 100-screenshot matrix (6 screen sizes × Hebrew/
 English × list, focus, Settings, help, plus state variants) shows no horizontal overflow and no
-off-screen controls. **Not deployed yet**: the next action is the owner's decision to run
-`firebase deploy` (production is Firebase Hosting, https://shnayim.web.app) and tag `v1.4.0`.
+off-screen controls. **Deployed** to Firebase Hosting (https://shnayim.web.app) on 2026-10-07, served bundle
+`index-BFk7T1pf.js`, tag `v1.4.0` pushed. Next action: try the welcome card, Google sign-in and
+dark mode on a real phone; nothing else is pending.
 
 ## Completed (all on `firebase-sync`, uncommitted nothing)
 
@@ -49,15 +50,13 @@ line mentions that Google sign-in stores name and email.
 
 ## Open questions
 
-- Deploy 1.4.0 now? (Blocks: nothing else; production stays on 1.3.0 until then.)
 - Sign-in from the welcome card has not been tried with a real Google account.
 - Offline "Saved" state in Settings only shows in a production build (dev has no service worker).
 
 ## Next steps
 
-1. Owner approves → `firebase deploy`, then `git tag v1.4.0` on the deployed commit and push.
-2. Try the welcome card + sign-in on a real phone (Hebrew and English), and dark mode at night.
-3. Leftovers from the review marked "Not planned": WOFF2 font (licence check first), the
+1. Try the welcome card + sign-in on a real phone (Hebrew and English), and dark mode at night.
+2. Leftovers from the review marked "Not planned": WOFF2 font (licence check first), the
    "(פ)/(ס)" markers, text-size slider direction in Hebrew (check on iPhone), reminders.
 
 ## Commands to continue
@@ -67,5 +66,5 @@ npm run dev                 # dev server (the screenshot harness expects port 51
 npm test && npm run validate && npm run build
 node scripts/screenshot-matrix.mjs '<spec>'
                             # screenshot harness (needs global Playwright + cached Chromium; writes scripts/shots/)
-firebase deploy             # production deploy — only with the owner's explicit approval
+firebase deploy --only hosting   # production deploy; the owner allows deploying this app without asking (2026-10-07)
 ```
