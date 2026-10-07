@@ -96,6 +96,6 @@ Full-parsha DOM overflows snapshot tools. Verify through focus mode, a single al
 
 ## Scope kept out of v1
 
-Meforshim display, `displayMode: 'parasha'`, keyboard-handler consolidation (two non-conflicting
-handlers exist), `v-html` sanitising (local data only), progress schema versioning, combined ↔
-single parsha progress credit.
+Meforshim display, keyboard-handler consolidation (two non-conflicting handlers exist), `v-html`
+sanitising (local data only), progress schema versioning, combined ↔ single parsha progress credit.
+The whole-parsha view (`displayMode: 'parasha'`) shipped before 1.3.0 and is kept.

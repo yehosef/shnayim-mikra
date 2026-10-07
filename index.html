@@ -8,13 +8,21 @@
     <title>שניים מקרא ואחד תרגום</title>
     <script>
       // Interface direction before the app mounts (no flash): App.vue keeps it
-      // in step with settings.interfaceLanguage afterwards.
+      // in step with settings.interfaceLanguage afterwards. With no saved
+      // language, a Hebrew browser gets Hebrew: the same rule as
+      // browserLanguage() in src/lib/settingsDefaults.js.
       (function () {
         var he = false
         try {
+          var l = String((navigator && navigator.language) || '').toLowerCase()
+          he = l.indexOf('he') === 0 || l.indexOf('iw') === 0
+        } catch (e) { /* default: English */ }
+        try {
           var s = JSON.parse(localStorage.getItem('shnayim-settings') || 'null')
-          he = !!s && s.interfaceLanguage === 'he'
-        } catch (e) { /* defaults: English */ }
+          if (s && typeof s === 'object' && typeof s.interfaceLanguage === 'string') {
+            he = s.interfaceLanguage === 'he'
+          }
+        } catch (e) { /* keep the browser default */ }
         document.documentElement.lang = he ? 'he' : 'en'
         document.documentElement.dir = he ? 'rtl' : 'ltr'
       })()

@@ -34,16 +34,108 @@
           </div>
         </fieldset>
 
+        <!-- Account: opt-in Google sign-in that syncs marks between devices.
+             Nothing else in the app depends on it or is hidden without it. -->
+        <section
+          ref="accountEl"
+          class="section"
+          tabindex="-1"
+          aria-labelledby="settings-sec-account"
+        >
+          <h4 id="settings-sec-account">{{ t('חשבון וגיבוי', 'Account and backup') }}</h4>
+
+          <template v-if="sync.user">
+            <p class="privacy">
+              {{ t('הסימונים שלכם ושנת הקריאה נשמרים בחשבון ומסונכרנים בין המכשירים שלכם.',
+                   'Your marks and the reading year are kept in your account and in sync across your devices.') }}
+            </p>
+            <div class="account-id">
+              <div class="account-name"><bdi>{{ sync.user.name }}</bdi></div>
+              <div v-if="sync.user.email" class="account-email"><bdi dir="ltr">{{ sync.user.email }}</bdi></div>
+            </div>
+            <div role="status">
+              <p v-if="syncStatusText && sync.status !== 'error'" class="status-line" :class="'sync-' + sync.status">
+                <span class="dot" aria-hidden="true"></span>
+                <span>{{ syncStatusText }}</span>
+              </p>
+            </div>
+            <template v-if="sync.status === 'error'">
+              <p class="status-line sync-error" role="alert">
+                <span class="dot" aria-hidden="true"></span>
+                <span>{{ syncStatusText }}</span>
+              </p>
+              <div class="actions">
+                <button type="button" class="btn btn-secondary" @click="retrySync">{{ t('נסו שוב', 'Try again') }}</button>
+              </div>
+            </template>
+            <div v-if="confirmingSignOut" class="confirm">
+              <p class="confirm-text">{{ signOutWarning }}</p>
+              <div class="btn-row">
+                <button type="button" class="btn btn-primary" @click="confirmingSignOut = false">{{ t('להישאר מחוברים', 'Stay signed in') }}</button>
+                <button type="button" class="btn btn-secondary" @click="confirmSignOut">{{ t('התנתקות', 'Sign out') }}</button>
+              </div>
+            </div>
+            <div v-else class="actions">
+              <button type="button" class="btn btn-secondary" @click="askSignOut">{{ t('התנתקות', 'Sign out') }}</button>
+            </div>
+          </template>
+
+          <template v-else>
+            <p class="account-benefit">
+              {{ t('שמרו את הסימונים שלכם והשתמשו בהם גם במכשירים האחרים שלכם.',
+                   'Keep your marks and use them on your other devices.') }}
+            </p>
+            <p class="account-warning">
+              {{ t('בלי התחברות, הסימונים נשמרים רק בדפדפן הזה ויאבדו אם הנתונים שלו יימחקו.',
+                   'Without sign-in, marks stay in this browser only and are lost if its data is cleared.') }}
+            </p>
+            <p class="privacy">
+              <template v-if="isHebrew">אם תתחברו, נשמרים רק הסימונים שלכם ושנת הקריאה; ההתחברות עם <bdi dir="ltr">Google</bdi> מוסיפה את השם וכתובת האימייל שלכם.</template>
+              <template v-else>If you sign in, only your marks and the reading year are stored, with the name and email of the Google account you use.</template>
+            </p>
+            <template v-if="sync.loadFailed">
+              <p class="error-line" role="alert">
+                {{ t('לא ניתן לטעון את ההתחברות. בדקו את החיבור.', 'Sign-in could not load. Check the connection.') }}
+              </p>
+              <div class="actions">
+                <button type="button" class="btn btn-secondary" @click="preload">{{ t('נסו שוב', 'Try again') }}</button>
+              </div>
+            </template>
+            <div v-else class="actions">
+              <button type="button" class="btn btn-primary" :disabled="!sync.ready" @click="startSignIn">
+                <template v-if="!sync.ready">{{ t('מכין התחברות…', 'Preparing sign-in…') }}</template>
+                <template v-else-if="isHebrew">התחברות עם <bdi dir="ltr">Google</bdi></template>
+                <template v-else>Sign in with Google</template>
+              </button>
+            </div>
+          </template>
+
+          <div v-if="sync.signInError" class="error-block" role="alert">
+            <p class="error-line">{{ t('ההתחברות נכשלה. נסו שוב.', "Couldn't sign in. Try again.") }}</p>
+            <p class="error-code"><bdi dir="ltr">{{ sync.signInError }}</bdi></p>
+          </div>
+        </section>
+
         <!-- Reading -->
         <section class="section" aria-labelledby="settings-sec-reading">
           <h4 id="settings-sec-reading">{{ t('קריאה', 'Reading') }}</h4>
 
-          <!-- Reading order: a traversal order only, it changes what "next" means -->
+          <!-- Reading order and View sit together: one decides what "next" means,
+               the other how much text is on screen. -->
           <fieldset class="field" aria-labelledby="settings-order-label">
             <div class="row row-seg">
               <span id="settings-order-label" class="row-label">{{ t('סדר הקריאה', 'Reading order') }}</span>
               <SegmentedControl v-model="settings.readingStyle" name="settings-order" :options="readingStyleOptions" />
               <p v-if="readingStyleHelp" class="helper">{{ readingStyleHelp }}</p>
+            </div>
+          </fieldset>
+
+          <fieldset v-if="!focusMode" class="field" aria-labelledby="settings-view-label">
+            <div class="row row-seg">
+              <span id="settings-view-label" class="row-label">{{ t('תצוגה', 'View') }}</span>
+              <SegmentedControl v-model="settings.displayMode" name="settings-view" :options="displayModeOptions" />
+              <p class="helper">{{ t('כמה טקסט מוצג על המסך. סדר הקריאה קובע מה בא אחר כך.',
+                                     'How much text is on screen. Reading order decides what comes next.') }}</p>
             </div>
           </fieldset>
 
@@ -55,14 +147,7 @@
             </div>
           </fieldset>
 
-          <fieldset v-if="!focusMode" class="field" aria-labelledby="settings-view-label">
-            <div class="row row-seg">
-              <span id="settings-view-label" class="row-label">{{ t('תצוגה', 'View') }}</span>
-              <SegmentedControl v-model="settings.displayMode" name="settings-view" :options="displayModeOptions" />
-            </div>
-          </fieldset>
-
-          <fieldset v-if="!focusMode" class="field" aria-labelledby="settings-location-label">
+          <fieldset class="field" aria-labelledby="settings-location-label">
             <div class="row row-seg">
               <span id="settings-location-label" class="row-label">{{ t('לוח קריאה', 'Reading schedule') }}</span>
               <SegmentedControl v-model="settings.location" name="settings-location" :options="locationOptions" />
@@ -123,84 +208,19 @@
             <span v-if="settings.targumType === 'english'" class="helper">{{ alreadyCounted }}</span>
           </label>
 
-          <label class="row row-check" :class="{ 'is-disabled': !rashiShown }">
-            <span class="row-label">{{ t('כתב רש"י', 'Rashi script') }}</span>
-            <input v-model="settings.fontRashi" type="checkbox" class="check" :disabled="!rashiShown" />
+          <label v-if="rashiShown" class="row row-check">
+            <span class="row-label">{{ t('להציג את רש"י בכתב רש"י', 'Show Rashi in Rashi script') }}</span>
+            <input v-model="settings.fontRashi" type="checkbox" class="check" />
           </label>
-        </section>
-
-        <!-- Account: opt-in Google sign-in that syncs marks between devices.
-             Nothing else in the app depends on it or is hidden without it. -->
-        <section class="section" aria-labelledby="settings-sec-account">
-          <h4 id="settings-sec-account">{{ t('חשבון וגיבוי', 'Account and backup') }}</h4>
-          <p class="privacy">
-            <template v-if="isHebrew">נשמרים שם וכתובת <bdi dir="ltr">Google</bdi> שלך, והפסוקים שסימנת.</template>
-            <template v-else>Stores your Google name and email, and which verses you marked.</template>
-          </p>
-
-          <template v-if="sync.user">
-            <div class="account-id">
-              <div class="account-name"><bdi>{{ sync.user.name }}</bdi></div>
-              <div v-if="sync.user.email" class="account-email"><bdi dir="ltr">{{ sync.user.email }}</bdi></div>
-            </div>
-            <div role="status">
-              <p v-if="syncStatusText && sync.status !== 'error'" class="status-line" :class="'sync-' + sync.status">
-                <span class="dot" aria-hidden="true"></span>
-                <span>{{ syncStatusText }}</span>
-              </p>
-            </div>
-            <template v-if="sync.status === 'error'">
-              <p class="status-line sync-error" role="alert">
-                <span class="dot" aria-hidden="true"></span>
-                <span>{{ syncStatusText }}</span>
-              </p>
-              <div class="actions">
-                <button type="button" class="btn btn-secondary" @click="retrySync">{{ t('נסו שוב', 'Try again') }}</button>
-              </div>
-            </template>
-            <div v-if="confirmingSignOut" class="confirm">
-              <p class="confirm-text">{{ signOutWarning }}</p>
-              <div class="btn-row">
-                <button type="button" class="btn btn-secondary" @click="confirmSignOut">{{ t('התנתקות', 'Sign out') }}</button>
-                <button type="button" class="btn btn-primary" @click="confirmingSignOut = false">{{ t('להישאר מחוברים', 'Stay signed in') }}</button>
-              </div>
-            </div>
-            <div v-else class="actions">
-              <button type="button" class="btn btn-secondary" @click="askSignOut">{{ t('התנתקות', 'Sign out') }}</button>
-            </div>
-          </template>
-
-          <template v-else>
-            <p class="helper-block">
-              {{ t('התחברות שומרת את הסימונים שלך בענן ומסנכרנת אותם בין המכשירים שלך. הכול עובד גם בלי להתחבר.',
-                   'Signing in backs up your marks and keeps them in sync across your devices. Everything works without it.') }}
-            </p>
-            <template v-if="sync.loadFailed">
-              <p class="error-line" role="alert">
-                {{ t('לא ניתן לטעון את ההתחברות. בדקו את החיבור.', 'Sign-in could not load. Check the connection.') }}
-              </p>
-              <div class="actions">
-                <button type="button" class="btn btn-secondary" @click="preload">{{ t('נסו שוב', 'Try again') }}</button>
-              </div>
-            </template>
-            <div v-else class="actions">
-              <button type="button" class="btn btn-primary" :disabled="!sync.ready" @click="startSignIn">
-                <template v-if="!sync.ready">{{ t('מכין התחברות…', 'Preparing sign-in…') }}</template>
-                <template v-else-if="isHebrew">התחברות עם <bdi dir="ltr">Google</bdi></template>
-                <template v-else>Sign in with Google</template>
-              </button>
-            </div>
-          </template>
-
-          <div v-if="sync.signInError" class="error-block" role="alert">
-            <p class="error-line">{{ t('ההתחברות נכשלה. נסו שוב.', "Couldn't sign in. Try again.") }}</p>
-            <p class="error-code"><bdi dir="ltr">{{ sync.signInError }}</bdi></p>
-          </div>
         </section>
 
         <!-- Offline use -->
         <section class="section" aria-labelledby="settings-sec-offline">
           <h4 id="settings-sec-offline">{{ t('שימוש ללא רשת', 'Offline use') }}</h4>
+          <p v-if="!offlineSupported" class="status-text">
+            {{ t('הדפדפן הזה לא תומך בשימוש ללא רשת.', "Offline isn't available in this browser.") }}
+          </p>
+          <template v-else>
           <p class="status-text">
             {{ offlineReady
               ? t('המקרא והתרגום שמורים לשימוש ללא רשת', 'Torah and Targum are saved for offline use')
@@ -237,6 +257,7 @@
               {{ t('שמירת רש"י ואנגלית לשימוש ללא רשת', 'Save Rashi and English for offline') }}
             </button>
           </div>
+          </template>
         </section>
 
         <!-- Start the open parsha over: archives its marks (Undo restores them)
@@ -251,8 +272,8 @@
               {{ t('למחוק את כל הסימונים בפרשה זו? אפשר לבטל מיד אחר כך.', 'Clear every mark in this parsha? You can undo right after.') }}
             </p>
             <div class="btn-row">
-              <button type="button" class="btn btn-danger-filled" @click="confirmStartOver">{{ t('מחיקת הסימונים', 'Clear marks') }}</button>
-              <button type="button" class="btn btn-secondary" @click="confirmingStartOver = false">{{ t('השארת הסימונים', 'Keep marks') }}</button>
+              <button type="button" class="btn btn-primary" @click="confirmingStartOver = false">{{ t('השארת הסימונים', 'Keep marks') }}</button>
+              <button type="button" class="btn btn-danger" @click="confirmStartOver">{{ t('מחיקת הסימונים', 'Clear marks') }}</button>
             </div>
           </div>
           <div v-else class="actions">
@@ -274,11 +295,34 @@
           </p>
         </section>
 
-        <!-- Attribution -->
+        <!-- Attribution: public/data/CREDITS.md, fetched when opened and shown
+             inline (it is English-only, so the block is pinned LTR). -->
         <div class="credits">
-          <span v-if="isHebrew">טקסטים באדיבות ספריא. ראו</span>
-          <span v-else>Texts courtesy of Sefaria. See</span>
-          <a href="/data/CREDITS.md" target="_blank" rel="noopener">CREDITS</a>
+          <p>{{ t('טקסטים באדיבות ספריא.', 'Texts courtesy of Sefaria.') }}</p>
+          <details class="credits-details" @toggle="onCreditsToggle">
+            <summary>{{ t('מקורות ורישיונות', 'Sources and licences') }}</summary>
+            <p v-if="creditsState === 'loading'" class="credits-status">{{ t('טוען…', 'Loading…') }}</p>
+            <p v-else-if="creditsState === 'error'" class="credits-status">
+              {{ t('לא ניתן לטעון כרגע.', "Couldn't load this right now.") }}
+              <a href="/data/CREDITS.md" target="_blank" rel="noopener">CREDITS.md</a>
+            </p>
+            <div v-else-if="creditsState === 'ready'" class="credits-body" dir="ltr" lang="en">
+              <template v-for="(block, i) in creditsBlocks" :key="i">
+                <p v-if="block.type === 'heading'" class="credits-heading">{{ block.text }}</p>
+                <p v-else-if="block.type === 'para'">{{ block.text }}</p>
+                <ul v-else-if="block.type === 'rows'" class="credits-rows">
+                  <li v-for="(row, j) in block.rows" :key="j">
+                    <strong>{{ row[0] }}</strong>
+                    <template v-for="(cell, k) in row.slice(1)" :key="k">
+                      <br />
+                      <a v-if="isUrl(cell)" :href="cell" target="_blank" rel="noopener">{{ cell }}</a>
+                      <span v-else>{{ block.header[k + 1] ? block.header[k + 1] + ': ' : '' }}{{ cell }}</span>
+                    </template>
+                  </li>
+                </ul>
+              </template>
+            </div>
+          </details>
         </div>
       </div>
     </div>
@@ -293,12 +337,19 @@ import { useCycles } from '../composables/useCycles'
 import { useSync, preload } from '../composables/useSync'
 import { parshiyotList } from '../data/parshiyot'
 import { formatHebrewText } from '../utils/hebrewUtils'
+import { parseCredits, looksLikeMarkdown } from '../lib/creditsText'
 import SegmentedControl from './SegmentedControl.vue'
 
 const props = defineProps({
   focusMode: {
     type: Boolean,
     default: false
+  },
+  // 'account': open scrolled to the Account section, with focus on it (the
+  // sign-in indicator next to the gear opens Settings this way).
+  initialSection: {
+    type: String,
+    default: null
   }
 })
 
@@ -333,12 +384,12 @@ const targumOptions = computed(() => [
   { value: 'rashi', label: t('רש"י', 'Rashi') },
   { value: 'english', label: t('אנגלית', 'English') }
 ])
-// 'parasha' (the old "By Parsha" view) is no longer offered; a saved
-// 'parasha' still loads and simply selects neither segment.
+// One pasuk, the whole aliyah, or the whole parsha on screen. Short labels so
+// the three fit on one line on a phone; the helper under View explains them.
 const displayModeOptions = computed(() => [
-  { value: 'pasuk', label: t('פסוק אחד', 'One pasuk') },
-  { value: 'aliyah', label: t('כל העלייה', 'Whole aliyah') },
-  { value: 'parasha', label: t('כל הפרשה', 'Whole parsha') }
+  { value: 'pasuk', label: t('פסוק', 'Pasuk') },
+  { value: 'aliyah', label: t('עלייה', 'Aliyah') },
+  { value: 'parasha', label: t('פרשה', 'Parsha') }
 ])
 const locationOptions = computed(() => [
   { value: 'israel', label: t('ישראל', 'Israel') },
@@ -428,14 +479,68 @@ const handleKeydown = (e) => {
   emit('close')
 }
 
+// Back button: on a phone Settings looks like a page, so Back must close it
+// instead of changing the parsha underneath or leaving the app. Opening pushes
+// one history entry with the same URL (no hashchange, so App.vue's routing does
+// not see it); Back pops it and closes. Closing any other way (✕, Escape,
+// focus mode's own handler, a restore) goes back over that entry on unmount,
+// but only if it is still on top. An entry left over from a reload while
+// Settings was open is reused rather than stacked.
+const HISTORY_MARK = 'settings'
+const isOurEntry = () => {
+  try {
+    return window.history.state?.modal === HISTORY_MARK
+  } catch (e) {
+    return false
+  }
+}
+let ownsEntry = false
+let closedByBack = false
+
+const onPopState = () => {
+  if (isOurEntry()) return
+  closedByBack = true
+  emit('close')
+}
+
+const pushHistoryEntry = () => {
+  try {
+    if (!isOurEntry()) {
+      window.history.pushState({ ...(window.history.state || {}), modal: HISTORY_MARK }, '')
+    }
+    ownsEntry = true
+    window.addEventListener('popstate', onPopState)
+  } catch (e) {
+    // No history API: Settings still closes with ✕ and Escape.
+  }
+}
+
+const releaseHistoryEntry = () => {
+  window.removeEventListener('popstate', onPopState)
+  if (ownsEntry && !closedByBack && isOurEntry()) {
+    try {
+      window.history.back()
+    } catch (e) { /* the extra entry is harmless */ }
+  }
+}
+
+const accountEl = ref(null)
+
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown)
+  pushHistoryEntry()
   // Fetch the sign-in client now, so the button's popup can open straight
   // from the click (Safari blocks popups opened after an await).
   preload()
   prevBodyOverflow = document.body.style.overflow
   document.body.style.overflow = 'hidden'
-  closeBtn.value?.focus()
+  if (props.initialSection === 'account' && accountEl.value) {
+    accountEl.value.scrollIntoView({ block: 'start' })
+    accountEl.value.focus({ preventScroll: true })
+  } else {
+    closeBtn.value?.focus()
+  }
+  checkOfflineCache()
 })
 
 // Account (sign-in sync)
@@ -484,6 +589,7 @@ const confirmSignOut = () => {
 }
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
+  releaseHistoryEntry()
   document.body.style.overflow = prevBodyOverflow
   // Do not hand focus back to the button that opened Settings: the list view
   // gives Space to a focused button, so the next Space would reopen Settings
@@ -503,16 +609,27 @@ const offlinePercent = computed(() => {
 
 // Torah, Targum and aliyot.json are precached by the service worker at
 // install. This button warms the runtime cache with the optional layers.
-const downloadForOffline = async () => {
-  const chumashim = ['bereishit', 'shmot', 'vayikra', 'bamidbar', 'dvarim']
-  const layers = ['english', 'rashi']
+const OPTIONAL_LAYER_URLS = ['english', 'rashi'].flatMap(layer =>
+  ['bereishit', 'shmot', 'vayikra', 'bamidbar', 'dvarim'].map(chumash => `/data/${layer}/${chumash}.json`))
 
-  const urls = []
-  for (const chumash of chumashim) {
-    for (const layer of layers) {
-      urls.push(`/data/${layer}/${chumash}.json`)
-    }
+// Without a service worker nothing is cached for offline use, and the
+// precache status would read "Saving…" forever.
+const offlineSupported = typeof navigator !== 'undefined' && 'serviceWorker' in navigator
+
+// The download state is local to this dialog, so ask the cache on open: if
+// every optional file is already there, say so instead of offering it again.
+const checkOfflineCache = async () => {
+  if (!offlineSupported || typeof caches === 'undefined') return
+  try {
+    const hits = await Promise.all(OPTIONAL_LAYER_URLS.map(url => caches.match(url, { ignoreSearch: true })))
+    if (hits.every(Boolean) && offlineStatus.value === 'idle') offlineStatus.value = 'ready'
+  } catch (e) {
+    // Unknown: leave the button offered.
   }
+}
+
+const downloadForOffline = async () => {
+  const urls = OPTIONAL_LAYER_URLS
 
   offlineTotal.value = urls.length
   offlineDownloaded.value = 0
@@ -537,6 +654,26 @@ const downloadForOffline = async () => {
   } catch (e) {
     console.error('Offline download failed:', e)
     offlineStatus.value = 'error'
+  }
+}
+
+// Sources and licences: fetched the first time the panel is opened.
+const creditsState = ref('idle') // idle | loading | ready | error
+const creditsBlocks = ref([])
+const isUrl = (cell) => /^https?:\/\//.test(cell)
+
+const onCreditsToggle = async (e) => {
+  if (!e.target.open || creditsState.value === 'loading' || creditsState.value === 'ready') return
+  creditsState.value = 'loading'
+  try {
+    const res = await fetch('/data/CREDITS.md')
+    const text = res.ok ? await res.text() : ''
+    if (!looksLikeMarkdown(text)) throw new Error(`CREDITS.md: ${res.status}`)
+    creditsBlocks.value = parseCredits(text)
+    creditsState.value = 'ready'
+  } catch (err) {
+    console.warn('Could not load credits:', err)
+    creditsState.value = 'error'
   }
 }
 </script>
@@ -756,6 +893,22 @@ const downloadForOffline = async () => {
   color: var(--c-muted);
 }
 
+.account-benefit {
+  margin: 0 0 0.35rem;
+  color: var(--c-text);
+}
+
+.account-warning {
+  margin: 0 0 0.35rem;
+  font-size: 0.9rem;
+  color: var(--c-text-2);
+}
+
+/* Focused programmatically when opened at Account; not a control. */
+.section:focus {
+  outline: none;
+}
+
 .account-id {
   margin-block: 0.5rem;
 }
@@ -909,12 +1062,6 @@ const downloadForOffline = async () => {
   background: var(--c-danger-bg);
 }
 
-.btn-danger-filled {
-  background: var(--c-danger);
-  border-color: var(--c-danger);
-  color: #fff;
-}
-
 .btn:disabled,
 .btn:disabled:hover {
   background: var(--c-surface-2);
@@ -941,12 +1088,65 @@ const downloadForOffline = async () => {
   color: var(--c-muted);
 }
 
+.credits p {
+  margin: 0;
+}
+
 .credits a {
   color: var(--c-scope-strong);
-  margin-inline-start: 0.25rem;
-  display: inline-flex;
+  overflow-wrap: anywhere;
+}
+
+.credits-details summary {
+  display: flex;
   align-items: center;
   min-height: 44px;
+  color: var(--c-scope-strong);
+  cursor: pointer;
+}
+
+.credits-details summary::before {
+  content: '▸';
+  margin-inline-end: 0.35rem;
+}
+
+.credits-details[open] summary::before {
+  content: '▾';
+}
+
+.credits-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.credits-details summary:focus-visible {
+  outline: 2px solid var(--c-scope-strong);
+  outline-offset: 2px;
+}
+
+.credits-status {
+  padding-block: 0.25rem;
+}
+
+.credits-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-block: 0.25rem 0.5rem;
+  color: var(--c-text-2);
+  text-align: left;
+}
+
+.credits-heading {
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.credits-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0;
+  list-style: none;
 }
 
 /* Phone: the dialog takes the whole screen. */

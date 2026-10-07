@@ -19,9 +19,11 @@ import { isStandalone, isQuietSignInError } from '../lib/cloudDocs'
  * objects) onto real storage, the progress singleton and the Firebase client.
  *
  * src/lib/firebaseClient.js is loaded with a dynamic import() only when
- * Settings opens (preload) or at startup when this device was signed in
- * before (startSync, flag below). Signed-out readers never run Firebase code,
- * and nothing in the app waits for or depends on any of this.
+ * Settings opens (preload), when App.vue shows a sign-in button (the welcome
+ * card or the moved-address notice, also preload), or at startup when this
+ * device was signed in before (startSync, flag below). Signed-out readers who
+ * see none of those never run Firebase code, and nothing in the app waits for
+ * or depends on any of this.
  *
  * A round runs right after sign-in, when the tab becomes visible, when the
  * connection returns, 30 s after the first change not yet uploaded (changes
@@ -271,7 +273,7 @@ function loadClient() {
   return clientPromise
 }
 
-/** Load the sign-in client in the background (Settings calls this on open). */
+/** Load the sign-in client in the background (Settings on open; App.vue when it offers sign-in). */
 export function preload() {
   return loadClient()
 }
