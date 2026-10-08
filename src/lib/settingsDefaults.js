@@ -39,6 +39,9 @@ export function makeDefaults(lang = browserLanguage()) {
     fontRashi: true,
     targumType: 'onkelos', // onkelos | rashi | english
     showEnglish: false,
+    // Show Onkelos as a reference layer when another translation is the counted one
+    // (the counted layer is always shown). Off keeps earlier readers' view unchanged.
+    showOnkelos: false,
   }
 }
 

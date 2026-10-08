@@ -38,14 +38,19 @@
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
             </button>
-            <!-- Sync state at a glance; opens Settings at the account section -->
+            <!-- Sync state at a glance. Signed out: starts Google sign-in right
+                 here (the client is preloaded on hover/focus so the popup opens
+                 inside the click). Signed in: opens Settings at the account
+                 section (status, sign-out). -->
             <button
               type="button"
               class="btn sync-btn"
               :class="`sync-${syncIcon}`"
               :title="syncLabel"
               :aria-label="syncLabel"
-              @click="openSettings('account')"
+              @pointerenter="preloadSignIn"
+              @focus="preloadSignIn"
+              @click="onSyncClick"
             >
               <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
                 <path
@@ -285,7 +290,21 @@ const { progress, externalRevision, persistFailed, setVerseProgress, getVersePro
 const { bulkRevision } = useCycles()
 const { getAliyot, aliyotData, aliyotError, retryAliyot, verseInAliyah, aliyahFor } = useAliyot()
 const now = useNow()
-const { sync } = useSync()
+const { sync, signIn, preload: preloadSync } = useSync()
+// The cloud button: signed out -> sign in with Google (the welcome card and
+// Settings do the same); otherwise Settings at the account section.
+const preloadSignIn = () => { if (sync.status === 'signed-out') preloadSync() }
+const onSyncClick = () => {
+  if (sync.status === 'signed-out') {
+    // signIn() starts the popup synchronously once the client is loaded; before
+    // that it only loads the client, so fall back to Settings, which has the
+    // same button and shows the loading state.
+    if (!sync.ready) { preloadSync(); openSettings('account'); return }
+    signIn()
+    return
+  }
+  openSettings('account')
+}
 
 const showSettings = ref(false)
 // Which Settings section to open at ('account' from the sync icon), or null.
@@ -398,7 +417,7 @@ const syncIcon = computed(() => {
 const syncLabel = computed(() => {
   switch (sync.status) {
     case 'signed-out':
-      return t('לא מחובר: הסימונים נשמרים רק במכשיר הזה', 'Not signed in: marks stay on this device')
+      return t('לא מחובר: הסימונים נשמרים רק במכשיר הזה. התחברו עם Google כדי לגבות אותם', 'Not signed in: marks stay on this device. Sign in with Google to back them up')
     case 'offline':
       return t('לא מקוון: הסימונים יסונכרנו כשהחיבור יחזור', 'Offline: marks will sync when the connection returns')
     case 'error':

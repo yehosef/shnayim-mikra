@@ -143,9 +143,28 @@
             <div class="row row-seg">
               <span id="settings-targum-label" class="row-label">{{ t('התרגום שנספר', 'Counted translation') }}</span>
               <SegmentedControl v-model="settings.targumType" name="settings-targum" :options="targumOptions" />
-              <p class="helper">{{ t('רק התרגום הזה נחשב לקריאה.', 'Only this one counts toward your reading.') }}</p>
+              <p class="helper">{{ t('רק התרגום הזה נחשב לקריאה והוא מופיע מיד אחרי העברית. את האחרים אפשר להציג מתחתיו.', 'Only this one counts toward your reading; it sits right under the Hebrew. The others can still be shown below it.') }}</p>
             </div>
           </fieldset>
+
+          <label class="row row-check" :class="{ 'is-disabled': settings.targumType === 'onkelos' }">
+            <span class="row-label">{{ t('להציג גם אונקלוס', 'Also show Onkelos') }}</span>
+            <input v-model="settings.showOnkelos" type="checkbox" class="check" :disabled="settings.targumType === 'onkelos'" />
+            <span v-if="settings.targumType === 'onkelos'" class="helper">{{ alreadyCounted }}</span>
+          </label>
+
+          <label class="row row-check" :class="{ 'is-disabled': settings.targumType === 'rashi' }">
+            <span class="row-label">{{ t('להציג גם רש"י', 'Also show Rashi') }}</span>
+            <input v-model="settings.showRashi" type="checkbox" class="check" :disabled="settings.targumType === 'rashi'" />
+            <span v-if="settings.targumType === 'rashi'" class="helper">{{ alreadyCounted }}</span>
+          </label>
+
+          <label class="row row-check" :class="{ 'is-disabled': settings.targumType === 'english' }">
+            <span class="row-label">{{ t('להציג גם אנגלית', 'Also show English') }}</span>
+            <input v-model="settings.showEnglish" type="checkbox" class="check" :disabled="settings.targumType === 'english'" />
+            <span v-if="settings.targumType === 'english'" class="helper">{{ alreadyCounted }}</span>
+          </label>
+
 
           <fieldset class="field" aria-labelledby="settings-location-label">
             <div class="row row-seg">
@@ -199,18 +218,6 @@
           <label class="row row-check">
             <span class="row-label">{{ t('טעמי המקרא', 'Cantillation marks') }}</span>
             <input v-model="settings.showTrop" type="checkbox" class="check" />
-          </label>
-
-          <label class="row row-check" :class="{ 'is-disabled': settings.targumType === 'rashi' }">
-            <span class="row-label">{{ t('להציג גם רש"י', 'Also show Rashi') }}</span>
-            <input v-model="settings.showRashi" type="checkbox" class="check" :disabled="settings.targumType === 'rashi'" />
-            <span v-if="settings.targumType === 'rashi'" class="helper">{{ alreadyCounted }}</span>
-          </label>
-
-          <label class="row row-check" :class="{ 'is-disabled': settings.targumType === 'english' }">
-            <span class="row-label">{{ t('להציג גם אנגלית', 'Also show English') }}</span>
-            <input v-model="settings.showEnglish" type="checkbox" class="check" :disabled="settings.targumType === 'english'" />
-            <span v-if="settings.targumType === 'english'" class="helper">{{ alreadyCounted }}</span>
           </label>
 
           <label v-if="rashiShown" class="row row-check">

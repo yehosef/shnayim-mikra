@@ -2,6 +2,19 @@
 
 Each entry says what changed for someone using the app, and where it was deployed.
 
+## 1.6.0 — 2026-10-08
+
+Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.6.0`.
+
+- Translation layers: pick which ONE counts toward the reading (Onkelos, Rashi or English; it sits
+  right under the two Hebrew readings and is what you tap to move on), and separately tick any of
+  the others to show below it as reference. Onkelos can now be shown as a reference when Rashi or
+  English is the counted one (new "Also show Onkelos", off by default). The three "Also show"
+  rows sit directly under "Counted translation" in Settings.
+- The cloud button beside the gear now starts Google sign-in directly when you are signed out
+  (the gear remains the only way into Settings); once signed in it opens Settings → Account for
+  status and sign-out.
+
 ## 1.5.1 — 2026-10-08
 
 Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.5.1`.

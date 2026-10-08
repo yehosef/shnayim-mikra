@@ -225,7 +225,13 @@
           <span class="hint-keys">{{ hint.keys }}</span>
         </div>
 
-        <!-- Additional Reference Texts (always visible if enabled) -->
+        <!-- Additional Reference Texts (always visible if enabled): Onkelos,
+             then English above Rashi. -->
+        <div v-if="settings.showOnkelos && targumLayer !== 'onkelos' && shownVerse.targum" class="reference-section" dir="rtl" lang="arc">
+          <div class="reference-label">{{ t('תרגום אונקלוס', 'Targum Onkelos') }}</div>
+          <div class="targum font-sbl reference-text" v-html="shownVerse.targum"></div>
+        </div>
+
         <div v-if="settings.showEnglish && settings.targumType !== 'english' && shownVerse.english" class="reference-section" dir="ltr">
           <div class="reference-label">{{ t('אנגלית', 'English') }}</div>
           <div class="english reference-text" v-html="shownVerse.english"></div>

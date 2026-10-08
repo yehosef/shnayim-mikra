@@ -115,6 +115,14 @@
       v-html="verse.english"
     ></div>
 
+    <!-- Reference layers (not counted, not clickable), below the counted one:
+         Onkelos, then English above Rashi (binding order). -->
+    <div
+      v-if="settings.showOnkelos && targumLayer !== 'onkelos' && verse.targum"
+      class="targum font-sbl"
+      v-html="verse.targum"
+    ></div>
+
     <!-- English (shown if enabled in settings AND not selected as targum type) -->
     <div
       v-if="settings.showEnglish && settings.targumType !== 'english' && verse.english"
