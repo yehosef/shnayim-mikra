@@ -1,5 +1,5 @@
 import { ref, watch } from 'vue'
-import { getItem, createPersister, onExternalWrite, onVisible } from '../lib/storage'
+import { getItem, setItem, createPersister, onExternalWrite, onVisible } from '../lib/storage'
 import { routesForVerse, clearTargets, partialClearWrites } from '../lib/overlap'
 import { hasMarks } from '../lib/cycleStore'
 
@@ -77,7 +77,17 @@ function mergeProgress(disk, mem) {
   return out
 }
 
-const progress = ref(parseProgress(getItem(KEY)))
+// The stored string exactly as this page found it, before this tab's persister
+// ever wrote: a flush turns a missing value into "{}", which would hide a lost
+// store from the sync layer's loss guard (src/lib/syncStore.js, readProgressRaw).
+const rawAtLoad = getItem(KEY)
+
+/** The stored progress string (or null) as it was when this page loaded. */
+export function progressRawAtLoad() {
+  return rawAtLoad
+}
+
+const progress = ref(parseProgress(rawAtLoad))
 
 // True after the backing store rejected the last write (quota, blocked
 // storage). The marks still live in memory for this session, but they will
@@ -156,6 +166,45 @@ export function setFirstMarkHandler(fn) {
  */
 export function flushProgress() {
   persister.flush()
+}
+
+/**
+ * Apply field writes that did not come from the reader — the sync layer's
+ * cloud-won values (src/lib/syncStore.js) — through the same write-through
+ * path as a reader's mark or un-mark, `false` included, and store them now.
+ * Each write is an ordinary dirty field, so the cross-tab merge keeps it.
+ *
+ * @param {Array<[string, string, string, boolean]>} writes [route, verseKey, field, value]
+ * @returns {boolean} true once every write is on disk (false while storage rejects writes)
+ */
+export function applyProgressFields(writes) {
+  for (const [route, verseKey, field, value] of writes) {
+    for (const r of routesForVerse(route, verseKey)) writeField(r, verseKey, field, value === true)
+  }
+  persister.flush()
+  if (persistFailed.value) return false
+  const disk = parseProgress(getItem(KEY))
+  return writes.every(([route, verseKey, field, value]) =>
+    (disk[route]?.[verseKey]?.[field] === true) === (value === true))
+}
+
+/**
+ * Replace the whole map (an account switch loads another account's marks).
+ * This tab's unflushed changes and clears belonged to the map being replaced,
+ * so they are dropped rather than merged in, and the new map is written now
+ * instead of being folded into what is on disk.
+ *
+ * @returns {boolean} true once the new map is on disk
+ */
+export function replaceProgress(map) {
+  const next = parseProgress(JSON.stringify(map ?? {}))
+  dirtyFields.clear()
+  clearedRoutes.clear()
+  progress.value = next
+  const ok = setItem(KEY, JSON.stringify(next))
+  persistFailed.value = !ok
+  externalRevision.value++
+  return ok
 }
 
 export function useProgress() {

@@ -311,7 +311,7 @@ describe('anti-gating invariant', () => {
   it('every export is a function or the PHASES constant, and nothing else', () => {
     const names = Object.keys(lib).sort()
     expect(names).toEqual([
-      'PHASES', 'aliyahStats', 'dailyGuide', 'isRouteComplete', 'isVerseComplete',
+      'PHASES', 'aliyahStats', 'catchUpPending', 'dailyGuide', 'isRouteComplete', 'isVerseComplete',
       'nextUnread', 'parseKey', 'rangeKeys', 'routeProgressState', 'urgency', 'verseKey'
     ])
     for (const [name, value] of Object.entries(lib)) {

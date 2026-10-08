@@ -22,6 +22,37 @@ disappears on reload; when the day changes while the app is open, the new-cycle 
 until the tab is hidden. Still open from Step 3: in English mode some Settings labels show
 their colon on the wrong side (right-to-left layout). Steps 5–6 (Firebase) have not been started.
 
+**Firebase round, status on 2026-10-05 (evening).** The owner changed the project choice to
+**Torah-io** (`shining-fire-3750`): free plan is enough, readers get their own sign-in list, and
+a deploy credential there cannot touch other apps. Where Step 5 and Step 6 below say
+mega-project or "the `shnayim` database", read Torah-io and its default database.
+- Done in Torah-io: Firestore and Hosting enabled; web app "Shnayim Mikra" registered; the empty
+  2018 database (older Datastore mode, US) deleted with the owner's approval and a new default
+  database created in native mode in the Europe multi-region (`eur3`, free tier); Hosting site
+  `shnayim` created (https://shnayim.web.app — `shnayim-mikra.web.app` belongs to someone
+  else's Shnayim Mikra app); sign-in allowed domains include `shnayim.web.app` and
+  `shnayim-mikra.vercel.app`; security rules deployed (`firestore.rules`, 13 emulator tests).
+- Built on the local branch `firebase-sync`, not committed: on-device sync logic
+  (`src/lib/syncMerge.js`, `src/lib/syncStore.js`), the Firebase client
+  (`src/lib/firebaseClient.js`, the only file importing Firebase, loaded only when Settings
+  opens or the device has signed in before), `src/composables/useSync.js`, an Account section
+  in Settings, an "app has moved" notice shown only on the Vercel address, `firebase.json`,
+  `.firebaserc`. 382 unit tests pass. Checked in a browser: a signed-out reader loads no
+  Firebase code; the Account section appears. Sign-in itself has not been tried by anyone.
+- Differences from Step 6 below: each account's archive is also set aside on an account
+  switch; "start over" uploads un-marks as ordinary changes instead of overwriting the cloud
+  document; the copy of what was last synced carries a counter so a stale download cannot undo
+  an upload that finished meanwhile.
+- Not done: Google sign-in is not switched on (owner, Firebase console); the address
+  `https://shnayim.web.app/__/auth/handler` is not registered on the Google sign-in client
+  (owner, Google Cloud console); nothing is deployed to shnayim.web.app; no automatic deploy
+  from GitHub to Firebase Hosting; no test on two real devices or an installed iPhone app.
+- Order from here: owner's two console steps → deploy this branch to shnayim.web.app → owner
+  signs in there and on a second device → merge to `master` as version 1.2.0 (the Vercel
+  address then shows the "moved" notice) → later switch Vercel off.
+- Found on the way: Torah-io has an old Realtime Database whose rules allow anyone to read and
+  write. It is deactivated; do not reactivate it with those rules.
+
 **What you need to do.** Approve each step marked **OWNER APPROVAL** when its turn comes (they
 change a live environment), and test Google sign-in on a real iPhone with the app installed —
 nobody could verify that from here.

@@ -1,7 +1,7 @@
 {
   "name": "shnayim-mikra",
   "private": true,
-  "version": "1.1.0",
+  "version": "1.6.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,14 +9,17 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-shnayim \"vitest run --config vitest.rules.config.js\"",
     "validate": "node scripts/validate-data.mjs && node scripts/check-styles.mjs",
     "generate:aliyot": "node scripts/generate-aliyot.js"
   },
   "dependencies": {
     "@hebcal/core": "^5.10.1",
+    "firebase": "^12.19.0",
     "vue": "^3.5.22"
   },
   "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
     "@hebcal/leyning": "^8.2.9",
     "@vitejs/plugin-vue": "^6.0.1",
     "vite": "^7.1.7",

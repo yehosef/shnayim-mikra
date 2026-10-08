@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// Shnayim Mikra — default database of project shining-fire-3750 ("Torah-io").
+//
+// There is no backend: the browser reads and writes Firestore directly, so
+// these rules are the whole trust boundary. A signed-in reader can reach only
+// their own reading marks:
+//
+//   users/{uid}/years/{hebrewYear}/parshiyot/{route}
+//     { verses: { "perek:pasuk": { hebrew1, hebrew2, targum } }, updatedAt }
+//
+// One document per single parsha per reading year. The app writes changed
+// pieces as a field-level merge and never deletes a document (another device
+// cannot see a deletion), so delete is denied. Everything else is denied by
+// default.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{uid}/years/{year}/parshiyot/{route} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create, update: if request.auth != null && request.auth.uid == uid
+        && year.matches('^5[0-9]{3}$')
+        && route.matches('^[a-z][a-z-]{1,39}$')
+        && request.resource.data.keys().hasOnly(['verses', 'updatedAt'])
+        && request.resource.data.verses is map
+        && request.resource.data.verses.size() <= 300
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+  }
+}

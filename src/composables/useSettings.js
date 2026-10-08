@@ -1,40 +1,8 @@
 import { ref, watch } from 'vue'
 import { getItem, createPersister, onExternalWrite, onVisible } from '../lib/storage'
+import { parseSettings } from '../lib/settingsDefaults'
 
 const KEY = 'shnayim-settings'
-
-const defaults = {
-  // Interface settings
-  interfaceLanguage: 'en', // 'en' | 'he'
-
-  // Display settings
-  displayMode: 'pasuk', // 'pasuk' (verse-by-verse) | 'parasha' (by paragraph) | 'aliyah' (one aliyah at a time)
-  currentAliyah: 1, // Which aliyah to show when in aliyah mode (1-7)
-  readingStyle: 'verse', // 'verse' (each pasuk twice + targum) | 'aliyah' (whole aliyah twice, then targum)
-  showRashi: false,
-  showTrop: false,
-  location: 'israel',
-  // Has the reader answered "Israel or Diaspora?" (or picked a location in
-  // Settings)? Missing in settings saved before the question existed, so
-  // existing readers are asked once too. The question never gates anything.
-  locationChosen: false,
-  fontSize: 20,
-  fontRashi: true,
-  targumType: 'onkelos', // onkelos | rashi | english
-  showEnglish: false,
-}
-
-function parseSettings(raw) {
-  if (!raw) return { ...defaults }
-  try {
-    const parsed = JSON.parse(raw)
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return { ...defaults }
-    return { ...defaults, ...parsed }
-  } catch (e) {
-    console.warn('Could not parse saved settings, using defaults:', e)
-    return { ...defaults }
-  }
-}
 
 const settings = ref(parseSettings(getItem(KEY)))
 

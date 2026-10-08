@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Shnayim Mikra app icon: an open scroll with two full lines (the two
+       readings) and one shorter gold line (the translation). Source for
+       favicon.svg/.ico, apple-touch-icon and the PWA icons (see make-icons.sh). -->
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="#1f2d3d"/>
+  <!-- rollers -->
+  <rect x="7" y="12" width="7" height="40" rx="3.5" fill="#f5efe3"/>
+  <rect x="50" y="12" width="7" height="40" rx="3.5" fill="#f5efe3"/>
+  <!-- parchment -->
+  <rect x="16" y="15" width="32" height="34" rx="2" fill="#f5efe3"/>
+  <!-- two readings -->
+  <rect x="21" y="23" width="22" height="4.5" rx="2.25" fill="#1f2d3d"/>
+  <rect x="21" y="31" width="22" height="4.5" rx="2.25" fill="#1f2d3d"/>
+  <!-- the translation -->
+  <rect x="27" y="39" width="16" height="4" rx="2" fill="#b7791f"/>
+</svg>

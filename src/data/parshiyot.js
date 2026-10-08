@@ -1,4 +1,4 @@
-export default {
+const parshiyot = {
   "bereshit": {
     chumash: "bereishit",
     hebcalName: "Bereshit",
@@ -367,7 +367,7 @@ export default {
   }
 }
 
-export const parshiyotList = [
+const parshiyotListBase = [
   { route: 'bereshit', he: 'בראשית' },
   { route: 'noach', he: 'נח' },
   { route: 'lech-lecha', he: 'לך לך' },
@@ -430,3 +430,17 @@ export const parshiyotList = [
   { route: 'haazinu', he: 'האזינו' },
   { route: 'vzot-haberachah', he: 'וזאת הברכה' }
 ]
+
+// English display names come from hebcalName (a two-element array for a
+// combined parsha). A few hebcal spellings are smoothed for the interface.
+const englishOverrides = { "Sh'lach": 'Shelach', 'Vezot Haberakhah': 'Vezot Haberachah', 'Nasso': 'Naso' }
+export function englishName(def) {
+  if (!def) return ''
+  const names = Array.isArray(def.hebcalName) ? def.hebcalName : [def.hebcalName]
+  return names.map(n => englishOverrides[n] || n).join('-')
+}
+
+/** `{ route, he, en }` for every parsha, in Torah order. */
+export const parshiyotList = parshiyotListBase.map(p => ({ ...p, en: englishName(parshiyot[p.route]) }))
+
+export default parshiyot
