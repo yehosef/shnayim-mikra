@@ -4,15 +4,15 @@ import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { pwaOptions } from '../vite.config.js'
 
-// The dark theme follows the system setting only: src/style.css defines the
-// --c-* colour tokens once for light and redefines them in a
-// prefers-color-scheme: dark block. Components use the tokens, never literal
-// colours, so both themes stay complete.
+// The theme is Light / Dark / Auto in Settings; the resolved value lives in
+// <html data-theme>. src/style.css defines the --c-* colour tokens once for
+// light and redefines them in a :root[data-theme="dark"] block. Components use
+// the tokens, never literal colours, so both themes stay complete.
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const css = readFileSync(join(root, 'src/style.css'), 'utf8')
 const html = readFileSync(join(root, 'index.html'), 'utf8')
 
-const darkStart = css.indexOf('@media (prefers-color-scheme: dark)')
+const darkStart = css.indexOf(':root[data-theme="dark"]')
 const lightCss = css.slice(0, darkStart)
 const darkCss = css.slice(darkStart, css.indexOf('@media (prefers-reduced-motion'))
 
@@ -33,8 +33,9 @@ describe('colour tokens', () => {
     }
   })
 
-  it('lets native controls follow the system theme', () => {
-    expect(lightCss).toMatch(/color-scheme:\s*light dark/)
+  it('lets native controls follow the resolved theme', () => {
+    expect(lightCss).toMatch(/color-scheme:\s*light;/)
+    expect(darkCss).toMatch(/color-scheme:\s*dark;/)
   })
 
   it('keeps literal colours out of the components', () => {
@@ -62,11 +63,10 @@ describe('installed-app colours', () => {
   })
 
   it('gives the browser bar each theme\'s page background', () => {
-    const meta = (scheme) => {
-      const m = html.match(new RegExp(`<meta name="theme-color" content="([^"]+)" media="\\(prefers-color-scheme: ${scheme}\\)"`))
-      return m && m[1]
-    }
-    expect(meta('light')).toBe(light['--c-bg'])
-    expect(meta('dark')).toBe(dark['--c-bg'])
+    // One theme-color meta, set before first paint by the index.html script
+    // (and kept current by useTheme.js); both values must match the tokens.
+    const m = html.match(/<meta name="theme-color" content="([^"]+)" \/>/)
+    expect(m && m[1]).toBe(light['--c-bg'])
+    expect(html).toContain(`theme === 'dark' ? '${dark['--c-bg']}' : '${light['--c-bg']}'`)
   })
 })

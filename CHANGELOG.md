@@ -2,6 +2,14 @@
 
 Each entry says what changed for someone using the app, and where it was deployed.
 
+## 1.5.0 — 2026-10-08
+
+Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.5.0`.
+
+- Settings → Appearance has a Theme choice: Light, Dark or Auto (Auto follows the device's
+  setting, which is what every existing reader gets until they choose). The browser bar colour
+  follows the chosen theme, and the page opens in the right theme without a flash.
+
 ## 1.4.1 — 2026-10-08
 
 Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.4.1`.

@@ -101,6 +101,7 @@
 import { ref, computed, watch, watchEffect, onMounted, onUnmounted, provide } from 'vue'
 import { useParsha } from './composables/useParsha'
 import { useSettings } from './composables/useSettings'
+import { applyTheme } from './composables/useTheme'
 import { useProgress } from './composables/useProgress'
 import { useAliyot } from './composables/useAliyot'
 import { useCycles } from './composables/useCycles'
@@ -138,6 +139,8 @@ watchEffect(() => {
   document.documentElement.dir = isHebrew.value ? 'rtl' : 'ltr'
   document.documentElement.lang = isHebrew.value ? 'he' : 'en'
 })
+// Light / dark / auto (Settings → Appearance); see useTheme.js.
+applyTheme()
 // Directional isolates (U+2068 / U+2069) around a Hebrew name inside an
 // interface sentence, so it cannot reorder the punctuation around it.
 const isolate = (s) => `\u2068${s}\u2069`

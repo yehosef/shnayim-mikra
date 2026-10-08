@@ -17,6 +17,7 @@ export function makeDefaults(lang = browserLanguage()) {
   return {
     // Interface settings
     interfaceLanguage: lang === 'he' ? 'he' : 'en', // 'en' | 'he'
+    theme: 'auto', // 'light' | 'dark' | 'auto' (auto follows prefers-color-scheme)
 
     // Display settings
     displayMode: 'pasuk', // 'pasuk' (one pasuk) | 'aliyah' (one aliyah at a time) | 'parasha' (whole parsha)

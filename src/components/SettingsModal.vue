@@ -158,7 +158,12 @@
 
         <!-- Text -->
         <section class="section" aria-labelledby="settings-sec-text">
-          <h4 id="settings-sec-text">{{ t('טקסט', 'Text') }}</h4>
+          <h4 id="settings-sec-text">{{ t('מראה', 'Appearance') }}</h4>
+
+          <div class="row row-seg">
+            <span id="settings-theme-label" class="row-label">{{ t('ערכת צבעים', 'Theme') }}</span>
+            <SegmentedControl v-model="settings.theme" name="settings-theme" :options="themeOptions" />
+          </div>
 
           <div class="row row-range">
             <label for="settings-font-size" class="row-label">{{ t('גודל הטקסט', 'Text size') }}</label>
@@ -386,6 +391,11 @@ const targumOptions = computed(() => [
 ])
 // One pasuk, the whole aliyah, or the whole parsha on screen. Short labels so
 // the three fit on one line on a phone; the helper under View explains them.
+const themeOptions = computed(() => [
+  { value: 'light', label: t('בהיר', 'Light') },
+  { value: 'dark', label: t('כהה', 'Dark') },
+  { value: 'auto', label: t('אוטומטי', 'Auto') }
+])
 const displayModeOptions = computed(() => [
   { value: 'pasuk', label: t('פסוק', 'Pasuk') },
   { value: 'aliyah', label: t('עלייה', 'Aliyah') },
