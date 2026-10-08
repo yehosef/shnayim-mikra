@@ -2,6 +2,15 @@
 
 Each entry says what changed for someone using the app, and where it was deployed.
 
+## 1.5.1 — 2026-10-08
+
+Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.5.1`.
+
+- New icon: an open scroll with two full lines (the two readings) and one shorter gold line (the
+  translation) on a dark slate square. It is the browser-tab favicon (crisp SVG, plus a 16/32/48
+  .ico), the iPhone home-screen icon, and the installed-app icon. Source and build script under
+  `scripts/icons/`.
+
 ## 1.5.0 — 2026-10-08
 
 Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.5.0`.

@@ -88,9 +88,16 @@ describe('PWA precache manifest', () => {
     // Rashi/English are runtime-cached on demand, not precached.
     expect(precaches('data/rashi/bereishit.json')).toBe(false)
     expect(precaches('data/english/bereishit.json')).toBe(false)
-    // Nothing in src/ or index.html references these.
+    // The old logo files were removed in 1.5.1; the pattern must not pull in
+    // stray SVGs or PNGs either.
     expect(precaches('logo.png')).toBe(false)
     expect(precaches('logo.svg')).toBe(false)
+  })
+
+  it('precaches the favicon set and the home-screen icon', () => {
+    expect(precaches('favicon.ico')).toBe(true)
+    expect(precaches('favicon.svg')).toBe(true)
+    expect(precaches('apple-touch-icon.png')).toBe(true)
   })
 })
 

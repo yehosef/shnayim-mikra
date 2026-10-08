@@ -27,6 +27,8 @@ export const pwaOptions = {
     globPatterns: [
       '**/*.{js,css,html}',
       '*.{ttf,ico}',
+      'favicon.svg',
+      'apple-touch-icon.png',
       'icon-*.png',
       'data/aliyot.json',
       'data/torah/*.json',
