@@ -6,8 +6,11 @@ The UI/UX plan from the review of 2026-10-06 is fully implemented on branch `fir
 (8 commits after version 1.3.0) and bumped to **1.4.0** with a changelog entry. Tests (437),
 `npm run validate` and `npm run build` pass; a 100-screenshot matrix (6 screen sizes × Hebrew/
 English × list, focus, Settings, help, plus state variants) shows no horizontal overflow and no
-off-screen controls. **Deployed** to Firebase Hosting (https://shnayim.web.app) on 2026-10-07, served bundle
-`index-BFk7T1pf.js`, tag `v1.4.0` pushed. Next action: try the welcome card, Google sign-in and
+off-screen controls. **1.4.1 deployed** to Firebase Hosting (https://shnayim.web.app) on 2026-10-08 (served bundle
+`index-B0iktlSy.js`, tag `v1.4.1`): English interface shows English parsha names, and a waiting
+update activates on the next open. A device still on 1.3.0/1.4.0 keeps the old version until its
+"New version ready → Reload" bar is pressed (in 1.3.0 that bar is only inside Settings) or all
+app tabs are closed and reopened. Next action: try the welcome card, Google sign-in and
 dark mode on a real phone; nothing else is pending.
 
 ## Completed (all on `firebase-sync`, uncommitted nothing)
