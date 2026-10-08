@@ -5,7 +5,7 @@
       <div class="container">
         <!-- Title row, the same at every width: the title is the parsha
              picker (a native select laid over it, so phones keep their own
-             picker) and the gear and the sync icon sit at its end. -->
+             picker) and the gear sits at its end. -->
         <div class="title-row">
           <div class="parsha-picker">
             <h1>{{ t('פרשת', 'Parashat') }} {{ parashaName }}<span class="picker-caret" aria-hidden="true">▾</span></h1>
@@ -27,42 +27,21 @@
             </select>
           </div>
           <div class="controls">
+            <!-- The gear also shows the sync state: a green dot when signed in
+                 and synced, an amber dot while marks wait to go up, no dot
+                 when signed out. The label says which. -->
             <button
               @click="openSettings()"
               class="btn gear-btn"
-              :title="t('הגדרות', 'Settings')"
-              :aria-label="t('הגדרות', 'Settings')"
+              :class="syncDot ? `gear-${syncDot}` : null"
+              :title="gearLabel"
+              :aria-label="gearLabel"
             >
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
-            </button>
-            <!-- Sync state at a glance. Signed out: starts Google sign-in right
-                 here (the client is preloaded on hover/focus so the popup opens
-                 inside the click). Signed in: opens Settings at the account
-                 section (status, sign-out). -->
-            <button
-              type="button"
-              class="btn sync-btn"
-              :class="`sync-${syncIcon}`"
-              :title="syncLabel"
-              :aria-label="syncLabel"
-              @pointerenter="preloadSignIn"
-              @focus="preloadSignIn"
-              @click="onSyncClick"
-            >
-              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
-                <path
-                  d="M7 18.5h10.5a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.6 9.2 4.7 4.7 0 0 0 7 18.5z"
-                  :fill="syncIcon === 'synced' ? 'currentColor' : 'none'"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                  stroke-linejoin="round"
-                />
-                <circle v-if="syncIcon === 'pending'" cx="12" cy="13.5" r="2.2" fill="currentColor" />
-                <line v-if="syncIcon === 'off'" x1="3.5" y1="3.5" x2="20.5" y2="20.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-              </svg>
+              <span v-if="syncDot" class="gear-dot" aria-hidden="true"></span>
             </button>
           </div>
         </div>
@@ -105,7 +84,7 @@
     </div>
 
     <!-- Settings Modal -->
-    <!-- initialSection: 'account' when opened from the sync icon (SettingsModal
+    <!-- initialSection: 'account' when a notice asks for the account section (SettingsModal
          ignores it if it does not know the prop) -->
     <SettingsModal v-if="showSettings" :initial-section="settingsSection" @close="showSettings = false" />
 
@@ -290,24 +269,10 @@ const { progress, externalRevision, persistFailed, setVerseProgress, getVersePro
 const { bulkRevision } = useCycles()
 const { getAliyot, aliyotData, aliyotError, retryAliyot, verseInAliyah, aliyahFor } = useAliyot()
 const now = useNow()
-const { sync, signIn, preload: preloadSync } = useSync()
-// The cloud button: signed out -> sign in with Google (the welcome card and
-// Settings do the same); otherwise Settings at the account section.
-const preloadSignIn = () => { if (sync.status === 'signed-out') preloadSync() }
-const onSyncClick = () => {
-  if (sync.status === 'signed-out') {
-    // signIn() starts the popup synchronously once the client is loaded; before
-    // that it only loads the client, so fall back to Settings, which has the
-    // same button and shows the loading state.
-    if (!sync.ready) { preloadSync(); openSettings('account'); return }
-    signIn()
-    return
-  }
-  openSettings('account')
-}
+const { sync } = useSync()
 
 const showSettings = ref(false)
-// Which Settings section to open at ('account' from the sync icon), or null.
+// Which Settings section to open at ('account'), or null.
 const settingsSection = ref(null)
 const openSettings = (section = null) => {
   settingsSection.value = section
@@ -405,19 +370,18 @@ const parshaGroups = computed(() => {
   return groups
 })
 
-// The sync icon beside the gear: three looks (off / synced / pending), with a
-// label per state. Offline and error share the pending look: marks are
-// waiting to go up.
-const syncIcon = computed(() => {
-  const s = sync.status
-  if (s === 'signed-out') return 'off'
-  if (s === 'synced' && !sync.pending) return 'synced'
+// Sync state shown on the gear: 'synced' (green dot), 'pending' (amber dot:
+// offline, error or marks waiting to go up), or null when signed out.
+const syncDot = computed(() => {
+  const st = sync.status
+  if (st === 'signed-out') return null
+  if (st === 'synced' && !sync.pending) return 'synced'
   return 'pending'
 })
 const syncLabel = computed(() => {
   switch (sync.status) {
     case 'signed-out':
-      return t('לא מחובר: הסימונים נשמרים רק במכשיר הזה. התחברו עם Google כדי לגבות אותם', 'Not signed in: marks stay on this device. Sign in with Google to back them up')
+      return ''
     case 'offline':
       return t('לא מקוון: הסימונים יסונכרנו כשהחיבור יחזור', 'Offline: marks will sync when the connection returns')
     case 'error':
@@ -428,6 +392,10 @@ const syncLabel = computed(() => {
     default:
       return t('מסנכרן…', 'Syncing…')
   }
+})
+const gearLabel = computed(() => {
+  const base = t('הגדרות', 'Settings')
+  return syncLabel.value ? `${base} · ${syncLabel.value}` : base
 })
 
 // One quiet line under the arrow row, shown only to keyboard-and-mouse
@@ -1245,7 +1213,7 @@ onUnmounted(() => {
   margin: 0 auto;
 }
 
-/* Title (the parsha picker) at the start, gear and sync icon at the end */
+/* Title (the parsha picker) at the start, gear at the end */
 .title-row {
   display: flex;
   align-items: center;
@@ -1367,7 +1335,7 @@ h1 {
 .controls {
   display: flex;
   gap: 0.5rem;
-  /* gear and sync icon the same height */
+  /* gear height */
   align-items: stretch;
   flex-shrink: 0;
 }
@@ -1398,20 +1366,27 @@ h1 {
   transform: translateY(0);
 }
 
-.sync-btn {
-  color: var(--c-text-2);
-  padding-inline: 0.7rem;
-}
-
-.sync-btn svg {
-  display: block;
-}
-
 /* Outline gear in the text colour (it was an emoji that differed per OS and
    ignored the dark theme). 18px wide plus 3px above and below: the button
    keeps the box the emoji gave it (18 x 24 content). */
 .gear-btn {
   color: var(--c-text-2);
+  position: relative;
+}
+
+/* Sync state on the gear (see syncDot): a small dot at the outer top corner. */
+.gear-dot {
+  position: absolute;
+  top: 5px;
+  inset-inline-end: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--c-surface);
+  background: var(--c-pointer-strong);
+}
+.gear-synced .gear-dot {
+  background: var(--c-read-strong);
 }
 
 .gear-btn svg {
