@@ -141,7 +141,10 @@ watchEffect(() => {
 // Directional isolates (U+2068 / U+2069) around a Hebrew name inside an
 // interface sentence, so it cannot reorder the punctuation around it.
 const isolate = (s) => `\u2068${s}\u2069`
-const parshaName = (route) => parshiyotList.find(p => p.route === route)?.he || route
+const parshaName = (route) => {
+  const p = parshiyotList.find(p => p.route === route)
+  return p ? (isHebrew.value ? p.he : p.en) : route
+}
 
 const cycleNoticeText = computed(() => {
   const n = cycleNotice.value

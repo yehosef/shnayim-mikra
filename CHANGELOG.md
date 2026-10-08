@@ -2,6 +2,19 @@
 
 Each entry says what changed for someone using the app, and where it was deployed.
 
+## 1.4.1 — 2026-10-08
+
+Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.4.1`.
+
+- In the English interface, parsha names are in English everywhere: the title and picker
+  ("Parashat Shelach", grouped by book), "Coming week: Bereshit", the completion card, the
+  "start this parsha over" section and the cycle notice. Hebrew is unchanged.
+- Updating: a new version that finished downloading on an earlier visit now takes over when the
+  app is next opened, instead of waiting behind the old one until "Reload" is pressed. During a
+  session the "New version ready" bar still asks first. (This fix itself only takes effect from
+  the version after 1.4.1: a device still on 1.4.0 needs one "Reload" from the bar, or all tabs
+  of the app closed and reopened.)
+
 ## 1.4.0 — 2026-10-07
 
 Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.4.0`. Follows the UI/UX review of

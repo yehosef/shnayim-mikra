@@ -8,21 +8,21 @@
              picker) and the gear and the sync icon sit at its end. -->
         <div class="title-row">
           <div class="parsha-picker">
-            <h1>פרשת {{ parashaHe }}<span class="picker-caret" aria-hidden="true">▾</span></h1>
+            <h1>{{ t('פרשת', 'Parashat') }} {{ parashaName }}<span class="picker-caret" aria-hidden="true">▾</span></h1>
             <!-- ✓ every piece of the parsha is read, ◐ partly read (derived from
                  progress, see parshaMarks); the disabled first option is the legend -->
             <select
               v-model="selectedParsha"
               @change="navigateToParsha"
               class="parsha-select"
-              dir="rtl"
-              lang="he"
+              :dir="isHebrew ? 'rtl' : 'ltr'"
+              :lang="isHebrew ? 'he' : 'en'"
               :title="t('✓ הושלמה · ◐ בקריאה', '✓ finished · ◐ in progress')"
               :aria-label="t('בחירת פרשה', 'Choose a parsha')"
             >
               <option disabled value="">{{ t('✓ הושלמה · ◐ בקריאה', '✓ finished · ◐ in progress') }}</option>
               <optgroup v-for="g in parshaGroups" :key="g.chumash" :label="g.label">
-                <option v-for="p in g.items" :key="p.route" :value="p.route">{{ p.he }}{{ parshaMarks[p.route] }}</option>
+                <option v-for="p in g.items" :key="p.route" :value="p.route">{{ isHebrew ? p.he : p.en }}{{ parshaMarks[p.route] }}</option>
               </optgroup>
             </select>
           </div>
@@ -152,8 +152,8 @@
       <!-- The whole parsha was just finished. Advisory: it hides nothing. -->
       <div v-if="showCompletion && viewedComplete" class="completion-card" role="status">
         <p class="completion-text">
-          <template v-if="isHebrew">פרשת {{ parashaHe }} הושלמה: שתי הקריאות והתרגום.</template>
-          <template v-else>Parashat <bdi lang="he">{{ parashaHe }}</bdi> complete: both readings and the translation.</template>
+          <template v-if="isHebrew">פרשת {{ parashaName }} הושלמה: שתי הקריאות והתרגום.</template>
+          <template v-else>Parashat {{ parashaName }} complete: both readings and the translation.</template>
         </p>
         <div class="completion-actions">
           <button v-if="otherWeek" type="button" class="btn" @click="goToOtherWeek">
@@ -354,34 +354,37 @@ const exitFocusMode = () => {
   seedSelectionFromPointer()
 }
 
-const parashaHe = computed(() => {
-  return parshiyotList.find(p => p.route === props.parasha)?.he || ''
-})
-
 const isHebrew = computed(() => settings.value.interfaceLanguage === 'he')
+
+// The parsha's name in the interface language (parshiyot.js carries he + en).
+const parashaName = computed(() => {
+  const p = parshiyotList.find(p => p.route === props.parasha)
+  return p ? (isHebrew.value ? p.he : p.en) : ''
+})
 const t = (he, en) => (isHebrew.value ? he : en)
 
 // The picker's options grouped by chumash (parshiyot.js carries `chumash`).
 const chumashLabels = {
-  bereishit: 'ספר בראשית',
-  shmot: 'ספר שמות',
-  vayikra: 'ספר ויקרא',
-  bamidbar: 'ספר במדבר',
-  dvarim: 'ספר דברים'
+  bereishit: ['ספר בראשית', 'Bereshit (Genesis)'],
+  shmot: ['ספר שמות', 'Shemot (Exodus)'],
+  vayikra: ['ספר ויקרא', 'Vayikra (Leviticus)'],
+  bamidbar: ['ספר במדבר', 'Bamidbar (Numbers)'],
+  dvarim: ['ספר דברים', 'Devarim (Deuteronomy)']
 }
-const parshaGroups = (() => {
+const parshaGroups = computed(() => {
   const groups = []
   for (const p of parshiyotList) {
     const chumash = parshiyotData[p.route]?.chumash || ''
     let g = groups[groups.length - 1]
     if (!g || g.chumash !== chumash) {
-      g = { chumash, label: chumashLabels[chumash] || chumash, items: [] }
+      const label = chumashLabels[chumash]
+      g = { chumash, label: label ? label[isHebrew.value ? 0 : 1] : chumash, items: [] }
       groups.push(g)
     }
     g.items.push(p)
   }
   return groups
-})()
+})
 
 // The sync icon beside the gear: three looks (off / synced / pending), with a
 // label per state. Offline and error share the pending look: marks are
@@ -498,7 +501,8 @@ const otherWeek = computed(() => {
 const otherWeekText = computed(() => {
   const o = otherWeek.value
   if (!o) return ''
-  const name = `\u2068${parshiyotList.find(p => p.route === o.route)?.he || o.route}\u2069`
+  const p = parshiyotList.find(p => p.route === o.route)
+  const name = `\u2068${p ? (isHebrew.value ? p.he : p.en) : o.route}\u2069`
   if (o.kind === 'next') return isHebrew.value ? `לשבוע הבא: ${name}` : `Coming week: ${name}`
   return isHebrew.value ? `לשבוע שעבר: ${name}` : `Last week: ${name}`
 })

@@ -413,8 +413,10 @@ const sampleTranslation = computed(() => {
 // "Start this parsha over" for the parsha App.vue has open.
 const currentParshaRef = inject('currentParsha', ref(''))
 const currentParsha = computed(() => currentParshaRef.value)
-const currentParshaName = computed(() =>
-  parshiyotList.find(p => p.route === currentParsha.value)?.he || currentParsha.value)
+const currentParshaName = computed(() => {
+  const p = parshiyotList.find(p => p.route === currentParsha.value)
+  return p ? (isHebrew.value ? p.he : p.en) : currentParsha.value
+})
 const { canStartOver, startOver, archivedFor, restoreArchived, bulkRevision } = useCycles()
 const confirmingStartOver = ref(false)
 const startOverFailed = ref(false)
