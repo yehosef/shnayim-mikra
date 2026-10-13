@@ -1,17 +1,17 @@
 # Resume — shnayim-mikra
 
-## Where things stand (2026-10-07)
+## Where things stand (2026-10-13)
 
-The UI/UX plan from the review of 2026-10-06 is fully implemented on branch `firebase-sync`
-(8 commits after version 1.3.0) and bumped to **1.4.0** with a changelog entry. Tests (437),
-`npm run validate` and `npm run build` pass; a 100-screenshot matrix (6 screen sizes × Hebrew/
-English × list, focus, Settings, help, plus state variants) shows no horizontal overflow and no
-off-screen controls. **1.4.1 deployed** to Firebase Hosting (https://shnayim.web.app) on 2026-10-08 (served bundle
-`index-B0iktlSy.js`, tag `v1.4.1`): English interface shows English parsha names, and a waiting
-update activates on the next open. A device still on 1.3.0/1.4.0 keeps the old version until its
-"New version ready → Reload" bar is pressed (in 1.3.0 that bar is only inside Settings) or all
-app tabs are closed and reopened. Next action: try the welcome card, Google sign-in and
-dark mode on a real phone; nothing else is pending.
+Everything from the UI/UX review of 2026-10-06 is implemented and live. Production is Firebase
+Hosting (https://shnayim.web.app) at **1.6.1**, tag `v1.6.1`, from branch `firebase-sync`
+(22 commits ahead of `master`). Since the review: 1.4.1 English parsha names and self-activating
+updates; 1.5.0 Light/Dark/Auto theme setting; 1.5.1 new icon; 1.6.0 "also show" Onkelos/Rashi/
+English under one counted translation; 1.6.1 the gear alone opens Settings with a sync dot.
+Nothing is in progress. The one structural item still open is whether to merge `firebase-sync`
+into `master` (PR #4, "optional Google sign-in, marks synced across devices", open since
+2026-10-05): `master` auto-deploys to the old Vercel address, which the changelog keeps on 1.1.0
+until sign-in has been tried on the new address; the "app has moved" notice there promises a
+sign-in button that only exists in the newer code.
 
 ## Completed (all on `firebase-sync`, uncommitted nothing)
 
