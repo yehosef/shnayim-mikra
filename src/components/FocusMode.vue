@@ -17,48 +17,59 @@
             v-if="shownIsPointer"
             class="pointer-mark"
             role="img"
-            :title="t('כאן אתה נמצא', 'You are here')"
-            :aria-label="t('כאן אתה נמצא', 'You are here')"
+            :title="t('כאן אתם נמצאים', 'You are here')"
+            :aria-label="t('כאן אתם נמצאים', 'You are here')"
           >▶</span>
-          <span v-if="perekLabel" class="perek">{{ t('פרק', 'Perek') }} {{ perekLabel }}</span>
-          <span v-if="perekLabel" class="separator">:</span>
-          <span class="pasuk">{{ t('פסוק', 'Pasuk') }} {{ shownVerse.pasuk }}</span>
+          <!-- Full reference; under 400px the compact "א:יג" replaces it
+               (CSS), keeping the full wording as its label. -->
+          <span class="ref-full">
+            <span v-if="perekLabel" class="perek">{{ t('פרק', 'Perek') }} {{ perekLabel }}</span>
+            <span v-if="perekLabel" class="separator">:</span>
+            <span class="pasuk">{{ t('פסוק', 'Pasuk') }} {{ shownVerse.pasuk }}</span>
+          </span>
+          <span
+            class="ref-compact"
+            dir="rtl"
+            role="img"
+            :title="fullReference"
+            :aria-label="fullReference"
+          >{{ compactReference }}</span>
         </span>
         <!-- Step Indicators -->
+        <!-- Step Indicators: one button per piece. Ring = not read,
+             gold = the piece on screen, green = read. -->
         <div class="step-indicator">
-          <span
-            :class="{ active: shown.step >= 1, done: shownProgress.hebrew1 }"
-            @click="jumpToStep(1)"
-            :title="t('קריאה ראשונה (1)', 'First reading (1)')"
-            :aria-label="t('קריאה ראשונה', 'First reading')"
-          >●</span>
-          <span
-            :class="{ active: shown.step >= 2, done: shownProgress.hebrew2 }"
-            @click="jumpToStep(2)"
-            :title="t('קריאה שנייה (2)', 'Second reading (2)')"
-            :aria-label="t('קריאה שנייה', 'Second reading')"
-          >●</span>
-          <span
-            :class="{ active: shown.step >= 3, done: shownProgress.targum }"
-            @click="jumpToStep(3)"
-            :title="t('תרגום (3)', 'Translation (3)')"
-            :aria-label="t('תרגום', 'Translation')"
-          >●</span>
+          <button
+            v-for="dot in stepDots"
+            :key="dot.step"
+            type="button"
+            class="step-dot"
+            :class="{ active: shown.step >= dot.step, current: shown.step === dot.step, done: shownProgress[dot.field] }"
+            :aria-current="shown.step === dot.step ? 'step' : null"
+            :title="dot.title"
+            :aria-label="dot.label"
+            @click="jumpToStep(dot.step)"
+          ></button>
         </div>
       </div>
       <div class="header-controls">
         <button
           @click="showHelp = !showHelp"
           class="help-btn"
-          :title="t('קיצורי מקלדת (?)', 'Keyboard shortcuts (?)')"
-          :aria-label="t('קיצורי מקלדת', 'Keyboard shortcuts')"
+          :title="t('איך זה עובד (?)', 'How it works (?)')"
+          :aria-label="t('איך זה עובד', 'How it works')"
         >?</button>
         <button
           @click="showSettings = !showSettings"
           class="settings-btn"
           :title="t('הגדרות', 'Settings')"
           :aria-label="t('הגדרות', 'Settings')"
-        >⚙️</button>
+        >
+          <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+        </button>
         <button
           @click="$emit('exit')"
           class="exit-btn"
@@ -68,26 +79,52 @@
       </div>
     </div>
 
-    <!-- Keyboard Help Overlay -->
+    <!-- "How it works" sheet: touch first, then the colour key, then the
+         keyboard. Scrolls inside itself; Close stays at the bottom. -->
     <div v-if="showHelp" class="help-overlay" @click.self="showHelp = false">
-      <div class="help-panel" role="dialog" :aria-label="t('קיצורי מקלדת', 'Keyboard shortcuts')">
-        <h3>{{ t('קיצורי מקלדת', 'Keyboard shortcuts') }}</h3>
-        <div class="shortcuts-grid">
-          <div class="shortcut"><kbd>Space</kbd> <span>{{ t('המשך לשלב הבא', 'Continue to the next step') }}</span></div>
-          <div class="shortcut"><kbd>Enter</kbd> <span>{{ t('המשך לשלב הבא', 'Continue to the next step') }}</span></div>
-          <div class="shortcut"><kbd>←</kbd> <span>{{ t('פסוק הבא', 'Next pasuk') }}</span></div>
-          <div class="shortcut"><kbd>→</kbd> <span>{{ t('פסוק קודם', 'Previous pasuk') }}</span></div>
-          <div class="shortcut"><kbd>↑</kbd> <span>{{ t('שלב קודם', 'Previous step') }}</span></div>
-          <div class="shortcut"><kbd>↓</kbd> <span>{{ t('שלב הבא', 'Next step') }}</span></div>
-          <div class="shortcut"><kbd>1</kbd> <span>{{ t('קריאה ראשונה', 'First reading') }}</span></div>
-          <div class="shortcut"><kbd>2</kbd> <span>{{ t('קריאה שנייה', 'Second reading') }}</span></div>
-          <div class="shortcut"><kbd>3</kbd> <span>{{ t('תרגום', 'Translation') }}</span></div>
-          <div class="shortcut"><kbd>M</kbd> <span>{{ t('סמן כנקרא', 'Mark as read') }}</span></div>
-          <div class="shortcut"><kbd>U</kbd> <span>{{ t('בטל סימון', 'Undo the mark') }}</span></div>
-          <div class="shortcut"><kbd>?</kbd> <span>{{ t('עזרה זו', 'This help') }}</span></div>
-          <div class="shortcut"><kbd>Esc</kbd> <span>{{ t('חזרה לרשימה', 'Back to the list') }}</span></div>
+      <div class="help-panel" role="dialog" :aria-label="t('איך זה עובד', 'How it works')">
+        <h3>{{ t('איך זה עובד', 'How it works') }}</h3>
+
+        <section class="help-section">
+          <h4>{{ t('במסך מגע', 'On a touch screen') }}</h4>
+          <ul class="help-list">
+            <li>{{ t('הקישו על הטקסט כדי לסמן אותו כנקרא ולעבור הלאה.', 'Tap the text to mark it read and move on.') }}</li>
+            <li>{{ t('הכפתורים בצדי המסך עוברים לפסוק הבא או לפסוק הקודם.', 'The buttons at the sides of the screen move to the next or previous pasuk.') }}</li>
+            <li>{{ t('שלוש הנקודות למעלה הן קריאה ראשונה, קריאה שנייה ותרגום. הקישו על נקודה כדי לעבור אליה.', 'The three dots at the top are the first reading, the second reading and the translation. Tap a dot to go to it.') }}</li>
+            <li>{{ t('אחרי כל סימון מופיע כפתור ״ביטול״ בתחתית המסך לכמה שניות.', 'After each mark, an Undo button appears at the bottom for a few seconds.') }}</li>
+          </ul>
+        </section>
+
+        <section class="help-section">
+          <h4>{{ t('צבעים', 'Colours') }}</h4>
+          <ul class="colour-key">
+            <li><span class="swatch swatch-read" aria-hidden="true"></span>{{ t('ירוק: נקרא', 'Green: read') }}</li>
+            <li><span class="swatch-mark pointer-mark" aria-hidden="true">▶</span>{{ t('זהב: כאן אתם נמצאים', 'Gold: where you are') }}</li>
+            <li><span class="swatch swatch-scope" aria-hidden="true"></span>{{ t('כחול: העלייה שנבחרה', 'Blue: the selected aliyah') }}</li>
+          </ul>
+        </section>
+
+        <section class="help-section">
+          <h4>{{ t('מקלדת', 'Keyboard') }}</h4>
+          <div class="shortcuts-grid">
+            <div class="shortcut"><span class="keys"><kbd>Space</kbd><kbd>Enter</kbd></span> <span>{{ t('המשיכו לשלב הבא', 'Continue to the next step') }}</span></div>
+            <div class="shortcut"><kbd>←</kbd> <span>{{ t('פסוק הבא', 'Next pasuk') }}</span></div>
+            <div class="shortcut"><kbd>→</kbd> <span>{{ t('פסוק קודם', 'Previous pasuk') }}</span></div>
+            <div class="shortcut"><kbd>↑</kbd> <span>{{ t('שלב קודם', 'Previous step') }}</span></div>
+            <div class="shortcut"><kbd>↓</kbd> <span>{{ t('שלב הבא', 'Next step') }}</span></div>
+            <div class="shortcut"><kbd>1</kbd> <span>{{ t('קריאה ראשונה', 'First reading') }}</span></div>
+            <div class="shortcut"><kbd>2</kbd> <span>{{ t('קריאה שנייה', 'Second reading') }}</span></div>
+            <div class="shortcut"><kbd>3</kbd> <span>{{ t('תרגום', 'Translation') }}</span></div>
+            <div class="shortcut"><kbd>M</kbd> <span>{{ t('סמנו כנקרא', 'Mark as read') }}</span></div>
+            <div class="shortcut"><kbd>U</kbd> <span>{{ t('בטלו את הסימון', 'Undo the mark') }}</span></div>
+            <div class="shortcut"><kbd>?</kbd> <span>{{ t('עזרה זו', 'This help') }}</span></div>
+            <div class="shortcut"><kbd>Esc</kbd> <span>{{ t('חזרה לרשימה', 'Back to the list') }}</span></div>
+          </div>
+        </section>
+
+        <div class="help-actions">
+          <button @click="showHelp = false" class="close-help-btn">{{ t('סגירה', 'Close') }}</button>
         </div>
-        <button @click="showHelp = false" class="close-help-btn">{{ t('סגור', 'Close') }}</button>
       </div>
     </div>
 
@@ -96,93 +133,116 @@
 
     <!-- Main Content - Sequential 3-Step Display -->
     <div ref="contentEl" class="focus-content" @pointerdown="handlePointerDown">
-      <!-- The piece being read. Motion vocabulary: src/lib/motion.js and the
-           motion-* classes in src/style.css.
-           - A new pasuk replaces the whole stage (keyed by pasuk), sliding in
-             the direction of the move (forward: enters from the left).
-           - Another piece of the same pasuk keeps the card; only the label and
-             the text crossfade, and the card's green resets.
-           On a mark, advanceStep first holds the green card, then moves.
-           The label travels with the stage so it cannot announce the next
-           piece while the previous card is still on its way out. -->
-      <Transition
-        :name="cardTransition"
-        mode="out-in"
-        @before-enter="onCardBeforeEnter"
-        @enter="onPasukEnter"
-        @after-enter="onCardAfterEnter"
-      >
-        <div class="text-stage" :key="currentIndex">
-          <!-- Step Label -->
-          <Transition name="motion-fade" mode="out-in">
-            <div class="step-label" :key="stepLabel">{{ stepLabel }}</div>
-          </Transition>
-
-          <!-- Read state is the border + background; the stripe on the
-               reading-start edge is the pointer (gold) / selected aliyah
-               (blue), the same channels as the list view's card. -->
-          <div
-            class="text-display"
-            :class="{ 'step-complete': currentStepDone, 'is-pointer': cardIsPointer, 'in-scope': cardInScope }"
-            @click="handleTextClick"
-          >
-            <Transition
-              name="motion-fade"
-              mode="out-in"
-              @before-enter="onCardBeforeEnter"
-              @after-enter="onCardAfterEnter"
-            >
-              <!-- Hebrew Text (Steps 1 & 2) -->
-              <div
-                v-if="currentStep === 1 || currentStep === 2"
-                :key="`hebrew${currentStep}`"
-                class="torah font-sbl"
-              >{{ formattedTorahText }}</div>
-
-              <!-- Targum (Step 3) -->
-              <div
-                v-else-if="targumLayer === 'onkelos'"
-                key="targum-onkelos"
-                class="targum font-sbl"
-                v-html="currentVerse.targum"
-              ></div>
-
-              <div
-                v-else-if="targumLayer === 'rashi'"
-                key="targum-rashi"
-                class="targum"
-                :class="{ 'font-rashi': settings.fontRashi }"
-                v-html="currentVerse.rashi.join('  ')"
-              ></div>
-
-              <div
-                v-else
-                key="targum-english"
-                class="targum english-targum"
-                v-html="currentVerse.english || t('אין תרגום לאנגלית', 'No English translation available')"
-              ></div>
+      <!-- Auto margins centre short content and let tall content start at
+           the top, inside the scroll range (plain flex centring pushed the
+           top of a tall pasuk above the scroll start). -->
+      <div class="focus-inner">
+        <!-- The piece being read. Motion vocabulary: src/lib/motion.js and the
+             motion-* classes in src/style.css.
+             - A new pasuk replaces the whole stage (keyed by pasuk), sliding in
+               the direction of the move (forward: enters from the left).
+             - Another piece of the same pasuk keeps the card; only the label and
+               the text crossfade, and the card's green resets.
+             On a mark, advanceStep first holds the green card, then moves.
+             The label travels with the stage so it cannot announce the next
+             piece while the previous card is still on its way out. -->
+        <Transition
+          :name="cardTransition"
+          mode="out-in"
+          @before-enter="onCardBeforeEnter"
+          @enter="onPasukEnter"
+          @after-enter="onCardAfterEnter"
+        >
+          <div class="text-stage" :key="currentIndex">
+            <!-- Step Label -->
+            <Transition name="motion-fade" mode="out-in">
+              <div class="step-label" :key="stepLabel + fallbackNote">
+                {{ stepLabel }}
+                <div v-if="fallbackNote" class="step-note">{{ fallbackNote }}</div>
+              </div>
             </Transition>
+
+            <!-- Read state is the border + background; the stripe on the
+                 reading-start edge is the pointer (gold) / selected aliyah
+                 (blue), the same channels as the list view's card. -->
+            <div
+              class="text-display"
+              :class="{ 'step-complete': currentStepDone, 'is-pointer': cardIsPointer, 'in-scope': cardInScope }"
+              @click="handleTextClick"
+            >
+              <Transition
+                name="motion-fade"
+                mode="out-in"
+                @before-enter="onCardBeforeEnter"
+                @after-enter="onCardAfterEnter"
+              >
+                <!-- Hebrew Text (Steps 1 & 2) -->
+                <div
+                  v-if="currentStep === 1 || currentStep === 2"
+                  :key="`hebrew${currentStep}`"
+                  class="torah font-sbl"
+                  dir="rtl"
+                  lang="he"
+                >{{ formattedTorahText }}</div>
+
+                <!-- Targum (Step 3) -->
+                <div
+                  v-else-if="targumLayer === 'onkelos'"
+                  key="targum-onkelos"
+                  class="targum font-sbl"
+                  dir="rtl"
+                  lang="he"
+                  v-html="currentVerse.targum"
+                ></div>
+
+                <div
+                  v-else-if="targumLayer === 'rashi'"
+                  key="targum-rashi"
+                  class="targum"
+                  dir="rtl"
+                  lang="he"
+                  :class="{ 'font-rashi': settings.fontRashi }"
+                >
+                  <div v-for="(comment, ci) in currentVerse.rashi" :key="ci" class="rashi-comment" v-html="comment"></div>
+                </div>
+
+                <div
+                  v-else
+                  key="targum-english"
+                  class="targum english-targum"
+                  dir="ltr"
+                  lang="en"
+                  v-html="currentVerse.english || t('אין תרגום לאנגלית', 'No English translation available')"
+                ></div>
+              </Transition>
+            </div>
+          </div>
+        </Transition>
+
+        <!-- Instruction: touch devices get the tap wording, others the key. -->
+        <div class="instruction">
+          <span class="hint-touch">{{ hint.touch }}</span>
+          <span class="hint-keys">{{ hint.keys }}</span>
+        </div>
+
+        <!-- Additional Reference Texts (always visible if enabled): Onkelos,
+             then English above Rashi. -->
+        <div v-if="settings.showOnkelos && targumLayer !== 'onkelos' && shownVerse.targum" class="reference-section" dir="rtl" lang="arc">
+          <div class="reference-label">{{ t('תרגום אונקלוס', 'Targum Onkelos') }}</div>
+          <div class="targum font-sbl reference-text" v-html="shownVerse.targum"></div>
+        </div>
+
+        <div v-if="settings.showEnglish && settings.targumType !== 'english' && shownVerse.english" class="reference-section" dir="ltr">
+          <div class="reference-label">{{ t('אנגלית', 'English') }}</div>
+          <div class="english reference-text" v-html="shownVerse.english"></div>
+        </div>
+
+        <div v-if="shownVerse.rashi?.length && settings.showRashi && settings.targumType !== 'rashi'" class="reference-section" dir="rtl" lang="he">
+          <div class="reference-label">רש"י</div>
+          <div class="rashi reference-text" :class="{ 'font-rashi': settings.fontRashi }">
+            <div v-for="(comment, ci) in shownVerse.rashi" :key="ci" class="rashi-comment" v-html="comment"></div>
           </div>
         </div>
-      </Transition>
-
-      <!-- Instruction -->
-      <div class="instruction">
-        <span v-if="shown.step < 3">{{ t('לחץ או [Space] להמשיך', 'Tap or press [Space] to continue') }}</span>
-        <span v-else-if="shown.index < totalVerses - 1">{{ t('לחץ או [Space] לפסוק הבא', 'Tap or press [Space] for the next pasuk') }}</span>
-        <span v-else-if="pointerElsewhere">{{ t('לחץ או [Space] להשלמת מה שנותר', 'Tap or press [Space] to finish what is left') }}</span>
-        <span v-else>{{ t('לחץ או [Space] לסיים', 'Tap or press [Space] to finish') }}</span>
-      </div>
-
-      <!-- Additional Reference Texts (always visible if enabled) -->
-      <div v-if="settings.showEnglish && settings.targumType !== 'english' && shownVerse.english" class="reference-section">
-        <div class="reference-label">{{ t('אנגלית', 'English') }}</div>
-        <div class="english reference-text" v-html="shownVerse.english"></div>
-      </div>
-
-      <div v-if="shownVerse.rashi?.length && settings.showRashi && settings.targumType !== 'rashi'" class="reference-section">
-        <div class="reference-label">רש"י</div>
-        <div class="rashi reference-text" :class="{ 'font-rashi': settings.fontRashi }" v-html="shownVerse.rashi.join('  ')"></div>
       </div>
     </div>
 
@@ -207,10 +267,19 @@
       →
     </button>
 
+    <!-- After a mark: a few seconds to take it back (a stray tap on a phone
+         would otherwise record a reading that did not happen). -->
+    <Transition name="motion-fade">
+      <div v-if="undoBarVisible" class="undo-bar" role="status">
+        <span>{{ t('סומן', 'Marked') }}</span>
+        <button type="button" class="undo-bar-btn" @click.stop="undoFromBar">{{ t('ביטול', 'Undo') }}</button>
+      </div>
+    </Transition>
+
     <!-- Progress Footer -->
     <div class="focus-footer">
       <div class="progress-indicator">
-        {{ t('פסוק', 'Pasuk') }} {{ shown.index + 1 }} / {{ totalVerses }}
+        {{ t('פסוק', 'Pasuk') }} <bdi dir="ltr">{{ shown.index + 1 }} / {{ totalVerses }}</bdi>
       </div>
     </div>
   </div>
@@ -274,7 +343,9 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['exit'])
+// 'complete': nothing is left to read in this view (fired just before that
+// 'exit'); the parent decides whether that finished the whole parsha.
+const emit = defineEmits(['exit', 'complete'])
 
 const { getVerseProgress, setVerseProgress } = useProgress()
 
@@ -337,6 +408,23 @@ const perekLabel = computed(() => {
   const n = shownVerse.value.perekNum
   return Number.isInteger(n) ? toHebrew(n + 1) : null
 })
+
+// "פרק א : פסוק יג" for the label, "א:יג" for narrow screens.
+const fullReference = computed(() => {
+  const pasuk = shownVerse.value.pasuk
+  if (!perekLabel.value) return `${t('פסוק', 'Pasuk')} ${pasuk ?? ''}`.trim()
+  return `${t('פרק', 'Perek')} ${perekLabel.value} : ${t('פסוק', 'Pasuk')} ${pasuk ?? ''}`.trim()
+})
+const compactReference = computed(() => {
+  const pasuk = shownVerse.value.pasuk ?? ''
+  return perekLabel.value ? `${perekLabel.value}:${pasuk}` : `${pasuk}`
+})
+
+const stepDots = computed(() => [
+  { step: 1, field: 'hebrew1', title: t('קריאה ראשונה (1)', 'First reading (1)'), label: t('קריאה ראשונה', 'First reading') },
+  { step: 2, field: 'hebrew2', title: t('קריאה שנייה (2)', 'Second reading (2)'), label: t('קריאה שנייה', 'Second reading') },
+  { step: 3, field: 'targum', title: t('תרגום (3)', 'Translation (3)'), label: t('תרגום', 'Translation') }
+])
 
 const aliyaLabel = computed(() => {
   const v = shownVerse.value
@@ -409,6 +497,31 @@ const stepLabel = computed(() => {
     english: t('תרגום לאנגלית', 'English translation')
   }
   return labels[targumLayer.value] || t('תרגום', 'Translation')
+})
+
+// Says why the counted Rashi / English was replaced by Onkelos on this pasuk.
+// Display only: the same `targum` field is marked either way.
+const fallbackNote = computed(() => {
+  if (currentStep.value !== 3 || targumLayer.value !== 'onkelos') return ''
+  const type = props.settings.targumType
+  if (type === 'rashi') return t('אין רש"י על פסוק זה: אונקלוס במקום', 'No Rashi on this pasuk: Onkelos instead')
+  if (type === 'english') return t('אין תרגום לאנגלית לפסוק זה: אונקלוס במקום', 'No English on this pasuk: Onkelos instead')
+  return ''
+})
+
+// The line under the card. Touch devices see `touch`, others `keys` (CSS).
+const hint = computed(() => {
+  const s = shown.value
+  if (s.step < 3) {
+    return { touch: t('הקישו על הטקסט להמשך', 'Tap the text to continue'), keys: t('לחצו על הטקסט או על [Space] להמשך', 'Click the text or press [Space] to continue') }
+  }
+  if (s.index < totalVerses.value - 1) {
+    return { touch: t('הקישו על הטקסט לפסוק הבא', 'Tap the text for the next pasuk'), keys: t('לחצו על הטקסט או על [Space] לפסוק הבא', 'Click the text or press [Space] for the next pasuk') }
+  }
+  if (pointerElsewhere.value) {
+    return { touch: t('הקישו על הטקסט להשלמת מה שנותר', 'Tap the text to finish what is left'), keys: t('לחצו על הטקסט או על [Space] להשלמת מה שנותר', 'Click the text or press [Space] to finish what is left') }
+  }
+  return { touch: t('הקישו על הטקסט לסיום', 'Tap the text to finish'), keys: t('לחצו על הטקסט או על [Space] לסיום', 'Click the text or press [Space] to finish') }
 })
 
 // The piece to open a pasuk on: the pointer's phase when the pointer is on
@@ -531,6 +644,7 @@ watch(() => props.verses, (list, old) => {
 onUnmounted(() => {
   cancelPendingAdvance()
   clearMotionGuardTimer()
+  hideUndoBar()
 })
 
 // Single write path: refuses to touch storage when the index is stale.
@@ -540,6 +654,28 @@ const markPhase = (field, value) => {
   lastAction.value = { type: 'progress', parasha: props.parasha, key, field, prevValue: progress.value[field] }
   setVerseProgress(props.parasha, key, field, value)
   return true
+}
+
+// "Marked · Undo" bar, shown for a few seconds after each mark.
+const UNDO_BAR_MS = 4000
+const undoBarVisible = ref(false)
+let undoBarTimer = null
+
+const hideUndoBar = () => {
+  if (undoBarTimer !== null) {
+    clearTimeout(undoBarTimer)
+    undoBarTimer = null
+  }
+  undoBarVisible.value = false
+}
+
+const showUndoBar = () => {
+  hideUndoBar()
+  undoBarVisible.value = true
+  undoBarTimer = setTimeout(() => {
+    undoBarTimer = null
+    undoBarVisible.value = false
+  }, UNDO_BAR_MS)
 }
 
 const canMarkNow = () =>
@@ -553,7 +689,7 @@ const canMarkNow = () =>
 const advanceStep = () => {
   if (!canMarkNow()) return
 
-  markPhase(fieldOf(currentStep.value), true)
+  if (markPhase(fieldOf(currentStep.value), true)) showUndoBar()
 
   // The pointer is recomputed by the parent from progress, so it must be read
   // AFTER the mark above.
@@ -574,6 +710,7 @@ const advanceStep = () => {
     holding.value = false
     // null = nothing left to read anywhere in this view.
     if (!next) {
+      emit('complete')
       emit('exit')
       return
     }
@@ -588,7 +725,7 @@ const jumpToStep = (step) => {
 
 const markCurrentComplete = () => {
   if (!canMarkNow()) return
-  markPhase(fieldOf(currentStep.value), true)
+  if (markPhase(fieldOf(currentStep.value), true)) showUndoBar()
 }
 
 // A pointer that moved more than this between down and up is a drag
@@ -625,6 +762,17 @@ const undoLastAction = () => {
     setVerseProgress(lastAction.value.parasha, lastAction.value.key, lastAction.value.field, lastAction.value.prevValue)
     lastAction.value = null
   }
+}
+
+// The bar's Undo: the same undo as the U key, then back to the piece that was
+// unmarked (by then the card has usually moved on to the next piece).
+const undoFromBar = () => {
+  const action = lastAction.value
+  hideUndoBar()
+  undoLastAction()
+  if (!action || action.type !== 'progress' || action.parasha !== props.parasha) return
+  const index = props.verses.findIndex(v => `${v.perekNum}:${v.pasukNum}` === action.key)
+  if (index >= 0) moveTo({ index, step: PHASE_STEP[action.field] || 1 })
 }
 
 const goToNeighbour = (delta) => {
@@ -689,6 +837,7 @@ const handleKeydown = (e) => {
       markCurrentComplete()
       break
     case 'undo':
+      hideUndoBar()
       undoLastAction()
       break
     case 'help':
@@ -697,12 +846,62 @@ const handleKeydown = (e) => {
   }
 }
 
+// Back button closes the help sheet, the same way it closes Settings
+// (SettingsModal.vue): opening pushes one same-URL history entry, Back pops it
+// and closes; closing any other way goes back over that entry if it is still
+// on top. An entry left over from a reload is reused rather than stacked.
+const HELP_HISTORY_MARK = 'focus-help'
+const isHelpEntry = () => {
+  try {
+    return window.history.state?.modal === HELP_HISTORY_MARK
+  } catch (e) {
+    return false
+  }
+}
+let helpOwnsEntry = false
+let helpClosedByBack = false
+
+const onHelpPopState = () => {
+  if (isHelpEntry()) return
+  helpClosedByBack = true
+  showHelp.value = false
+}
+
+const pushHelpEntry = () => {
+  helpClosedByBack = false
+  try {
+    if (!isHelpEntry()) {
+      window.history.pushState({ ...(window.history.state || {}), modal: HELP_HISTORY_MARK }, '')
+    }
+    helpOwnsEntry = true
+    window.addEventListener('popstate', onHelpPopState)
+  } catch (e) {
+    // No history API: the sheet still closes with its button and Escape.
+  }
+}
+
+const releaseHelpEntry = () => {
+  window.removeEventListener('popstate', onHelpPopState)
+  if (helpOwnsEntry && !helpClosedByBack && isHelpEntry()) {
+    try {
+      window.history.back()
+    } catch (e) { /* the extra entry is harmless */ }
+  }
+  helpOwnsEntry = false
+}
+
+watch(showHelp, (open) => {
+  if (open) pushHelpEntry()
+  else releaseHelpEntry()
+})
+
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown)
 })
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown)
+  if (showHelp.value) releaseHelpEntry()
 })
 </script>
 
@@ -717,16 +916,25 @@ onUnmounted(() => {
   z-index: 100;
   display: flex;
   flex-direction: column;
+  /* Side buttons: distance from the screen edge, width, and the gap the
+     content keeps from them. The content padding is derived from these. */
+  --nav-edge: 1rem;
+  --nav-w: 4rem;
+  --nav-gap: 1rem;
 }
 
+/* The header is sized in rem: only the reading text follows the text-size
+   setting, so the exit and settings buttons stay on screen at any size. */
 .focus-header {
   background: var(--c-surface);
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--c-border-soft);
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  gap: 0.5rem 1rem;
+  box-shadow: 0 2px 4px rgba(var(--c-shadow-rgb), 0.05);
 }
 
 .verse-info {
@@ -734,16 +942,21 @@ onUnmounted(() => {
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  /* A 10rem basis keeps the buttons on the first row of a phone header;
+     the labels and dots wrap inside this box instead. */
+  flex: 1 1 10rem;
+  min-width: 0;
 }
 
-/* Labels: same sizes, weights and colours as the list view's aliyah chip,
-   perek and pasuk (VerseView .aliya-marker / .perek / .pasuk). */
+/* Labels: same weights and colours as the list view's aliyah chip, perek
+   and pasuk (VerseView .aliya-marker / .perek / .pasuk), at the sizes the
+   list shows at the default text size (20px). */
 .aliya-label {
   background: var(--c-border-soft);
   padding: 0.3rem 0.6rem;
   border-radius: var(--radius-sm);
   font-weight: 600;
-  font-size: 0.9em;
+  font-size: 1.125rem;
   color: var(--c-text-2);
 }
 
@@ -768,6 +981,19 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.ref-full {
+  display: contents;
+}
+
+.ref-compact {
+  display: none;
+  font-weight: 600;
+  font-size: 1.1em;
+  color: var(--c-text-2);
+  white-space: nowrap;
 }
 
 .perek {
@@ -777,7 +1003,7 @@ onUnmounted(() => {
 }
 
 .separator {
-  color: var(--c-faint);
+  color: var(--c-muted);
 }
 
 .pasuk {
@@ -793,42 +1019,63 @@ onUnmounted(() => {
   font-weight: bold;
 }
 
-/* Step Indicators */
+/* In Hebrew the mark sits at the right edge: point it inward. */
+[dir="rtl"] .pointer-mark {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+
+/* Step Indicators: a 32px button around a 16px dot. Ring = not read,
+   gold (the pointer colour) = the piece on screen, green = read. */
 .step-indicator {
   display: flex;
-  gap: 0.5rem;
+  gap: 0;
   align-items: center;
 }
 
-.step-indicator span {
-  width: 16px;
-  height: 16px;
-  display: flex;
+.step-indicator .step-dot {
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: var(--c-border-soft);
-  color: var(--c-faint);
-  font-size: 12px;
   cursor: pointer;
+}
+
+.step-dot::before {
+  content: '';
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--c-muted);
+  background: var(--c-surface);
   transition:
     background-color var(--motion-base) var(--ease-out),
-    color var(--motion-base) var(--ease-out),
+    border-color var(--motion-base) var(--ease-out),
     transform var(--motion-base) var(--ease-out);
 }
 
-.step-indicator span.active {
-  background: var(--c-scope);
-  color: white;
-  transform: scale(1.1);
+.step-dot.current::before {
+  border-color: var(--c-pointer);
+  background: var(--c-pointer);
+  transform: scale(1.15);
 }
 
-.step-indicator span.done {
+.step-dot.done::before {
+  border-color: var(--c-read-border);
   background: var(--c-read-border);
-  color: white;
 }
 
-.step-indicator span:hover {
+/* Read and on screen: green dot with a gold ring. */
+.step-dot.current.done::before {
+  box-shadow: 0 0 0 2px var(--c-surface), 0 0 0 4px var(--c-pointer);
+}
+
+.step-dot:hover::before {
   transform: scale(1.2);
 }
 
@@ -836,6 +1083,8 @@ onUnmounted(() => {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  flex-shrink: 0;
+  margin-inline-start: auto;
 }
 
 /* The list view's light bordered .btn look. */
@@ -862,6 +1111,13 @@ onUnmounted(() => {
   border-color: var(--c-faint);
 }
 
+/* Outline gear in the text colour. 21px wide plus 3.5px above and below:
+   the button keeps the box the emoji gave it (21 x 28 content). */
+.settings-btn svg {
+  display: block;
+  margin-block: 3.5px;
+}
+
 /* Help Overlay */
 .help-overlay {
   position: fixed;
@@ -869,27 +1125,98 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--c-overlay-strong);
   z-index: 102;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+/* Scrolls inside itself on short screens; Close is sticky at the bottom. */
 .help-panel {
   background: var(--c-surface);
   border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 20px 60px rgba(var(--c-shadow-rgb), 0.3);
   max-width: 450px;
   width: 90%;
-  padding: 2rem;
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  padding: 2rem 2rem 0;
 }
 
 .help-panel h3 {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   color: var(--c-text);
   font-size: 1.3rem;
   text-align: center;
+}
+
+.help-section + .help-section {
+  margin-top: 1.25rem;
+}
+
+.help-section h4 {
+  margin-bottom: 0.5rem;
+  color: var(--c-text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.help-list {
+  padding-inline-start: 1.25rem;
+  color: var(--c-text-2);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.help-list li + li {
+  margin-top: 0.35rem;
+}
+
+.colour-key {
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+  color: var(--c-text-2);
+  font-size: 0.95rem;
+}
+
+.colour-key li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.swatch {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+}
+
+.swatch-read {
+  background: var(--c-read-bg);
+  border: 3px solid var(--c-read-border);
+}
+
+.swatch-scope {
+  background: var(--c-scope-bg);
+  border: 3px solid var(--c-scope);
+}
+
+.swatch-mark {
+  width: 1.25rem;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.help-actions {
+  position: sticky;
+  bottom: 0;
+  background: var(--c-surface);
+  padding: 1rem 0 2rem;
+  margin-top: 0.5rem;
 }
 
 .shortcuts-grid {
@@ -904,6 +1231,11 @@ onUnmounted(() => {
   padding: 0.5rem;
   border-radius: var(--radius-md);
   background: var(--c-bg);
+}
+
+.shortcut .keys {
+  display: flex;
+  gap: 0.35rem;
 }
 
 .shortcut kbd {
@@ -927,10 +1259,9 @@ onUnmounted(() => {
 
 .close-help-btn {
   width: 100%;
-  margin-top: 1.5rem;
   padding: 0.75rem;
   background: var(--c-scope);
-  color: white;
+  color: var(--c-on-accent);
   border: none;
   border-radius: var(--radius-md);
   font-size: 1rem;
@@ -943,21 +1274,37 @@ onUnmounted(() => {
   background: var(--c-scope-strong);
 }
 
-/* Main Content - Sequential Display */
+/* Main Content - Sequential Display.
+   Side padding keeps the card clear of the fixed side buttons at every
+   width: the buttons' reach (edge + width + gap) minus the margin the 900px
+   cap already leaves on each side; never less than 2rem. Percentages in
+   padding resolve against .focus-mode's width. */
 .focus-content {
   flex: 1;
   overflow-y: auto;
   padding: 2rem;
+  padding-inline: max(2rem, calc(var(--nav-edge) + var(--nav-w) + var(--nav-gap) - max(0px, (100% - 900px) / 2)));
   max-width: 900px;
   margin: 0 auto;
   width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   cursor: pointer;
   /* the sliding card must not flash a horizontal scrollbar */
   overflow-x: hidden;
+}
+
+/* "Safe" centring: the auto margins centre short content and collapse to 0
+   when the content is taller than the screen, so it starts at the top. */
+.focus-inner {
+  width: 100%;
+  margin: auto 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .step-label {
@@ -966,6 +1313,14 @@ onUnmounted(() => {
   margin-bottom: 1.5rem;
   font-weight: 500;
   text-align: center;
+}
+
+/* Why the counted Rashi / English was replaced by Onkelos here. */
+.step-note {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--c-text-2);
 }
 
 /* The card: same 2px grey border and radius as a piece box in the list view
@@ -979,7 +1334,7 @@ onUnmounted(() => {
   padding: calc(2.5rem + 1px);
   background: var(--c-surface);
   border-radius: var(--radius-md);
-  box-shadow: inset -6px 0 0 var(--cue), 0 4px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: inset -6px 0 0 var(--cue), 0 4px 12px rgba(var(--c-shadow-rgb), 0.08);
   text-align: center;
   /* Green appears within --motion-colour; colours and the hover lift only. */
   transition:
@@ -1009,7 +1364,7 @@ onUnmounted(() => {
 }
 
 .text-display:hover {
-  box-shadow: inset -6px 0 0 var(--cue), 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: inset -6px 0 0 var(--cue), 0 8px 24px rgba(var(--c-shadow-rgb), 0.12);
   transform: translateY(-2px);
 }
 
@@ -1026,7 +1381,7 @@ onUnmounted(() => {
   padding: 2.5rem;
   border-color: var(--c-read-border);
   background: var(--c-read-bg);
-  box-shadow: inset -6px 0 0 var(--cue), 0 4px 16px rgba(16, 185, 129, 0.35);
+  box-shadow: inset -6px 0 0 var(--cue), 0 4px 16px rgba(var(--c-read-rgb), 0.35);
 }
 
 .torah {
@@ -1049,8 +1404,23 @@ onUnmounted(() => {
 .instruction {
   margin-top: 2rem;
   font-size: 0.9rem;
-  color: var(--c-faint);
+  color: var(--c-text-2);
   text-align: center;
+}
+
+.hint-touch {
+  display: none;
+}
+
+/* A touch screen with no hover has no Space key to mention. */
+@media (hover: none) and (pointer: coarse) {
+  .hint-touch {
+    display: inline;
+  }
+
+  .hint-keys {
+    display: none;
+  }
 }
 
 /* Reference blocks (English / Rashi when they are not the counted
@@ -1085,42 +1455,55 @@ onUnmounted(() => {
   font-family: 'Rashi', serif;
 }
 
+/* Rashi: each comment is its own block, as in the list view. */
+.rashi-comment + .rashi-comment {
+  margin-top: 0.6em;
+}
+
 /* Navigation Buttons */
 .nav-btn {
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
-  background: linear-gradient(135deg, var(--c-read-border) 0%, var(--c-read-strong) 100%);
-  color: white;
-  border: none;
-  padding: 1.5rem 1rem;
+  /* Neutral like the list-view arrows: green is kept for "read" */
+  background: var(--c-surface-2);
+  color: var(--c-text-2);
+  border: 1px solid var(--c-border);
+  width: var(--nav-w);
+  padding: 1.5rem 0;
   border-radius: var(--radius-lg);
   font-size: 2rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform var(--motion-base) var(--ease-out), background-color var(--motion-base) var(--ease-out);
-  box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+  transition:
+    transform var(--motion-base) var(--ease-out),
+    background-color var(--motion-base) var(--ease-out),
+    border-color var(--motion-base) var(--ease-out);
+  box-shadow: 0 2px 6px rgba(var(--c-shadow-rgb), 0.12);
   z-index: 50;
 }
 
 .nav-btn-left {
-  left: 1rem;
+  left: var(--nav-edge);
 }
 
 .nav-btn-right {
-  right: 1rem;
+  right: var(--nav-edge);
 }
 
 .nav-btn:hover:not(:disabled) {
   transform: translateY(-50%) scale(1.1);
-  box-shadow: 0 6px 12px rgba(16, 185, 129, 0.4);
+  background: var(--c-border-soft);
+  border-color: var(--c-faint);
+  color: var(--c-text);
 }
 
+/* Disabled at the first / last pasuk: faint by colour, same shape */
 .nav-btn:disabled {
-  /* allow-opacity: disabled side button at the first/last verse, not text */
-  opacity: 0.3;
   cursor: not-allowed;
-  background: var(--c-border);
+  background: var(--c-bg);
+  border-color: var(--c-border-soft);
+  color: var(--c-border);
   box-shadow: none;
 }
 
@@ -1132,7 +1515,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 -2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 -2px 4px rgba(var(--c-shadow-rgb), 0.05);
 }
 
 .progress-indicator {
@@ -1141,8 +1524,61 @@ onUnmounted(() => {
   font-weight: 500;
 }
 
+/* "Marked · Undo", above the footer for a few seconds after a mark. */
+.undo-bar {
+  position: absolute;
+  left: 50%;
+  bottom: 4.75rem;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-block: 0.35rem;
+  padding-inline: 1.1rem 0.35rem;
+  background: var(--c-text);
+  color: var(--c-surface);
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(var(--c-shadow-rgb), 0.2);
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.undo-bar-btn {
+  min-height: 40px;
+  padding: 0.4rem 1rem;
+  background: transparent;
+  color: var(--c-read-soft);
+  border: 1px solid var(--c-read-soft);
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.undo-bar-btn:hover {
+  background: var(--c-inverse-hover);
+}
+
+/* Larger screens: a bigger pasuk (and translation, keeping the ratio). */
+@media (min-width: 1024px) {
+  .torah {
+    font-size: calc(var(--fs-hebrew) * 1.25);
+  }
+
+  .targum {
+    font-size: calc(var(--fs-translation) * 1.25);
+  }
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
+  .focus-mode {
+    --nav-edge: 0.5rem;
+    --nav-w: 3rem;
+    --nav-gap: 0.5rem;
+  }
+
   .focus-header {
     padding: 0.75rem 1rem;
   }
@@ -1155,16 +1591,6 @@ onUnmounted(() => {
     order: 3;
     width: 100%;
     justify-content: center;
-    margin-top: 0.5rem;
-  }
-
-  /* Same Hebrew : translation ratio as on a wide screen, scaled down. */
-  .torah {
-    font-size: calc(var(--fs-hebrew) * 0.8);
-  }
-
-  .targum {
-    font-size: calc(var(--fs-translation) * 0.8);
   }
 
   .text-display {
@@ -1176,16 +1602,8 @@ onUnmounted(() => {
   }
 
   .nav-btn {
-    padding: 1rem 0.75rem;
+    padding: 1rem 0;
     font-size: 1.5rem;
-  }
-
-  .nav-btn-left {
-    left: 0.5rem;
-  }
-
-  .nav-btn-right {
-    right: 0.5rem;
   }
 
   .perek,
@@ -1194,7 +1612,11 @@ onUnmounted(() => {
   }
 
   .help-panel {
-    padding: 1.5rem;
+    padding: 1.5rem 1.5rem 0;
+  }
+
+  .help-actions {
+    padding-bottom: 1.5rem;
   }
 
   .shortcut kbd {
@@ -1206,21 +1628,19 @@ onUnmounted(() => {
 /* Phone: slimmer edge buttons, and side padding so the card never sits
    underneath them. */
 @media (max-width: 600px) {
+  .focus-mode {
+    --nav-edge: 0.25rem;
+    --nav-w: 2.25rem;
+    --nav-gap: 0.25rem;
+  }
+
   .focus-content {
-    padding: 1rem 2.75rem;
+    padding-block: 1rem;
   }
 
   .nav-btn {
-    padding: 1.25rem 0.4rem;
+    padding: 1.25rem 0;
     font-size: 1.25rem;
-  }
-
-  .nav-btn-left {
-    left: 0.25rem;
-  }
-
-  .nav-btn-right {
-    right: 0.25rem;
   }
 
   .text-display {
@@ -1229,6 +1649,23 @@ onUnmounted(() => {
 
   .text-display.step-complete {
     padding: 1rem;
+  }
+}
+
+/* Narrow phones: "א:יג" instead of "Perek א : Pasuk יג". */
+@media (max-width: 399px) {
+  .ref-full {
+    display: none;
+  }
+
+  .ref-compact {
+    display: inline;
+  }
+
+  .help-btn,
+  .settings-btn,
+  .exit-btn {
+    padding: 0.5rem 0.75rem;
   }
 }
 </style>

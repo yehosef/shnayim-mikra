@@ -37,6 +37,13 @@ export function registerOffline() {
     immediate: true,
     onOfflineReady() { offlineReady.value = true },
     onNeedRefresh() { needRefresh.value = true },
+    // A build that finished downloading on an earlier visit is still waiting
+    // behind the old worker (registerType 'prompt' never skips waiting on its
+    // own). At page load nothing has been read yet, so activating it now and
+    // reloading costs the reader nothing; mid-session updates still prompt.
+    onRegisteredSW(_url, registration) {
+      if (registration?.waiting && updateFn) updateFn(true)
+    },
     onRegisterError(e) { console.error('Service worker registration failed:', e) }
   })
   probeOfflineReady()

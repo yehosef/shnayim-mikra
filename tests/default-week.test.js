@@ -7,7 +7,9 @@
  */
 import { describe, it, expect } from 'vitest'
 import { HDate, months } from '@hebcal/core'
+import { readFileSync } from 'node:fs'
 import { resolveDefaultWeek, useParsha } from '../src/composables/useParsha.js'
+import { catchUpPending, rangeKeys, routeProgressState } from '../src/lib/progressMath.js'
 
 const NONE = () => false
 const ALL = () => true
@@ -86,6 +88,57 @@ describe('resolveDefaultWeek: the Sunday–Tuesday grace window', () => {
         }
       }
     }
+  })
+})
+
+/**
+ * The rule App.vue passes in: only a parsha that was started and not finished
+ * keeps the reader on last week. A brand-new visitor (no marks at all) must
+ * land on the coming week instead of being told to catch up.
+ */
+describe('resolveDefaultWeek with the app\'s catch-up rule (started and not finished)', () => {
+  const aliyot = JSON.parse(readFileSync(new URL('../public/data/aliyot.json', import.meta.url), 'utf8'))
+  const torah = JSON.parse(readFileSync(new URL('../public/data/torah/bereishit.json', import.meta.url), 'utf8'))
+  const chapterLengths = torah.text.map((ch) => ch.length)
+  const DONE = { hebrew1: true, hebrew2: true, targum: true }
+
+  const vayechi = aliyot.vayechi
+  const first = vayechi.aliyot[0].start
+  const last = vayechi.aliyot[vayechi.aliyot.length - 1].end
+  const allVayechi = Object.fromEntries(rangeKeys(first, last, chapterLengths).map((k) => [k, { ...DONE }]))
+
+  /** isComplete callback built exactly like App.vue's isRouteDone. */
+  const doneWith = (progress) => (route) => !catchUpPending(progress[route] || {}, aliyot[route])
+
+  // 4-6 Jan 2026: Sunday-Tuesday after Vayechi, before Shemot.
+  const days = [['Sunday', new Date(2026, 0, 4)], ['Monday', new Date(2026, 0, 5)], ['Tuesday', new Date(2026, 0, 6)]]
+
+  for (const [name, date] of days) {
+    it(`${name}: no marks at all opens on the coming week`, () => {
+      const r = resolveDefaultWeek(date, true, doneWith({}))
+      expect(r.route).toBe('shemot')
+      expect(r.late).toBe(false)
+    })
+
+    it(`${name}: last week started but unfinished stays on last week`, () => {
+      const progress = { vayechi: { [`${first[0]}:${first[1]}`]: { hebrew1: true } } }
+      const r = resolveDefaultWeek(date, true, doneWith(progress))
+      expect(r.route).toBe('vayechi')
+      expect(r.late).toBe(true)
+    })
+
+    it(`${name}: last week complete opens on the coming week`, () => {
+      expect(routeProgressState(allVayechi, vayechi)).toBe('complete')
+      const r = resolveDefaultWeek(date, true, doneWith({ vayechi: allVayechi }))
+      expect(r.route).toBe('shemot')
+      expect(r.late).toBe(false)
+    })
+  }
+
+  it('marks belonging to another parsha do not count as starting last week', () => {
+    const progress = { shemot: { '0:0': { ...DONE } } }
+    const r = resolveDefaultWeek(days[0][1], true, doneWith(progress))
+    expect(r.route).toBe('shemot')
   })
 })
 

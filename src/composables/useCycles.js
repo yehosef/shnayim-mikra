@@ -158,6 +158,7 @@ export function useCycles() {
     startOver,
     undoCycleNotice,
     bulkRevision,
+    currentYearOf,
     archivedFor,
     restoreArchived,
     dismissCycleNotice
