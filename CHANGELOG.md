@@ -5,6 +5,8 @@ Each entry says what changed for someone using the app, and where it was deploye
 ## 1.6.1 — 2026-10-08
 
 Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.6.1`.
+Also on the old Vercel address (https://shnayim-mikra.vercel.app) since 2026-10-13, when
+`firebase-sync` was merged into `master` (PR #4); that address had stayed on 1.1.0 until then.
 
 - The cloud button is gone; the gear alone opens Settings. Signed in, the gear carries a small
   dot: green when everything is synced, amber while marks are waiting to go up (offline or a sync
