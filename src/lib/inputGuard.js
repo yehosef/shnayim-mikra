@@ -88,9 +88,12 @@ export function focusKeyAction(e) {
 }
 
 /**
- * List view key handling. Returns `{ action, preventDefault }`, where action is
- * one of: 'phase-down', 'phase-up', 'next-verse', 'previous-verse', 'mark',
- * 'focus', or null.
+ * List view key handling. Returns `{ action, preventDefault, step? }`, where
+ * action is one of: 'phase-down', 'phase-up', 'next-verse', 'previous-verse',
+ * 'mark', 'focus', 'jump' (with step 1/2/3), or null.
+ *
+ * 'jump' (the 1 / 2 / 3 keys) shows that reading in the one-reading view
+ * (AliyahReading). The card views ignore it, so it never prevents the default.
  *
  * `targetIsControl` is true when the key went to a button or link (the reader
  * just clicked an arrow, the mode toggle, the other-week link...). Space and
@@ -117,6 +120,10 @@ export function listKeyAction(e) {
     case 'Enter':
       if (targetIsControl) return NONE
       return repeat ? SWALLOW : { action: 'focus', preventDefault: true }
+    case '1':
+    case '2':
+    case '3':
+      return { action: 'jump', step: Number(key), preventDefault: false }
     default:
       return NONE
   }

@@ -128,6 +128,25 @@ describe('listKeyAction', () => {
     expect(listKeyAction(key(' ', { repeat: true }))).toEqual({ action: null, preventDefault: true })
   })
 
+  it('1 / 2 / 3 jump to that reading (used by the one-reading view only) and keep the default', () => {
+    expect(listKeyAction(key('1'))).toEqual({ action: 'jump', step: 1, preventDefault: false })
+    expect(listKeyAction(key('2'))).toEqual({ action: 'jump', step: 2, preventDefault: false })
+    expect(listKeyAction(key('3'))).toEqual({ action: 'jump', step: 3, preventDefault: false })
+    expect(listKeyAction(key('4')).action).toBeNull()
+    // the same keys as the focus view
+    expect(focusKeyAction(key('2')).step).toBe(listKeyAction(key('2')).step)
+  })
+
+  it('a digit typed into a field or with a modifier is not a jump', () => {
+    expect(listKeyAction(key('1', { targetTag: 'INPUT' })).action).toBeNull()
+    expect(listKeyAction(key('1', { ctrlKey: true })).action).toBeNull()
+  })
+
+  it('Space / Enter on a focused pasuk of the one-reading view (role="button") belong to it', () => {
+    // ParshaDisplay passes targetIsControl for [role="button"] targets
+    expect(listKeyAction(key(' ', { targetIsControl: true, targetTag: 'SPAN' }))).toEqual({ action: null, preventDefault: false })
+  })
+
   it('never handles typing or browser shortcuts', () => {
     expect(listKeyAction(key(' ', { targetTag: 'SELECT' })).action).toBeNull()
     expect(listKeyAction(key('ArrowLeft', { altKey: true })).action).toBeNull()

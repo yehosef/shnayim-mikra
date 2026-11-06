@@ -387,7 +387,8 @@ const readingStyleHelp = computed(() => {
     return t('כל פסוק פעמיים מקרא, ואחריו התרגום', 'Each pasuk twice in Hebrew, then its translation.')
   }
   if (settings.value.readingStyle === 'aliyah') {
-    return t('כל העלייה פעמיים מקרא, ואחריה התרגום', 'The whole aliyah twice in Hebrew, then its translation.')
+    return t('כל העלייה פעמיים מקרא, ואחריה התרגום. בתצוגת עלייה תראו קריאה אחת בכל פעם.',
+             'The whole aliyah twice in Hebrew, then its translation. In the Aliyah view, one reading is shown at a time.')
   }
   return ''
 })

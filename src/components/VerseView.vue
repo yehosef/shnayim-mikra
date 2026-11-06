@@ -147,6 +147,7 @@ import { computed, ref, watch, onBeforeUnmount } from 'vue'
 import { useProgress } from '../composables/useProgress'
 import { useInputMethod } from '../composables/useInputMethod'
 import { formatHebrewText } from '../utils/hebrewUtils'
+import { hasSelectionInside, movedTooFar } from '../utils/tapGuard'
 
 const props = defineProps({
   verse: {
@@ -289,25 +290,11 @@ onBeforeUnmount(dropUndo)
 
 const pointerLabel = computed(() => `${t('כאן אתם נמצאים', 'You are here')}: ${pointerTitle.value}`)
 
-// A pointer that moved more than this between down and up is a drag
-// (text selection / scroll), not a tap on a reading target.
-const DRAG_THRESHOLD_PX = 8
-
+// Drag / text-selection guard (src/utils/tapGuard.js, shared with AliyahReading)
 let pointerStart = null
 
 const handlePointerDown = (e) => {
   pointerStart = { x: e.clientX, y: e.clientY }
-}
-
-/** True when a live (non-collapsed) selection is anchored inside `el`. */
-const hasSelectionInside = (el) => {
-  if (!el || typeof window === 'undefined' || !window.getSelection) return false
-  const sel = window.getSelection()
-  if (!sel || sel.isCollapsed || sel.rangeCount === 0) return false
-  const anchor = sel.anchorNode
-  if (!anchor) return false
-  const node = anchor.nodeType === 1 ? anchor : anchor.parentNode
-  return !!(node && el.contains(node))
 }
 
 // Handle click on a phase - emit to parent which handles toggle + advance logic
@@ -318,11 +305,7 @@ const handlePhaseClick = (phase, field, event) => {
   const target = event?.currentTarget || null
   // Drag-to-select (to copy/quote) must not mark the phase read.
   if (hasSelectionInside(target)) return
-  if (start && event && typeof event.clientX === 'number') {
-    const dx = event.clientX - start.x
-    const dy = event.clientY - start.y
-    if (Math.hypot(dx, dy) > DRAG_THRESHOLD_PX) return
-  }
+  if (start && event && movedTooFar(start, event)) return
 
   // Check if currently read before emitting
   const wasRead = progress.value[field]

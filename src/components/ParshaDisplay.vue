@@ -200,11 +200,36 @@
           </button>
         </div>
         <p class="keyboard-hint">{{ keyboardHint }}</p>
-        <VerseView
-          v-for="item in visibleVerses"
-          :key="`${item.verse.perekNum}-${item.verse.pasukNum}`"
-          v-bind="verseBindings(item)"
+        <!-- Aliyah by aliyah, in the Aliyah view: the aliyah in one reading at
+             a time (AliyahReading). This component keeps the selection, the
+             marks and the keys. -->
+        <AliyahReading
+          v-if="oneReadingView"
+          :verses="displayVerses"
+          :reading="readingShown"
+          :readsByPhase="readsByPhase"
+          :tabs="readingTabs"
+          :selectedIndex="selectedPhase === readingShown ? selectedIndex : -1"
+          :pointerIndex="readingPointerIndex"
+          :aliyahName="aliyahNames[settings.currentAliyah - 1] || ''"
+          :settings="settings"
+          :end="readingEndState"
+          :hasNextAliyah="settings.currentAliyah < aliyahCount"
+          :undoCount="finishUndo ? finishUndo.keys.length : 0"
+          @tap="onReadingTap"
+          @show="showReadingPhase"
+          @finish="finishReading"
+          @undo="undoFinishReading"
+          @next-aliyah="settleReadingTaps(); selectAliyah(settings.currentAliyah + 1)"
+          @set-translation="(type) => { settleReadingTaps(); settings.targumType = type }"
         />
+        <template v-else>
+          <VerseView
+            v-for="item in visibleVerses"
+            :key="`${item.verse.perekNum}-${item.verse.pasukNum}`"
+            v-bind="verseBindings(item)"
+          />
+        </template>
       </template>
     </div>
   </div>
@@ -235,6 +260,17 @@ import {
 import { neighbourIndex } from '../lib/focusStep'
 import { listKeyAction, mayAdvance } from '../lib/inputGuard'
 import {
+  FIELD_OF,
+  readingOnScreen,
+  firstUnreadStep,
+  showReading,
+  nextInReading,
+  stepInReading,
+  finishReadingKeys,
+  undoFinishWrites,
+  readingEnd
+} from '../lib/layerStep'
+import {
   MARK_HOLD_MS,
   MOTION_GUARD_MAX_MS,
   TRANSITION_FORWARD,
@@ -247,6 +283,7 @@ import VerseView from './VerseView.vue'
 import FocusMode from './FocusMode.vue'
 import SettingsModal from './SettingsModal.vue'
 import AliyahBar from './AliyahBar.vue'
+import AliyahReading from './AliyahReading.vue'
 import DailyGuide from './DailyGuide.vue'
 
 const props = defineProps({
@@ -401,7 +438,10 @@ const gearLabel = computed(() => {
 // One quiet line under the arrow row, shown only to keyboard-and-mouse
 // devices (CSS: hover + fine pointer).
 const keyboardHint = computed(() =>
-  t('רווח מסמן וממשיך · ← → מעבר בין פסוקים', 'Space marks and moves on · ← → change pasuk')
+  oneReadingView.value
+    ? t('רווח מסמן וממשיך · ← → מעבר בין פסוקים · 1 2 3 בחירת הקריאה',
+        'Space marks and moves on · ← → change pasuk · 1 2 3 choose the reading')
+    : t('רווח מסמן וממשיך · ← → מעבר בין פסוקים', 'Space marks and moves on · ← → change pasuk')
 )
 
 // Aliyah boundaries come from the generated aliyot.json (never from parshiyot.js)
@@ -610,6 +650,76 @@ const visiblePasukKey = computed(() => {
   return v ? `${v.perekNum}-${v.pasukNum}` : null
 })
 
+// The one-reading view (AliyahReading): Reading order "Aliyah by aliyah" in
+// the Aliyah view, once the aliyah boundaries are known. It shows the aliyah in
+// one reading at a time; the pure rules are in src/lib/layerStep.js.
+const oneReadingView = computed(() =>
+  settings.value.readingStyle === 'aliyah' &&
+  settings.value.displayMode === 'aliyah' &&
+  !!aliyotEntry.value
+)
+
+// The reading the reader was last on (UI state, not a setting): what the view
+// shows while the selection is parked because the whole aliyah is read.
+const lastReading = ref(null)
+watch(selectedPhase, (p) => { if (p >= 1 && p <= 3) lastReading.value = p })
+
+const readingShown = computed(() =>
+  readingOnScreen({ selectedPhase: selectedPhase.value, lastReading: lastReading.value })
+)
+
+// Per reading, one boolean per pasuk on screen. Empty outside the view.
+const readsByPhase = computed(() => {
+  const out = { 1: [], 2: [], 3: [] }
+  if (!oneReadingView.value) return out
+  for (const v of displayVerses.value) {
+    const rec = getVerseProgress(props.parasha, getVerseKey(v))
+    out[1].push(!!rec.hebrew1)
+    out[2].push(!!rec.hebrew2)
+    out[3].push(!!rec.targum)
+  }
+  return out
+})
+
+// The reading tabs' counts, from the aliyah rollups (counted from the pesukim
+// on screen until the chapter lengths behind the rollups have loaded).
+const readingTabs = computed(() => {
+  const stats = aliyahStatsList.value.find(a => a.n === settings.value.currentAliyah)
+  return [1, 2, 3].map(phase => {
+    const field = FIELD_OF[phase]
+    if (stats) return { phase, read: stats[field], total: stats.total }
+    const read = readsByPhase.value[phase]
+    return { phase, read: read.filter(Boolean).length, total: read.length }
+  })
+})
+
+// The gold pointer, when it is in the reading on screen.
+const readingPointerIndex = computed(() => {
+  const ptr = scopedPointer.value
+  if (!ptr || phaseOf(ptr) !== readingShown.value) return -1
+  const [p, v] = parseKey(ptr.key)
+  return displayVerses.value.findIndex(x => x.perekNum === p && x.pasukNum === v)
+})
+
+const readingEndState = computed(() =>
+  readingEnd({ phase: readingShown.value, readsByPhase: readsByPhase.value })
+)
+
+// The Undo offered after "Finished this reading": what that press marked.
+const FINISH_UNDO_MS = 4000
+const finishUndo = ref(null) // { route, phase, field, keys }
+let finishUndoTimer = null
+const dropFinishUndo = () => {
+  if (finishUndoTimer !== null) {
+    clearTimeout(finishUndoTimer)
+    finishUndoTimer = null
+  }
+  finishUndo.value = null
+}
+// Set while a scroll to the top of the text is wanted; cleared after this
+// tick's scroll calls have all seen it.
+let scrollTextTop = false
+
 const ordinalOfKey = (key) => {
   const [p, v] = key.split('-').map(Number)
   return pasukOrdinal(p, v)
@@ -765,6 +875,7 @@ watch(() => props.parasha, async (newParasha) => {
   selectedParsha.value = newParasha
   showCompletion.value = false
   cancelHold()
+  dropFinishUndo()
   // Focus mode holds its own index into the old verse list, and the old verses
   // would be rendered while progress is written under the new route.
   showFocusMode.value = false
@@ -782,10 +893,28 @@ watch(() => props.parasha, async (newParasha) => {
 watch(
   () => [settings.value.showRashi, settings.value.targumType],
   async () => {
+    // A layer that is not cached yet (Rashi picked in the one-reading view)
+    // shows "Loading..." in place of the text while it is fetched, so the
+    // page shrinks and loses its place. Put the reader back where they were,
+    // with focus back on the translation control they used. Only for the
+    // one-reading view; the card views keep their behaviour.
+    const restore = oneReadingView.value
+      ? {
+          parasha: props.parasha,
+          y: window.scrollY,
+          control: !!document.activeElement?.closest?.('.content .ar-translation')
+        }
+      : null
     await loadParsha(props.parasha, {
       showRashi: settings.value.showRashi,
       targumType: settings.value.targumType
     })
+    if (!restore || !oneReadingView.value || props.parasha !== restore.parasha) return
+    await nextTick()
+    if (Math.abs(window.scrollY - restore.y) >= 1) window.scrollTo({ top: restore.y, behavior: 'auto' })
+    if (restore.control && !document.activeElement?.closest?.('.content .ar-translation')) {
+      document.querySelector('.content .ar-translation .ar-segment.is-current')?.focus({ preventScroll: true })
+    }
   }
 )
 
@@ -906,6 +1035,11 @@ const applyAdvance = (next) => {
 }
 
 const nextSelection = () => {
+  // One reading at a time: stay in the reading on screen until it is done.
+  if (oneReadingView.value) {
+    const phase = selectedPhase.value >= 1 && selectedPhase.value <= 3 ? selectedPhase.value : readingShown.value
+    return nextInReading({ index: selectedIndex.value, phase, readsByPhase: readsByPhase.value })
+  }
   const ptr = scopedPointer.value
   let pointerIndex = null
   let pointerPhase = null
@@ -983,6 +1117,90 @@ const setSelectionByHand = (next) => {
   selectedPhase.value = next.phase
 }
 
+// --- One-reading view (AliyahReading) ---
+
+// A tap on a pasuk (or Enter / Space on a focused one): toggle it in the
+// reading on screen, through the same path as a tap in the card view.
+// In the one-reading view a press often changes the text under the finger:
+// "Finished this reading" scrolls back to the top of the next reading, a tab,
+// "On to…", Undo or "Next aliyah" swaps the text or scrolls it, and the Undo
+// bar's closing uncovers the pesukim beneath it. A second tap in that moment
+// (a double-tap, or a tap aimed at the vanished Undo) would mark or un-mark a
+// pasuk the reader never aimed at, so pasuk taps are ignored until the motion
+// is over. Every such press and every scroll this view makes arms it.
+let readingSettling = false
+let readingSettleTimer = null
+const settleReadingTaps = () => {
+  readingSettling = true
+  if (readingSettleTimer !== null) clearTimeout(readingSettleTimer)
+  readingSettleTimer = setTimeout(() => {
+    readingSettleTimer = null
+    readingSettling = false
+  }, MOTION_GUARD_MAX_MS)
+}
+
+const onReadingTap = (i) => {
+  if (readingSettling) return
+  const phase = readingShown.value
+  handlePhaseClick(i, { phase, field: FIELD_OF[phase], wasRead: !!readsByPhase.value[phase][i] })
+}
+
+// A reading tab, or the 1 / 2 / 3 key.
+const showReadingPhase = (phase) => {
+  if (!FIELD_OF[phase]) return
+  settleReadingTaps()
+  lastReading.value = phase
+  setSelectionByHand(showReading({ phase, read: readsByPhase.value[phase] }))
+}
+
+// "Finished this reading": mark every unread pasuk of the aliyah in the
+// reading on screen, offer an Undo for a few seconds (finishUndo), then move
+// on to the next reading (or park) and back to the top of the text.
+const finishReading = () => {
+  if (!canMarkNow()) return
+  const phase = readingShown.value
+  const field = FIELD_OF[phase]
+  const keys = finishReadingKeys({ keys: displayVerses.value.map(getVerseKey), read: readsByPhase.value[phase] })
+  if (keys.length === 0) return
+  cancelHold()
+  noteCompletion(() => {
+    for (const key of keys) setVerseProgress(props.parasha, key, field, true)
+  })
+  dropFinishUndo()
+  finishUndo.value = { route: props.parasha, phase, field, keys }
+  finishUndoTimer = setTimeout(() => {
+    finishUndoTimer = null
+    finishUndo.value = null
+    settleReadingTaps()
+  }, FINISH_UNDO_MS)
+  anchored.value = true
+  const next = firstUnreadStep(readsByPhase.value)
+  settleReadingTaps()
+  scrollTextTop = true
+  setTimeout(() => { scrollTextTop = false }, 0)
+  selectedIndex.value = next.index
+  selectedPhase.value = next.phase
+  scrollToSelected()
+}
+
+// The Undo: un-mark exactly what the press marked, and show that reading again.
+const undoFinishReading = () => {
+  const rec = finishUndo.value
+  dropFinishUndo()
+  settleReadingTaps()
+  if (!rec) return
+  for (const w of undoFinishWrites({ keys: rec.keys, field: rec.field })) {
+    setVerseProgress(rec.route, w.key, w.field, w.value)
+  }
+  if (rec.route === props.parasha && oneReadingView.value) showReadingPhase(rec.phase)
+}
+
+// Switching Reading order to "Aliyah by aliyah" while in the Aliyah view does
+// not change the list, so nothing else re-seeds: put the selection on the
+// pointer, or the screen would open on whatever reading the card view held.
+watch(oneReadingView, (on) => { if (on) seedSelectionFromPointer() })
+watch(() => settings.value.currentAliyah, dropFinishUndo)
+
 // Keyboard navigation for list view - navigates by phase (section) within
 // verses. Which key does what is decided in src/lib/inputGuard.js
 // (listKeyAction); this only dispatches.
@@ -990,7 +1208,7 @@ const handleKeydown = (e) => {
   // Don't handle if focus mode is active or settings open
   if (showFocusMode.value || showSettings.value) return
 
-  const { action, preventDefault } = listKeyAction({
+  const { action, preventDefault, step: jumpTo } = listKeyAction({
     key: e.key,
     repeat: e.repeat,
     ctrlKey: e.ctrlKey,
@@ -1004,6 +1222,26 @@ const handleKeydown = (e) => {
   if (preventDefault) e.preventDefault()
 
   const maxIndex = displayVerses.value.length - 1
+
+  // One reading at a time: the arrows stay in the reading on screen
+  // (left / down = next pasuk, right / up = previous), 1 / 2 / 3 pick it.
+  if (oneReadingView.value) {
+    const move = (delta) =>
+      setSelectionByHand(stepInReading({ index: selectedIndex.value, delta, phase: readingShown.value, maxIndex }))
+    switch (action) {
+      case 'next-verse':
+      case 'phase-down':
+        move(1)
+        return
+      case 'previous-verse':
+      case 'phase-up':
+        move(-1)
+        return
+      case 'jump':
+        showReadingPhase(jumpTo)
+        return
+    }
+  }
 
   switch (action) {
     case 'phase-down':
@@ -1059,6 +1297,10 @@ const stickyTopOffset = () => {
 
 const scrollToSelected = () => {
   nextTick(() => {
+    if (oneReadingView.value) {
+      scrollReadingSelection()
+      return
+    }
     const verseEl = document.querySelector(`.verse[data-verse-index="${selectedIndex.value}"]`)
     if (!verseEl) return
     const el = verseEl.querySelector('.phase-selected') || verseEl
@@ -1084,6 +1326,34 @@ const scrollToSelected = () => {
       top: Math.max(0, window.scrollY + delta),
       behavior: prefersReducedMotion() ? 'auto' : 'smooth'
     })
+  })
+}
+
+// The one-reading view is flowing text: the page moves only when the selected
+// pasuk is out of view (a tap must not slide the text under the finger), and
+// to the top of the text after "Finished this reading" (scrollTextTop). A
+// parked selection (phase 0) does not scroll.
+const scrollReadingSelection = () => {
+  const el = scrollTextTop
+    ? document.querySelector('.content .aliyah-reading')
+    : selectedPhase.value >= 1
+      ? document.querySelector(`.content .ar-pasuk[data-verse-index="${selectedIndex.value}"]`)
+      : null
+  if (!el) return
+  const offset = stickyTopOffset()
+  const vh = window.innerHeight
+  const free = vh - offset
+  const p = el.getBoundingClientRect()
+  let delta
+  if (scrollTextTop) delta = p.top - offset - SCROLL_GAP
+  else if (p.top >= offset + SCROLL_GAP && p.bottom <= vh - SCROLL_GAP) delta = 0
+  else if (p.height > free - 2 * SCROLL_GAP) delta = p.top - offset - SCROLL_GAP
+  else delta = p.top - offset - (free - p.height) / 2
+  if (Math.abs(delta) < 1) return
+  settleReadingTaps()
+  window.scrollTo({
+    top: Math.max(0, window.scrollY + delta),
+    behavior: prefersReducedMotion() ? 'auto' : 'smooth'
   })
 }
 
@@ -1185,6 +1455,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   cancelHold()
+  dropFinishUndo()
   clearPasukGuardTimer()
   if (headerObserver) headerObserver.disconnect()
   document.documentElement.style.removeProperty('--list-header-h')

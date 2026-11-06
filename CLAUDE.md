@@ -37,8 +37,12 @@ Everything else is **derived**, never stored:
 - **Aliyah completion, the reading pointer, per-aliyah stats** — `src/lib/progressMath.js`
   (pure, zero Vue, zero localStorage) wrapped by `src/composables/useReadingState.js`
   (all `computed`, no position ref — a stored position is what froze the old pointer).
-- **Reading style** (`settings.readingStyle`: `'verse'` | `'aliyah'`) is only a traversal-order
-  parameter for `nextUnread`. Both styles read the same booleans.
+- **Reading style** (`settings.readingStyle`: `'verse'` | `'aliyah'`) is the traversal order for
+  `nextUnread`; both styles read the same booleans. It also picks the screen in View = Aliyah:
+  `'aliyah'` shows the one-reading view (`src/components/AliyahReading.vue`, pure rules in
+  `src/lib/layerStep.js`), the whole aliyah in one reading at a time as flowing text, with a
+  "Finished this reading" bulk mark and its Undo. Which reading is on screen is derived from the
+  selection, never stored.
 - **Daily guide / urgency** (`useDailyGuide.js`) is advisory only. Nothing it returns may hide,
   disable, or gate content. `tests/daily-guide.test.js` asserts that.
 
