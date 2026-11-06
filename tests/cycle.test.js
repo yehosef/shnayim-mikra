@@ -78,7 +78,9 @@ describe('cycleOf sweep 5786–5795', () => {
           d = d.add(1)
         }
       }
-    })
+    // Ten years of days × every route: ~2s alone, over 5s when the whole suite
+    // runs in parallel, so the default timeout made CI fail at random.
+    }, 20000)
 
     it(`il=${il}: the Bereshit Shabbat is always in the new cycle, Ha'azinu in the old`, () => {
       for (const year of YEARS) {
