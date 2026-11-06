@@ -2,6 +2,22 @@
 
 Each entry says what changed for someone using the app, and where it was deployed.
 
+## 1.7.0 — 2026-11-06
+
+Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.7.0`.
+
+- Read a whole aliyah in one reading at a time. With Reading order "Aliyah by aliyah" and View
+  "Aliyah", the aliyah is shown as flowing text, like a chumash page, in just the reading you are
+  on: first the whole aliyah in Hebrew, then again, then the whole aliyah in the translation.
+  Tabs at the top switch between the 1st reading, the 2nd reading and the translation, each with
+  its count. On the translation tab you can switch the counted translation between Onkelos, Rashi
+  (shown as a block per pasuk) and English; only one counts, as before.
+- Tap a pasuk to mark it, or press "Finished this reading" at the end to mark the whole aliyah;
+  an Undo is offered for a few seconds. When the aliyah is done, a button goes on to the next
+  one. Keys: Space marks and moves on, arrows move between pesukim, 1/2/3 switch the reading.
+- A pasuk with no Rashi or English shows its Onkelos with a short note, as in focus mode.
+- The other reading orders and views, and focus mode, look and behave as before.
+
 ## 1.6.1 — 2026-10-08
 
 Deployed to Firebase Hosting (https://shnayim.web.app), tag `v1.6.1`.
